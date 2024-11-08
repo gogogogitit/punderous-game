@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardDescription, CardFooter } from "@/co
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/Textarea"
+import { Textarea } from "@/components/ui/textarea"
 import Confetti from 'react-dom-confetti'
 import Image from 'next/image'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown } from 'lucide-react'
