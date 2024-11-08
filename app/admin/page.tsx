@@ -1,6 +1,5 @@
 import { sql } from '@vercel/postgres';
 
-// Force dynamic rendering and disable cache
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -8,41 +7,32 @@ interface EmailSubmission {
   id: number;
   email: string;
   comment: string | null;
-  timestamp: Date;
-}
-
-interface DatabaseError {
-  message: string;
-  code?: string;
+  timestamp: string;
 }
 
 async function getEmailSubmissions(): Promise<EmailSubmission[]> {
   try {
-    console.log('Attempting to fetch email submissions...');
-    
     const { rows } = await sql<EmailSubmission>`
-      SELECT id, email, comment, 
-             COALESCE(timestamp, created_at) as timestamp
+      SELECT id, email, comment, timestamp
       FROM email_submissions
-      ORDER BY COALESCE(timestamp, created_at) DESC;
+      ORDER BY timestamp DESC;
     `;
-    
     console.log('Fetched submissions:', rows);
     return rows;
   } catch (error) {
     console.error('Error fetching email submissions:', error);
-    throw error as DatabaseError;
+    throw error;
   }
 }
 
 export default async function AdminPage() {
   let submissions: EmailSubmission[] = [];
-  let error: DatabaseError | null = null;
+  let error: Error | null = null;
 
   try {
     submissions = await getEmailSubmissions();
   } catch (e) {
-    error = e as DatabaseError;
+    error = e as Error;
     console.error('Error in AdminPage:', e);
   }
 
@@ -50,39 +40,20 @@ export default async function AdminPage() {
     <div className="min-h-screen p-8 bg-gray-50">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-6 text-gray-900">Email Submissions</h1>
-        
         {error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600">Error loading submissions. Please try again later.</p>
-            <p className="text-red-400 text-sm mt-1">{error.message}</p>
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p>An error occurred while fetching submissions. Please try again later.</p>
+            <p className="text-sm">{error.message}</p>
           </div>
         ) : submissions.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-500 text-center">No submissions yet.</p>
-          </div>
+          <p className="text-gray-500 text-center">No submissions yet.</p>
         ) : (
           <div className="space-y-4">
-            {submissions.map((submission: EmailSubmission) => (
-              <div 
-                key={submission.id} 
-                className="bg-white rounded-lg shadow p-6 space-y-3"
-              >
-                <div>
-                  <span className="font-semibold text-gray-700">Email: </span>
-                  <span className="text-gray-900">{submission.email}</span>
-                </div>
-                {submission.comment && (
-                  <div>
-                    <span className="font-semibold text-gray-700">Comment: </span>
-                    <span className="text-gray-900">{submission.comment}</span>
-                  </div>
-                )}
-                <div>
-                  <span className="font-semibold text-gray-700">Submitted: </span>
-                  <span className="text-gray-900">
-                    {new Date(submission.timestamp).toLocaleString()}
-                  </span>
-                </div>
+            {submissions.map((sub) => (
+              <div key={sub.id} className="bg-white shadow rounded-lg p-6">
+                <p><strong>Email:</strong> {sub.email}</p>
+                <p><strong>Comment:</strong> {sub.comment || 'No comment'}</p>
+                <p><strong>Submitted:</strong> {new Date(sub.timestamp).toLocaleString()}</p>
               </div>
             ))}
           </div>
