@@ -629,16 +629,48 @@ export default function PunderfulGame() {
             </>
           )}
         </CardContent>
-        <CardFooter className="flex justify-center border-t border-gray-200 py-3">
-          {!dailyLimitReached && (
-            <Button
-              onClick={gameState.isCorrect || gameState.gameOver ? getNextPun : resetGame}
-              className="bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
-            >
-              {gameState.isCorrect || gameState.gameOver ? "Next Pun" : "Reset Game"}
-            </Button>
-          )}
-        </CardFooter>
+        <CardFooter className="flex flex-col items-center space-y-3 border-t border-gray-200 p-3">
+  <div className="text-center space-y-2">
+    <h3 className="text-lg font-semibold text-gray-800">Coming Soon: Punderful™ Full Version</h3>
+    <ul className="text-sm text-gray-600 space-y-1">
+      <li>• AI-powered pun game that adapts to your skill level</li>
+      <li>• Create and share your own puns for inclusion in the game</li>
+      <li>• Compete with friends and climb the global leaderboard</li>
+      <li>• Unlock achievements and earn badges as you play</li>
+      <li>• Daily challenges and themed pun collections</li>
+    </ul>
+  </div>
+  {!emailSubmitted && !dailyLimitReached && (
+    <form onSubmit={handleEmailSubmit} className="w-full space-y-2">
+      <Input
+        type="email"
+        placeholder="Enter your email for updates"
+        value={email}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+        className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
+        required
+      />
+      <Textarea
+        placeholder="Optional: Share your thoughts or suggestions..."
+        value={comment}
+        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
+        className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
+      />
+      <Button 
+        type="submit"
+        className="w-full bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
+      >
+        Get Notified
+      </Button>
+    </form>
+  )}
+  {emailSubmitted && (
+    <p className="text-green-600 text-sm">Thank you for your interest! We'll keep you updated.</p>
+  )}
+  {submitError && (
+    <p className="text-red-500 text-sm">{submitError}</p>
+  )}
+</CardFooter>
       </Card>
     </div>
   )
