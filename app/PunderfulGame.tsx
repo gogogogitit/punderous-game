@@ -552,13 +552,6 @@ export default function PunderfulGame() {
       Parts of the answer: "{gameState.partialMatch}"
     </p>
   )}
-  <Button
-    onClick={handleSkip}
-    variant="ghost"
-    className="text-xs text-gray-500 hover:text-[#A06CD5] mt-1 p-0"
-  >
-    Skip this pun
-  </Button>
 </motion.div>
                 )}
               </AnimatePresence>
