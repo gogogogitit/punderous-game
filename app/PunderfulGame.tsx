@@ -1,15 +1,16 @@
 'use client'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardDescription, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@/components/ui/Textarea"
 import Confetti from 'react-dom-confetti'
 import Image from 'next/image'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { submitFeedback } from './actions'
 
 interface Pun {
   id: number;
@@ -101,7 +102,6 @@ const confettiConfig = {
 }
 
 export default function PunderfulGame() {
-  const [puns, setPuns] = useState<Pun[]>(initialPuns)
   const [gameState, setGameState] = useState<GameState>({
     currentPun: initialPuns[0],
     userAnswer: '',
@@ -120,10 +120,126 @@ export default function PunderfulGame() {
     usedPunIds: new Set<number>([initialPuns[0].id]),
     unlimitedMode: false
   })
+  const [puns, setPuns] = useState<Pun[]>(initialPuns)
   const [email, setEmail] = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const [dailyLimitReached, setDailyLimitReached] = useState(false)
   const [comment, setComment] = useState('')
+
+  const handleAnswerSubmit = useCallback(() => {
+    if (gameState.userAnswer.trim() === '' || gameState.gameOver) return
+    if (gameState.userAnswer.toLowerCase() === '#playforever') {
+      setGameState(prev => ({
+        ...prev,
+        unlimitedMode: true,
+        userAnswer: '',
+        feedback: 'Unlimited mode activated! You can now play forever.',
+      }))
+      setDailyLimitReached(false)
+      return
+    }
+
+    const findPartialMatch = (userGuess: string, correctAnswer: string, previousGuesses: string[]): string | null => {
+      const correctWords = correctAnswer.toLowerCase().split(' ')
+      const allGuesses = [...previousGuesses, userGuess].map(guess => guess.toLowerCase())
+      
+      const matchedParts = correctWords.filter(word => 
+        allGuesses.some(guess => guess.includes(word))
+      )
+      return matchedParts.length > 0 ? matchedParts.join(' ') : null
+    }
+
+    const compareAnswers = (userAnswer: string, correctAnswer: string): boolean => {
+      const cleanAnswer = (answer: string) => 
+        answer.toLowerCase()
+          .replace(/^(a|an|it|they&apos;re|they)\s+/i, '')
+          .replace(/\s+/g, ' ')
+          .replace(/[.,!?]/g, '')
+          .trim();
+      const cleanedUserAnswer = cleanAnswer(userAnswer);
+      const cleanedCorrectAnswer = cleanAnswer(correctAnswer);
+      if (cleanedUserAnswer === cleanedCorrectAnswer) {
+        return true;
+      }
+      const userWords = cleanedUserAnswer.split(' ');
+      const correctWords = cleanedCorrectAnswer.split(' ');
+      const allWordsPresent = correctWords.every(word => userWords.includes(word));
+      const matchPercentage = correctWords.filter(word => userWords.includes(word)).length / correctWords.length;
+
+      return allWordsPresent || matchPercentage >= 0.7;
+    }
+
+    const findCorrectLetters = (userGuess: string, correctAnswer: string): Set<string> => {
+      const guessLetters = new Set(userGuess.toLowerCase().replace(/\s/g, ''))
+      const answerLetters = new Set(correctAnswer.toLowerCase().replace(/\s/g, ''))
+      return new Set([...guessLetters].filter(letter => answerLetters.has(letter)))
+    }
+
+    const correctAnswer = gameState.currentPun.answer;
+    const userGuess = gameState.userAnswer;
+    if (compareAnswers(userGuess, correctAnswer)) {
+      const pointsEarned = gameState.currentPun.difficulty;
+      setGameState(prev => ({
+        ...prev,
+        score: prev.score + pointsEarned,
+        playerSkillLevel: Math.min(prev.playerSkillLevel + 1, 3),
+        isCorrect: true,
+        showCorrectAnswer: true,
+        correctAnswerDisplay: correctAnswer,
+        userAnswer: '',
+        dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
+        feedback: `Correct! You earned ${pointsEarned} point${pointsEarned > 1 ? 's' : ''}.`,
+        usedPunIds: new Set([...prev.usedPunIds, prev.currentPun.id]),
+      }))
+    } else {
+      const newCorrectLetters = findCorrectLetters(userGuess, correctAnswer)
+      setGameState(prev => {
+        const newAttempts = prev.attempts - 1
+        const partialMatchResult = findPartialMatch(userGuess, correctAnswer, prev.guessedAnswers)
+        const newFeedback = newAttempts === 0
+          ? `Game over!`
+          : partialMatchResult
+            ? `Close! You&apos;re on the right track. Parts of the answer: "${partialMatchResult}"`
+            : `Not quite! You have ${newAttempts} attempts left.`
+        return {
+          ...prev,
+          attempts: newAttempts,
+          guessedAnswers: [...prev.guessedAnswers, prev.userAnswer],
+          partialMatch: partialMatchResult || '',
+          feedback: newFeedback,
+          gameOver: newAttempts === 0,
+          userAnswer: '',
+          showCorrectAnswer: newAttempts === 0,
+          correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
+          correctLetters: new Set([...prev.correctLetters, ...newCorrectLetters]),
+        }
+      })
+    }
+  }, [gameState])
+
+  const handleEmailSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    try {
+      const response = await fetch('/api/submit-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, comment }),
+      })
+      const result = await response.json()
+      if (result.success) {
+        console.log('Submission successful:', result.message)
+        setEmailSubmitted(true)
+        setEmail('')
+        setComment('')
+      } else {
+        console.error('Submission failed:', result.error)
+      }
+    } catch (error) {
+      console.error('Error submitting:', error)
+    }
+  }, [email, comment])
 
   useEffect(() => {
     const storedPuns = localStorage.getItem('punderfulPuns')
@@ -172,13 +288,6 @@ export default function PunderfulGame() {
       setDailyLimitReached(false)
       localStorage.setItem('punderfulLastPlayedDate', currentDate)
     }
-
-    if (!gameState.currentPun.id) {
-      setGameState(prevState => ({
-        ...prevState,
-        currentPun: shuffledPuns[0],
-      }))
-    }
   }, [])
 
   useEffect(() => {
@@ -195,97 +304,7 @@ export default function PunderfulGame() {
     }
   }, [puns, gameState])
 
-  const compareAnswers = (userAnswer: string, correctAnswer: string): boolean => {
-    const cleanAnswer = (answer: string) => 
-      answer.toLowerCase()
-        .replace(/^(a|an|it|they're|they)\s+/i, '')
-        .replace(/\s+/g, ' ')
-        .replace(/[.,!?]/g, '')
-        .trim();
-    const cleanedUserAnswer = cleanAnswer(userAnswer);
-    const cleanedCorrectAnswer = cleanAnswer(correctAnswer);
-    if (cleanedUserAnswer === cleanedCorrectAnswer) {
-      return true;
-    }
-    const userWords = cleanedUserAnswer.split(' ');
-    const correctWords = cleanedCorrectAnswer.split(' ');
-    const allWordsPresent = correctWords.every(word => userWords.includes(word));
-    const matchPercentage = correctWords.filter(word => userWords.includes(word)).length / correctWords.length;
-
-    return allWordsPresent || matchPercentage >= 0.7;
-  };
-
-  const findCorrectLetters = (userGuess: string, correctAnswer: string): Set<string> => {
-    const guessLetters = new Set(userGuess.toLowerCase().replace(/\s/g, ''))
-    const answerLetters = new Set(correctAnswer.toLowerCase().replace(/\s/g, ''))
-    return new Set([...guessLetters].filter(letter => answerLetters.has(letter)))
-  }
-
-  const handleAnswerSubmit = () => {
-    if (gameState.userAnswer.trim() === '' || gameState.gameOver) return
-    if (gameState.userAnswer.toLowerCase() === '#playforever') {
-      setGameState(prev => ({
-        ...prev,
-        unlimitedMode: true,
-        userAnswer: '',
-        feedback: 'Unlimited mode activated! You can now play forever.',
-      }))
-      setDailyLimitReached(false)
-      return
-    }
-    const correctAnswer = gameState.currentPun.answer;
-    const userGuess = gameState.userAnswer;
-    if (compareAnswers(userGuess, correctAnswer)) {
-      const pointsEarned = gameState.currentPun.difficulty;
-      setGameState(prev => ({
-        ...prev,
-        score: prev.score + pointsEarned,
-        playerSkillLevel: Math.min(prev.playerSkillLevel + 1, 3),
-        isCorrect: true,
-        showCorrectAnswer: true,
-        correctAnswerDisplay: correctAnswer,
-        userAnswer: '',
-        dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
-        feedback: `Correct! You earned ${pointsEarned} point${pointsEarned > 1 ? 's' : ''}.`,
-        usedPunIds: new Set([...prev.usedPunIds, prev.currentPun.id]),
-      }))
-    } else {
-      const newCorrectLetters = findCorrectLetters(userGuess, correctAnswer)
-      setGameState(prev => {
-        const newAttempts = prev.attempts - 1
-        const partialMatchResult = findPartialMatch(userGuess, correctAnswer, prev.guessedAnswers)
-        const newFeedback = newAttempts === 0
-          ? `Game over!`
-          : partialMatchResult
-            ? `Close! You're on the right track. Parts of the answer: "${partialMatchResult}"`
-            : `Not quite! You have ${newAttempts} attempts left.`
-        return {
-          ...prev,
-          attempts: newAttempts,
-          guessedAnswers: [...prev.guessedAnswers, prev.userAnswer],
-          partialMatch: partialMatchResult || '',
-          feedback: newFeedback,
-          gameOver: newAttempts === 0,
-          userAnswer: '',
-          showCorrectAnswer: newAttempts === 0,
-          correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
-          correctLetters: new Set([...prev.correctLetters, ...newCorrectLetters]),
-        }
-      })
-    }
-  }
-
-  const findPartialMatch = (userGuess: string, correctAnswer: string, previousGuesses: string[]): string | null => {
-    const correctWords = correctAnswer.toLowerCase().split(' ')
-    const allGuesses = [...previousGuesses, userGuess].map(guess => guess.toLowerCase())
-    
-    const matchedParts = correctWords.filter(word => 
-      allGuesses.some(guess => guess.includes(word))
-    )
-    return matchedParts.length > 0 ? matchedParts.join(' ') : null
-  }
-
-  const getNextPun = () => {
+  const getNextPun = useCallback(() => {
     if (gameState.dailyGamesPlayed >= 5 && !gameState.unlimitedMode) {
       setDailyLimitReached(true)
       return
@@ -326,9 +345,9 @@ export default function PunderfulGame() {
         dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
       }))
     }
-  }
+  }, [gameState, puns])
 
-  const resetGame = () => {
+  const resetGame = useCallback(() => {
     if (gameState.dailyGamesPlayed >= 5 && !gameState.unlimitedMode) {
       setDailyLimitReached(true)
       return
@@ -353,31 +372,20 @@ export default function PunderfulGame() {
       usedPunIds: new Set([shuffledPuns[0].id]),
       dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
     }))
-  }
+  }, [gameState, puns])
 
-  const handleEmailSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    console.log(`Email submitted: ${email}`)
-    console.log(`Comment submitted: ${comment}`)
-    setEmailSubmitted(true)
-    setEmail('')
-    setComment('')
-  }
-
-  const handleVote = (id: number, voteType: 'up' | 'down') => {
+  const handleVote = useCallback((id: number, voteType: 'up' | 'down') => {
     setPuns(prevPuns => prevPuns.map(pun => 
       pun.id === id
         ? { ...pun, votes: { ...pun.votes, [voteType]: pun.votes[voteType] + 1 } }
         : pun
     ))
     getNextPun()
-  }
+  }, [getNextPun])
 
-  const handleSkip = () => {
-    if (!gameState.isCorrect && !gameState.gameOver) {
-      getNextPun()
-    }
-  }
+  const handleSkip = useCallback(() => {
+    if (!gameState.isCorrect && !gameState.gameOver) getNextPun()
+  }, [gameState, getNextPun])
 
   const getDifficultyText = (difficulty: number): string => {
     switch (difficulty) {
@@ -401,7 +409,8 @@ export default function PunderfulGame() {
               <Image
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/lettuce-IBEXinN0VWnKphTGJhalo65OURRqhY.png"
                 alt="Punderful™ Logo"
-                fill
+                width={128}
+                height={128}
                 className="object-contain"
                 priority
               />
@@ -420,10 +429,10 @@ export default function PunderfulGame() {
               <p className="text-xl font-bold text-gray-800">
                 Daily Limit Reached!
               </p>
-              <p className="text-lg text-gray-600">You've played 5 games today. Come back tomorrow for more puns!</p>
+              <p className="text-lg text-gray-600">You&apos;ve played 5 games today. Come back tomorrow for more puns!</p>
               <div className="rounded-lg border-2 border-[#A06CD5] bg-[#A06CD5]/10 p-2 w-full">
                 <p className="text-sm text-center text-gray-800">
-                  Don't forget to share your email address to be invited to the full version of the game as soon as it's ready!
+                  Don&apos;t forget to share your email address to be invited to the full version of the game as soon as it&apos;s ready!
                 </p>
               </div>
               {!emailSubmitted && (
@@ -670,7 +679,7 @@ export default function PunderfulGame() {
                 </Button>
               </form>
             ) : (
-              <p className="text-sm text-center text-green-600 font-medium mt-2">Thank you! We'll keep you updated on the full version release.</p>
+              <p className="text-sm text-center text-green-600 font-medium mt-2">Thank you! We&apos;ll keep you updated on the full version release.</p>
             )}
           </div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
