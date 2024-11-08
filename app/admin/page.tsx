@@ -1,6 +1,5 @@
 import { sql } from '@vercel/postgres';
 
-// Force dynamic rendering to ensure fresh data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -8,15 +7,15 @@ interface EmailSubmission {
   id: number;
   email: string;
   comment: string | null;
-  timestamp: Date;
+  created_at: string;
 }
 
 async function getEmailSubmissions(): Promise<EmailSubmission[]> {
   try {
     const { rows } = await sql<EmailSubmission>`
-      SELECT id, email, comment, timestamp
+      SELECT id, email, comment, created_at
       FROM email_submissions
-      ORDER BY timestamp DESC;
+      ORDER BY created_at DESC;
     `;
     console.log('Fetched submissions:', rows);
     return rows;
@@ -27,7 +26,7 @@ async function getEmailSubmissions(): Promise<EmailSubmission[]> {
 }
 
 export default async function AdminPage() {
-  const submissions: EmailSubmission[] = await getEmailSubmissions();
+  const submissions = await getEmailSubmissions();
 
   return (
     <div className="min-h-screen p-8 bg-gray-50">
@@ -57,7 +56,7 @@ export default async function AdminPage() {
                 <div>
                   <span className="font-semibold text-gray-700">Submitted: </span>
                   <span className="text-gray-900">
-                    {new Date(submission.timestamp).toLocaleString()}
+                    {new Date(submission.created_at).toLocaleString()}
                   </span>
                 </div>
               </div>
