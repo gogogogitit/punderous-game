@@ -533,21 +533,33 @@ export default function PunderfulGame() {
                     </motion.div>
                   </motion.div>
                 ) : (
-                  <motion.div
-                    key="question"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10"
-                  >
-                    <p className="text-lg font-medium text-gray-800 mb-1">
-                      {gameState.currentPun.question}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {getDifficultyText(gameState.currentPun.difficulty)}
-                    </p>
-                  </motion.div>
+<motion.div
+  key="question"
+  initial={{ opacity: 0, scale: 0.8 }}
+  animate={{ opacity: 1, scale: 1 }}
+  exit={{ opacity: 0, scale: 0.8 }}
+  transition={{ duration: 0.5 }}
+  className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10 text-center"
+>
+  <p className="text-lg font-medium text-gray-800 mb-1">
+    {gameState.currentPun.question}
+  </p>
+  <p className="text-sm text-gray-600">
+    Difficulty: {getDifficultyText(gameState.currentPun.difficulty)}
+  </p>
+  {gameState.partialMatch && (
+    <p className="text-sm text-[#247BA0] mt-1">
+      Parts of the answer: "{gameState.partialMatch}"
+    </p>
+  )}
+  <Button
+    onClick={handleSkip}
+    variant="ghost"
+    className="text-xs text-gray-500 hover:text-[#A06CD5] mt-1 p-0"
+  >
+    Skip this pun
+  </Button>
+</motion.div>
                 )}
               </AnimatePresence>
               <div className="w-full">
