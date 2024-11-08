@@ -1,19 +1,69 @@
 import { sql } from '@vercel/postgres';
 
+// Force dynamic rendering to ensure fresh data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+interface EmailSubmission {
+  id: number;
+  email: string;
+  comment: string | null;
+  timestamp: Date;
+}
+
+async function getEmailSubmissions(): Promise<EmailSubmission[]> {
+  try {
+    const { rows } = await sql<EmailSubmission>`
+      SELECT id, email, comment, timestamp
+      FROM email_submissions
+      ORDER BY timestamp DESC;
+    `;
+    console.log('Fetched submissions:', rows);
+    return rows;
+  } catch (error) {
+    console.error('Error fetching email submissions:', error);
+    return [];
+  }
+}
+
 export default async function AdminPage() {
-  const { rows } = await sql`SELECT * FROM email_submissions ORDER BY timestamp DESC`;
+  const submissions: EmailSubmission[] = await getEmailSubmissions();
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Email Submissions</h1>
-      <div className="space-y-4">
-        {rows.map((row, index) => (
-          <div key={index} className="border p-4 rounded-lg">
-            <p><strong>Email:</strong> {row.email}</p>
-            {row.comment && <p><strong>Comment:</strong> {row.comment}</p>}
-            <p><strong>Submitted:</strong> {new Date(row.timestamp).toLocaleString()}</p>
-          </div>
-        ))}
+    <div className="min-h-screen p-8 bg-gray-50">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-6 text-gray-900">Email Submissions</h1>
+        <div className="space-y-4">
+          {submissions.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-6">
+              <p className="text-gray-500 text-center">No submissions yet.</p>
+            </div>
+          ) : (
+            submissions.map((submission) => (
+              <div 
+                key={submission.id} 
+                className="bg-white rounded-lg shadow p-6 space-y-3"
+              >
+                <div>
+                  <span className="font-semibold text-gray-700">Email: </span>
+                  <span className="text-gray-900">{submission.email}</span>
+                </div>
+                {submission.comment && (
+                  <div>
+                    <span className="font-semibold text-gray-700">Comment: </span>
+                    <span className="text-gray-900">{submission.comment}</span>
+                  </div>
+                )}
+                <div>
+                  <span className="font-semibold text-gray-700">Submitted: </span>
+                  <span className="text-gray-900">
+                    {new Date(submission.timestamp).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

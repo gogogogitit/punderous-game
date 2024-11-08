@@ -189,7 +189,7 @@ export default function PunderfulGame() {
     }
   }, [puns, gameState])
 
-  const findPartialMatch = (userGuess: string, correctAnswer: string, previousGuesses: string[]): string | null => {
+  const findPartialMatch = useCallback((userGuess: string, correctAnswer: string, previousGuesses: string[]): string | null => {
     const correctWords = correctAnswer.toLowerCase().split(' ')
     const allGuesses = [...previousGuesses, userGuess].map(guess => guess.toLowerCase())
     
@@ -197,9 +197,9 @@ export default function PunderfulGame() {
       allGuesses.some(guess => guess.includes(word))
     )
     return matchedParts.length > 0 ? matchedParts.join(' ') : null
-  }
+  }, [])
 
-  const compareAnswers = (userAnswer: string, correctAnswer: string): boolean => {
+  const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
     const cleanAnswer = (answer: string) => 
       answer.toLowerCase()
         .replace(/^(a|an|it|they're|they)\s+/i, '')
@@ -217,13 +217,13 @@ export default function PunderfulGame() {
     const matchPercentage = correctWords.filter(word => userWords.includes(word)).length / correctWords.length;
 
     return allWordsPresent || matchPercentage >= 0.7;
-  };
+  }, [])
 
-  const findCorrectLetters = (userGuess: string, correctAnswer: string): Set<string> => {
+  const findCorrectLetters = useCallback((userGuess: string, correctAnswer: string): Set<string> => {
     const guessLetters = new Set(userGuess.toLowerCase().replace(/\s/g, ''))
     const answerLetters = new Set(correctAnswer.toLowerCase().replace(/\s/g, ''))
     return new Set([...guessLetters].filter(letter => answerLetters.has(letter)))
-  }
+  }, [])
 
   const handleAnswerSubmit = useCallback(() => {
     if (gameState.userAnswer.trim() === '' || gameState.gameOver) return
@@ -261,7 +261,7 @@ export default function PunderfulGame() {
         const newFeedback = newAttempts === 0
           ? `Game over!`
           : partialMatchResult
-            ? `Close! You're on the right track. Parts of the answer: "${partialMatchResult}"`
+            ? `Close! You&apos;re on the right track. Parts of the answer: "${partialMatchResult}"`
             : `Not quite! You have ${newAttempts} attempts left.`
         return {
           ...prev,
@@ -432,10 +432,10 @@ export default function PunderfulGame() {
               <p className="text-xl font-bold text-gray-800">
                 Daily Limit Reached!
               </p>
-              <p className="text-lg text-gray-600">You've played 5 games today. Come back tomorrow for more puns!</p>
+              <p className="text-lg text-gray-600">You&apos;ve played 5 games today. Come back tomorrow for more puns!</p>
               <div className="rounded-lg border-2 border-[#A06CD5] bg-[#A06CD5]/10 p-2 w-full">
                 <p className="text-sm text-center text-gray-800">
-                  Don't forget to share your email address to be invited to the full version of the game as soon as it's ready!
+                  Don&apos;t forget to share your email address to be invited to the full version of the game as soon as it&apos;s ready!
                 </p>
               </div>
               {!emailSubmitted && (
@@ -530,165 +530,114 @@ export default function PunderfulGame() {
                           <span>{gameState.currentPun.votes.down}</span>
                         </Button>
                       </div>
-                      <Button
-                        onClick={getNextPun}
-                        variant="outline"
-                        className="mt-1 text-sm border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
-                      >
-                        Next Pun
-                      </Button>
                     </motion.div>
                   </motion.div>
                 ) : (
                   <motion.div
                     key="question"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.5 }}
-                    className="w-full rounded-lg border-2 border-[#A06CD5] p-3 flex flex-col items-center justify-center bg-white"
+                    className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10"
                   >
-                    <div className="space-y-2">
-                      <p className="text-lg font-medium text-gray-800 text-center">{gameState.currentPun.question}</p>
-                      <p className="text-xs text-center text-gray-600">
-                        Difficulty: {getDifficultyText(gameState.currentPun.difficulty)}
-                      </p>
-                    </div>
-                    <div className="flex justify-center mt-2">
-                      <Button
-                        onClick={handleSkip}
-                        variant="outline"
-                        className="text-xs border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
-                        disabled={gameState.isCorrect || gameState.gameOver}
-                      >
-                        Skip this pun
-                      </Button>
-                    </div>
+                    <p className="text-lg font-medium text-gray-800 mb-1">
+                      {gameState.currentPun.question}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {getDifficultyText(gameState.currentPun.difficulty)}
+                    </p>
                   </motion.div>
                 )}
               </AnimatePresence>
-              <div className="w-full space-y-3">
-                <div className="flex flex-col w-full space-y-2">
-                  <Input
-                    type="text"
-                    placeholder="Your punderful answer..."
-                    value={gameState.userAnswer}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
-                    className="text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
-                    onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                      if (e.key === 'Enter' && !gameState.gameOver) {
-                        handleAnswerSubmit()
-                      }
-                    }}
-                    disabled={gameState.gameOver}
-                  />
-                  <Button 
-                    onClick={handleAnswerSubmit}
-                    className="bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm w-full"
-                    disabled={gameState.gameOver}
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Submit
-                  </Button>
-                </div>
-                {gameState.gameOver && (
-                  <div className="text-center space-y-3 p-3">
-                    <p className="text-xl font-bold text-gray-800">
-                      Game Over!
-                    </p>
-                    <p className="text-lg text-gray-600">Your final score: {gameState.score}</p>
-                    <div className="rounded-lg border-2 border-[#A06CD5] bg-[#A06CD5]/10 p-2 w-full">
-                      <p className="text-sm text-center text-gray-800">
-                        The correct answer was: <strong>{gameState.currentPun.answer}</strong>
-                      </p>
-                    </div>
-                    <Button 
-                      onClick={resetGame}
-                      className="bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm px-4 py-2"
-                    >
-                      Play Again
-                    </Button>
-                  </div>
-                )}
-                {gameState.partialMatch && (
-                  <div className="rounded-lg border-2 border-[#FFD151] bg-[#FFD151]/10 p-2">
-                    <p className="text-sm text-gray-800">Partial match: <strong>{gameState.partialMatch}</strong></p>
-                  </div>
-                )}
-                {gameState.correctLetters.size > 0 && (
-                  <div className="rounded-lg border-2 border-[#A06CD5] bg-[#A06CD5]/10 p-2">
-                    <p className="text-sm text-gray-800">
-                      Correct letters: <strong>{Array.from(gameState.correctLetters).join(', ')}</strong>
-                    </p>
-                  </div>
-                )}
-                <div className="rounded-lg border-2 border-gray-200 p-2 bg-white">
-                  <h3 className="text-sm font-semibold text-gray-800 mb-1">Guesses:</h3>
-                  {gameState.guessedAnswers.length > 0 ? (
-                    <ul className="list-disc list-inside space-y-1">
-                      {gameState.guessedAnswers.map((answer, index) => (
-                        <li key={index} className="text-sm text-gray-600">{answer}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-gray-500 italic">No guesses yet. Keep trying!</p>
-                  )}
-                </div>
+              <div className="w-full">
+                <Input
+                  type="text"
+                  placeholder="Enter your answer"
+                  value={gameState.userAnswer}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
+                  onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleAnswerSubmit()
+                    }
+                  }}
+                  className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
+                  disabled={gameState.gameOver || gameState.isCorrect}
+                />
               </div>
-              {gameState.feedback && !gameState.gameOver && (
-                <div className="rounded-lg border-2 border-[#A06CD5] bg-[#A06CD5]/10 p-2 w-full">
-                  <p className="text-sm text-center text-gray-800">{gameState.feedback}</p>
-                </div>
+              <div className="flex justify-between w-full space-x-2">
+                <Button
+                  onClick={handleAnswerSubmit}
+                  className="flex-1 bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
+                  disabled={gameState.gameOver || gameState.isCorrect}
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Submit
+                </Button>
+                <Button
+                  onClick={handleSkip}
+                  className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm py-2"
+                  disabled={gameState.isCorrect || gameState.gameOver}
+                >
+                  Skip
+                </Button>
+              </div>
+              {gameState.feedback && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-sm text-center text-gray-700"
+                >
+                  {gameState.feedback}
+                </motion.p>
               )}
-              <Progress 
-                value={(gameState.attempts / 5) * 100} 
-                className="w-full h-2 bg-gray-200 [&>div]:bg-gradient-to-r [&>div]:from-[#FFD151] [&>div]:to-[#A06CD5]"
-              />
+              {gameState.partialMatch && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-sm text-center text-[#A06CD5] font-medium"
+                >
+                  Partial match: {gameState.partialMatch}
+                </motion.p>
+              )}
+              {gameState.correctLetters.size > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="text-sm text-center text-gray-700"
+                >
+                  <span className="font-medium">Correct letters: </span>
+                  {Array.from(gameState.correctLetters).join(', ')}
+                </motion.div>
+              )}
+              {gameState.gameOver && !gameState.isCorrect && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center space-y-2"
+                >
+                  <p className="text-lg font-medium text-gray-800">Game Over!</p>
+                  <p className="text-sm text-gray-600">The correct answer was:</p>
+                  <p className="text-md font-medium text-[#A06CD5]">{gameState.correctAnswerDisplay}</p>
+                </motion.div>
+              )}
+              <Confetti active={gameState.isCorrect} config={confettiConfig} />
             </>
           )}
         </CardContent>
-        <Separator className="my-3" />
-        <CardFooter className="flex flex-col space-y-3">
-          <div className="w-full space-y-2 p-3 bg-gray-50 rounded-lg">
-            <h3 className="text-lg font-bold text-center text-gray-800">Coming Soon: Punderful™ Full Version</h3>
-            <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-              <li>AI-powered pun game that adapts to your skill level</li>
-              <li>Create and share your own puns for inclusion in the game</li>
-              <li>Rate community-created puns</li>
-              <li>Leaderboard for puns with the most votes</li>
-              <li>Global competition based on consecutive answers & speed</li>
-            </ul>
-            {!emailSubmitted ? (
-              <form onSubmit={handleEmailSubmit} className="space-y-2 mt-3">
-                <Input
-                  type="email"
-                  placeholder="Enter your email for updates"
-                  value={email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                  className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
-                  required
-                />
-                <Textarea
-                  placeholder="Optional: Share your thoughts or suggestions..."
-                  value={comment}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
-                  className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
-                />
-                <Button 
-                  type="submit"
-                  className="w-full bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
-                >
-                  Get Notified
-                </Button>
-                {submitError && <p className="text-red-500 text-sm">{submitError}</p>}
-              </form>
-            ) : (
-              <p className="text-sm text-center text-green-600 font-medium mt-2">Thank you! We'll keep you updated on the full version release.</p>
-            )}
-          </div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <Confetti active={gameState.isCorrect} config={confettiConfig} />
-          </div>
+        <CardFooter className="flex justify-center border-t border-gray-200 py-3">
+          {!dailyLimitReached && (
+            <Button
+              onClick={gameState.isCorrect || gameState.gameOver ? getNextPun : resetGame}
+              className="bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
+            >
+              {gameState.isCorrect || gameState.gameOver ? "Next Pun" : "Reset Game"}
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>
