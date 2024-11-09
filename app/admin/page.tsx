@@ -19,55 +19,81 @@ export default function AdminPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [isSettingPassword, setIsSettingPassword] = useState(false)
   const [isResettingPassword, setIsResettingPassword] = useState(false)
   const [resetEmailSent, setResetEmailSent] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string>('')
   const router = useRouter()
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    checkPasswordSet()
+    const checkAuth = async () => {
+      setIsLoading(true)
+      setDebugInfo('Checking authentication status...')
+      try {
+        const storedAuth = localStorage.getItem('isAuthenticated')
+        if (storedAuth === 'true') {
+          setIsAuthenticated(true)
+          setDebugInfo(prev => prev + '\nAuthenticated from local storage')
+          await fetchSubmissions()
+        } else {
+          await checkPasswordSet()
+        }
+      } catch (error) {
+        console.error('Error during initial auth check:', error)
+        setDebugInfo(prev => prev + `\nError during initial auth check: ${error}`)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  useEffect(() => {
     const resetToken = searchParams.get('reset_token')
     if (resetToken) {
       setIsResettingPassword(true)
+      setDebugInfo(prev => prev + '\nReset token found in URL')
     }
   }, [searchParams])
 
   const checkPasswordSet = async () => {
     try {
+      setDebugInfo(prev => prev + '\nChecking if password is set...')
       const response = await fetch('/api/admin-password')
       const data = await response.json()
       setIsSettingPassword(!data.hasPassword)
+      setDebugInfo(prev => prev + `\nPassword set: ${data.hasPassword}`)
     } catch (error) {
       console.error('Error checking password status:', error)
       setError('Failed to check password status')
+      setDebugInfo(prev => prev + `\nError checking password: ${error}`)
     }
   }
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchSubmissions()
-    }
-  }, [isAuthenticated])
-
   const fetchSubmissions = async () => {
     try {
+      setDebugInfo(prev => prev + '\nFetching submissions...')
       const response = await fetch('/api/submit-email')
       if (!response.ok) {
         throw new Error('Failed to fetch submissions')
       }
       const data = await response.json()
       setSubmissions(data.submissions)
+      setDebugInfo(prev => prev + `\nFetched ${data.submissions.length} submissions`)
     } catch (error) {
       console.error('Error fetching submissions:', error)
       setError('Failed to load submissions')
+      setDebugInfo(prev => prev + `\nError fetching submissions: ${error}`)
     }
   }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setDebugInfo(prev => prev + '\nAttempting login...')
     try {
       const response = await fetch('/api/admin-password', {
         method: 'POST',
@@ -77,13 +103,18 @@ export default function AdminPage() {
       const data = await response.json()
       if (data.success) {
         setIsAuthenticated(true)
+        localStorage.setItem('isAuthenticated', 'true')
         setError('')
+        await fetchSubmissions()
+        setDebugInfo(prev => prev + '\nLogin successful')
       } else {
         setError('Incorrect password')
+        setDebugInfo(prev => prev + '\nLogin failed: ' + data.error)
       }
     } catch (error) {
       console.error('Error during authentication:', error)
       setError('Authentication failed')
+      setDebugInfo(prev => prev + `\nAuthentication error: ${error}`)
     }
   }
 
@@ -93,6 +124,7 @@ export default function AdminPage() {
       setError('Passwords do not match')
       return
     }
+    setDebugInfo(prev => prev + '\nAttempting to set password...')
     try {
       const response = await fetch('/api/admin-password', {
         method: 'POST',
@@ -103,20 +135,24 @@ export default function AdminPage() {
       if (data.success) {
         setIsSettingPassword(false)
         setIsResettingPassword(false)
+        setIsAuthenticated(true)
+        localStorage.setItem('isAuthenticated', 'true')
         setError('')
-        if (isResettingPassword) {
-          setIsAuthenticated(true)
-        }
+        await fetchSubmissions()
+        setDebugInfo(prev => prev + '\nPassword set successfully')
       } else {
         setError('Failed to set password')
+        setDebugInfo(prev => prev + '\nFailed to set password: ' + data.error)
       }
     } catch (error) {
       console.error('Error setting password:', error)
       setError('Failed to set password')
+      setDebugInfo(prev => prev + `\nError setting password: ${error}`)
     }
   }
 
   const handleGenerateResetToken = async () => {
+    setDebugInfo(prev => prev + '\nGenerating reset token...')
     try {
       const response = await fetch('/api/admin-password', {
         method: 'POST',
@@ -127,12 +163,15 @@ export default function AdminPage() {
       if (data.success) {
         setResetEmailSent(true)
         setError('')
+        setDebugInfo(prev => prev + '\nReset email sent')
       } else {
         setError('Failed to send reset email')
+        setDebugInfo(prev => prev + '\nFailed to send reset email: ' + data.error)
       }
     } catch (error) {
       console.error('Error generating reset token:', error)
       setError('Failed to send reset email')
+      setDebugInfo(prev => prev + `\nError generating reset token: ${error}`)
     }
   }
 
@@ -142,6 +181,7 @@ export default function AdminPage() {
       setError('Passwords do not match')
       return
     }
+    setDebugInfo(prev => prev + '\nAttempting to reset password...')
     try {
       const resetToken = searchParams.get('reset_token')
       const response = await fetch('/api/admin-password', {
@@ -152,27 +192,42 @@ export default function AdminPage() {
       const data = await response.json()
       if (data.success) {
         setIsResettingPassword(false)
-        setError('')
         setIsAuthenticated(true)
+        localStorage.setItem('isAuthenticated', 'true')
+        setError('')
+        await fetchSubmissions()
         router.push('/admin') // Remove the reset_token from the URL
+        setDebugInfo(prev => prev + '\nPassword reset successfully')
       } else {
         setError('Failed to reset password')
+        setDebugInfo(prev => prev + '\nFailed to reset password: ' + data.error)
       }
     } catch (error) {
       console.error('Error resetting password:', error)
       setError('Failed to reset password')
+      setDebugInfo(prev => prev + `\nError resetting password: ${error}`)
     }
   }
 
-  if (isSettingPassword || isResettingPassword) {
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+    localStorage.removeItem('isAuthenticated')
+    setDebugInfo(prev => prev + '\nLogged out')
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (isSettingPassword) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <Card className="w-[350px]">
           <CardHeader>
-            <CardTitle>{isResettingPassword ? 'Reset Admin Password' : 'Set Admin Password'}</CardTitle>
-            <CardDescription>{isResettingPassword ? 'Enter a new password for the admin area' : 'Create a new password for the admin area'}</CardDescription>
+            <CardTitle>Set Admin Password</CardTitle>
+            <CardDescription>Create a new password for the admin area</CardDescription>
           </CardHeader>
-          <form onSubmit={isResettingPassword ? handleResetPassword : handleSetPassword}>
+          <form onSubmit={handleSetPassword}>
             <CardContent>
               <div className="grid w-full items-center gap-4">
                 <div className="flex flex-col space-y-1.5">
@@ -196,7 +251,48 @@ export default function AdminPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full">{isResettingPassword ? 'Reset Password' : 'Set Password'}</Button>
+              <Button type="submit" className="w-full">Set Password</Button>
+            </CardFooter>
+          </form>
+          {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+        </Card>
+      </div>
+    )
+  }
+
+  if (isResettingPassword) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardTitle>Reset Admin Password</CardTitle>
+            <CardDescription>Enter a new password for the admin area</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleResetPassword}>
+            <CardContent>
+              <div className="grid w-full items-center gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full">Reset Password</Button>
             </CardFooter>
           </form>
           {error && <p className="text-red-500 text-center mt-2">{error}</p>}
@@ -237,9 +333,14 @@ export default function AdminPage() {
           </CardContent>
         </Card>
         
-        <Button onClick={() => router.push('/')} className="mt-4">
-          Back to Home
-        </Button>
+        <div className="flex justify-between">
+          <Button onClick={() => router.push('/')} className="mt-4">
+            Back to Home
+          </Button>
+          <Button onClick={handleLogout} variant="destructive" className="mt-4">
+            Logout
+          </Button>
+        </div>
       </div>
     )
   }
@@ -275,6 +376,10 @@ export default function AdminPage() {
         )}
         {error && <p className="text-red-500 text-center mt-2">{error}</p>}
       </Card>
+      <div className="fixed bottom-4 left-4 bg-gray-800 text-white p-4 rounded">
+        <h3 className="font-bold mb-2">Debug Info:</h3>
+        <pre className="whitespace-pre-wrap">{debugInfo}</pre>
+      </div>
     </div>
   )
 }

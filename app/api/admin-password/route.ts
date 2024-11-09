@@ -14,8 +14,10 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function POST(request: Request) {
+  console.log('POST request received to /api/admin-password');
   try {
     const { password, action, token } = await request.json();
+    console.log(`Received action: ${action}`);
     
     if (action === 'set') {
       if (!password) {
@@ -39,6 +41,7 @@ export async function POST(request: Request) {
         ON CONFLICT (id) DO UPDATE SET password_hash = ${hashedPassword}, created_at = CURRENT_TIMESTAMP
       `;
 
+      console.log('Password set successfully');
       return NextResponse.json({ success: true, message: 'Admin password set successfully' });
     } else if (action === 'login') {
       if (!password) {
@@ -46,6 +49,7 @@ export async function POST(request: Request) {
       }
       const result = await sql`SELECT password_hash FROM admin_password LIMIT 1`;
       if (result.rows.length === 0) {
+        console.log('No admin password set');
         return NextResponse.json({ success: false, error: 'No admin password set' }, { status: 404 });
       }
 
@@ -53,17 +57,19 @@ export async function POST(request: Request) {
       const isMatch = await bcrypt.compare(password, storedHash);
 
       if (isMatch) {
+        console.log('Login successful');
         return NextResponse.json({ success: true, message: 'Login successful' });
       } else {
+        console.log('Incorrect password');
         return NextResponse.json({ success: false, error: 'Incorrect password' }, { status: 401 });
       }
     } else if (action === 'generate_reset_token') {
       const token = crypto.randomBytes(20).toString('hex');
-      const expiresDate = new Date(Date.now() + 3600000); // 1 hour from now
+      const expires = new Date(Date.now() + 3600000); // 1 hour from now
 
       await sql`
         UPDATE admin_password
-        SET reset_token = ${token}, reset_token_expires = ${expiresDate.toISOString()}
+        SET reset_token = ${token}, reset_token_expires = ${expires.toISOString()}
         WHERE id = 1
       `;
 
@@ -76,6 +82,7 @@ export async function POST(request: Request) {
         html: `<p>Click <a href="${resetLink}">here</a> to reset your password.</p>`,
       });
 
+      console.log('Reset email sent');
       return NextResponse.json({ success: true, message: 'Reset email sent' });
     } else if (action === 'reset_password') {
       if (!password || !token) {
@@ -89,6 +96,7 @@ export async function POST(request: Request) {
       `;
 
       if (result.rows.length === 0) {
+        console.log('Invalid or expired reset token');
         return NextResponse.json({ success: false, error: 'Invalid or expired reset token' }, { status: 400 });
       }
 
@@ -100,8 +108,10 @@ export async function POST(request: Request) {
         WHERE id = 1
       `;
 
+      console.log('Password reset successfully');
       return NextResponse.json({ success: true, message: 'Password reset successfully' });
     } else {
+      console.log('Invalid action');
       return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
     }
   } catch (error) {
@@ -111,11 +121,14 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  console.log('GET request received to /api/admin-password');
   try {
     const result = await sql`SELECT password_hash FROM admin_password LIMIT 1`;
     if (result.rows.length === 0) {
-      return NextResponse.json({ success: false, error: 'No admin password set' }, { status: 404 });
+      console.log('No admin password set');
+      return NextResponse.json({ success: true, hasPassword: false });
     }
+    console.log('Admin password is set');
     return NextResponse.json({ success: true, hasPassword: true });
   } catch (error) {
     console.error('Error checking admin password:', error);
