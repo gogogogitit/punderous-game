@@ -1,39 +1,50 @@
 import { NextResponse } from 'next/server'
+import { sql } from '@vercel/postgres'
 import nodemailer from 'nodemailer'
 
+export const runtime = 'edge'
+
 export async function POST(request: Request) {
-  console.log('Starting email submission process...')
-  
-  // Get environment variables
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL
-  const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD
-  
-  // Validate environment variables
-  if (!ADMIN_EMAIL || !EMAIL_PASSWORD) {
-    console.error('Missing email credentials in environment variables')
+  console.log('Starting submission process...')
+
+  const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com'
+  const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587')
+  const SMTP_USER = process.env.SMTP_USER
+  const SMTP_PASS = process.env.SMTP_PASS
+  const TO_EMAIL = 'michaeljkatz.email@gmail.com'
+
+  if (!SMTP_USER || !SMTP_PASS) {
+    console.error('Missing SMTP credentials')
     return NextResponse.json(
-      { error: 'Server configuration error - missing credentials' },
+      { error: 'Server configuration error' },
       { status: 500 }
     )
   }
 
   try {
-    // Parse request body
     const { email, comment } = await request.json()
     console.log('Received submission from:', email)
 
-    // Create transport with explicit authentication
+    // Store in database
+    await sql`
+      INSERT INTO submissions (email, comment)
+      VALUES (${email}, ${comment})
+    `
+
+    // Send email
     const transporter = nodemailer.createTransport({
-      service: 'gmail',  // Using Gmail service instead of manual SMTP configuration
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
       auth: {
-        user: ADMIN_EMAIL,
-        pass: EMAIL_PASSWORD,
-      }
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+      },
     })
 
-    const mailOptions = {
-      from: ADMIN_EMAIL,
-      to: ADMIN_EMAIL,
+    await transporter.sendMail({
+      from: SMTP_USER,
+      to: TO_EMAIL,
       subject: 'New Punderful Submission',
       text: `
 New submission received:
@@ -48,26 +59,16 @@ Time: ${new Date().toLocaleString()}
         <p><strong>Comment:</strong> ${comment || 'No comment provided'}</p>
         <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
       `
-    }
-
-    // Verify connection before sending
-    await transporter.verify()
-    console.log('Email transport verified successfully')
-
-    // Send email
-    const info = await transporter.sendMail(mailOptions)
-    console.log('Email sent successfully:', info.messageId)
-
-    return NextResponse.json({ 
-      success: true,
-      messageId: info.messageId
     })
 
+    console.log('Submission stored and email sent successfully')
+    return NextResponse.json({ success: true })
+
   } catch (error) {
-    console.error('Error in email submission:', error)
+    console.error('Error in submission process:', error)
     
     const errorMessage = error instanceof Error 
-      ? `Email error: ${error.message}`
+      ? `Submission error: ${error.message}`
       : 'An unknown error occurred'
 
     return NextResponse.json(
