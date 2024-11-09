@@ -4,13 +4,11 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const result = await sql`
-      SELECT id, email, comment, created_at as timestamp
-      FROM email_submissions
+      SELECT * FROM email_submissions
       ORDER BY created_at DESC;
     `;
     
-    // Return the rows directly as the submissions array
-    return NextResponse.json(result.rows);
+    return NextResponse.json({ submissions: result.rows });
     
   } catch (error) {
     console.error('Database error:', error);
@@ -35,10 +33,10 @@ export async function POST(request: Request) {
     const result = await sql`
       INSERT INTO email_submissions (email, comment)
       VALUES (${email}, ${comment})
-      RETURNING id, email, comment, created_at as timestamp;
+      RETURNING *;
     `;
 
-    return NextResponse.json(result.rows[0]);
+    return NextResponse.json({ success: true, submission: result.rows[0] });
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json(
