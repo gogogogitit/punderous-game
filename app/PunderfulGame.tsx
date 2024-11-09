@@ -1,15 +1,14 @@
 'use client'
+
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardDescription, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import Confetti from 'react-dom-confetti'
 import Image from 'next/image'
-import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight } from 'lucide-react'
 
 interface Pun {
   id: number;
@@ -25,6 +24,7 @@ interface Pun {
 const initialPuns: Pun[] = [
   { id: 1, question: "What do you call a rabbit with a positive future outlook?", answer: "A hoptimist", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 2, question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 3, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 3, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 4, question: "What do you call a bear with no teeth?", answer: "A gummy bear", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 5, question: "Why did the scarecrow win an award?", answer: "They were outstanding in their field", difficulty: 3, votes: { up: 0, down: 0 } },
@@ -66,7 +66,7 @@ const initialPuns: Pun[] = [
   { id: 41, question: "Why did the skeleton go to the party alone?", answer: "He had no body to go with him", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 42, question: "Why did the belt get arrested?", answer: "It held up a pair of pants", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 43, question: "What do you call a snowman with a six-pack?", answer: "An abdominal snowman", difficulty: 2, votes: { up: 0, down: 0 } },
-]
+];
 
 interface GameState {
   currentPun: Pun;
@@ -85,6 +85,7 @@ interface GameState {
   correctLetters: Set<string>;
   usedPunIds: Set<number>;
   unlimitedMode: boolean;
+  lastEarnedPoints: number;
 }
 
 const confettiConfig = {
@@ -117,7 +118,8 @@ export default function PunderfulGame() {
     correctAnswerDisplay: '',
     correctLetters: new Set<string>(),
     usedPunIds: new Set<number>([initialPuns[0].id]),
-    unlimitedMode: false
+    unlimitedMode: false,
+    lastEarnedPoints: 0
   })
   const [puns, setPuns] = useState<Pun[]>(initialPuns)
   const [email, setEmail] = useState('')
@@ -206,13 +208,17 @@ export default function PunderfulGame() {
         .replace(/\s+/g, ' ')
         .replace(/[.,!?]/g, '')
         .trim();
+
     const cleanedUserAnswer = cleanAnswer(userAnswer);
     const cleanedCorrectAnswer = cleanAnswer(correctAnswer);
+
     if (cleanedUserAnswer === cleanedCorrectAnswer) {
       return true;
     }
+
     const userWords = cleanedUserAnswer.split(' ');
     const correctWords = cleanedCorrectAnswer.split(' ');
+
     const allWordsPresent = correctWords.every(word => userWords.includes(word));
     const matchPercentage = correctWords.filter(word => userWords.includes(word)).length / correctWords.length;
 
@@ -227,6 +233,7 @@ export default function PunderfulGame() {
 
   const handleAnswerSubmit = useCallback(() => {
     if (gameState.userAnswer.trim() === '' || gameState.gameOver) return
+
     if (gameState.userAnswer.toLowerCase() === '#playforever') {
       setGameState(prev => ({
         ...prev,
@@ -237,8 +244,10 @@ export default function PunderfulGame() {
       setDailyLimitReached(false)
       return
     }
+
     const correctAnswer = gameState.currentPun.answer;
     const userGuess = gameState.userAnswer;
+
     if (compareAnswers(userGuess, correctAnswer)) {
       const pointsEarned = gameState.currentPun.difficulty;
       setGameState(prev => ({
@@ -252,6 +261,7 @@ export default function PunderfulGame() {
         dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
         feedback: `Correct! You earned ${pointsEarned} point${pointsEarned > 1 ? 's' : ''}.`,
         usedPunIds: new Set([...prev.usedPunIds, prev.currentPun.id]),
+        lastEarnedPoints: pointsEarned
       }))
     } else {
       const newCorrectLetters = findCorrectLetters(userGuess, correctAnswer)
@@ -261,7 +271,7 @@ export default function PunderfulGame() {
         const newFeedback = newAttempts === 0
           ? `Game over!`
           : partialMatchResult
-            ? `Close! You&apos;re on the right track. Parts of the answer: "${partialMatchResult}"`
+            ? `Close! You're on the right track.`
             : `Not quite! You have ${newAttempts} attempts left.`
         return {
           ...prev,
@@ -274,6 +284,7 @@ export default function PunderfulGame() {
           showCorrectAnswer: newAttempts === 0,
           correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
           correctLetters: new Set([...prev.correctLetters, ...newCorrectLetters]),
+          lastEarnedPoints: 0
         }
       })
     }
@@ -284,6 +295,7 @@ export default function PunderfulGame() {
       setDailyLimitReached(true)
       return
     }
+
     const unusedPuns = puns.filter(pun => !gameState.usedPunIds.has(pun.id) && pun.difficulty <= gameState.playerSkillLevel)
     
     if (unusedPuns.length === 0) {
@@ -302,6 +314,7 @@ export default function PunderfulGame() {
         correctLetters: new Set<string>(),
         usedPunIds: new Set([shuffledPuns[0].id]),
         dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
+        lastEarnedPoints: 0
       }))
     } else {
       const randomPun = unusedPuns[Math.floor(Math.random() * unusedPuns.length)]
@@ -318,41 +331,14 @@ export default function PunderfulGame() {
         correctLetters: new Set<string>(),
         usedPunIds: new Set([...prev.usedPunIds, randomPun.id]),
         dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
+        lastEarnedPoints: 0
       }))
     }
-  }, [gameState, puns])
-
-  const resetGame = useCallback(() => {
-    if (gameState.dailyGamesPlayed >= 5 && !gameState.unlimitedMode) {
-      setDailyLimitReached(true)
-      return
-    }
-    const shuffledPuns = [...puns].sort(() => Math.random() - 0.5)
-    setPuns(shuffledPuns)
-    setGameState(prev => ({
-      ...prev,
-      currentPun: shuffledPuns[0],
-      userAnswer: '',
-      guessedAnswers: [],
-      attempts: 5,
-      score: 0,
-      gameOver: false,
-      playerSkillLevel: 1,
-      feedback: '',
-      isCorrect: false,
-      partialMatch: '',
-      showCorrectAnswer: false,
-      correctAnswerDisplay: '',
-      correctLetters: new Set<string>(),
-      usedPunIds: new Set([shuffledPuns[0].id]),
-      dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
-    }))
   }, [gameState, puns])
 
   const handleEmailSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setSubmitError('')
-
     try {
       const response = await fetch('/api/submit-email', {
         method: 'POST',
@@ -361,9 +347,7 @@ export default function PunderfulGame() {
         },
         body: JSON.stringify({ email, comment }),
       })
-
       const data = await response.json()
-
       if (data.success) {
         setEmailSubmitted(true)
         setEmail('')
@@ -383,8 +367,7 @@ export default function PunderfulGame() {
         ? { ...pun, votes: { ...pun.votes, [voteType]: pun.votes[voteType] + 1 } }
         : pun
     ))
-    getNextPun()
-  }, [getNextPun])
+  }, [])
 
   const handleSkip = useCallback(() => {
     if (!gameState.isCorrect && !gameState.gameOver) getNextPun()
@@ -409,14 +392,14 @@ export default function PunderfulGame() {
         <CardHeader className="text-center border-b border-gray-200 py-3">
           <div className="flex flex-col items-center justify-center">
             <div className="relative w-32 h-32 mb-2">
-            <Image
-  src="/lettuce.png"
-  alt="Punderful™ Logo"
-  width={128}
-  height={128}
-  className="object-contain"
-  priority
-/>
+              <Image
+                src="/lettuce.png"
+                alt="Punderful™ Logo"
+                width={128}
+                height={128}
+                className="object-contain"
+                priority
+              />
             </div>
             <p className="text-sm text-gray-600 mb-2">
               A pun-filled word game where we ask the questions and you guess the puns!
@@ -432,10 +415,10 @@ export default function PunderfulGame() {
               <p className="text-xl font-bold text-gray-800">
                 Daily Limit Reached!
               </p>
-              <p className="text-lg text-gray-600">You&apos;ve played 5 games today. Come back tomorrow for more puns!</p>
+              <p className="text-lg text-gray-600">You've played 5 games today. Come back tomorrow for more puns!</p>
               <div className="rounded-lg border-2 border-[#A06CD5] bg-[#A06CD5]/10 p-2 w-full">
                 <p className="text-sm text-center text-gray-800">
-                  Don&apos;t forget to share your email address to be invited to the full version of the game as soon as it&apos;s ready!
+                  Don't forget to share your email address to be invited to the full version of the game as soon as it's ready!
                 </p>
               </div>
               {!emailSubmitted && (
@@ -479,82 +462,116 @@ export default function PunderfulGame() {
                   Level: {gameState.playerSkillLevel}
                 </div>
               </div>
-              <AnimatePresence mode="wait">
-                {gameState.isCorrect && gameState.showCorrectAnswer ? (
-                  <motion.div
-                    key="correct-answer"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10"
-                  >
-                    <motion.p
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2, duration: 0.5 }}
-                      className="text-xl font-medium text-[#A06CD5] text-center"
-                    >
-                      Correct!
-                    </motion.p>
-                    <motion.p
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4, duration: 0.5 }}
-                      className="text-lg font-medium text-gray-800 mt-1 text-center"
-                    >
-                      {gameState.correctAnswerDisplay}
-                    </motion.p>
+              <motion.div
+                layout
+                className="w-full h-48 flex items-center justify-center"
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              >
+                <AnimatePresence mode="wait">
+                  {gameState.isCorrect && gameState.showCorrectAnswer ? (
                     <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.6, duration: 0.5 }}
-                      className="flex flex-col items-center space-y-2 mt-2"
+                      key="correct-answer"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.5 }}
+                      className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10"
                     >
-                      <p className="text-sm text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
-                      <div className="flex justify-center space-x-2">
-                        <Button
-                          onClick={() => handleVote(gameState.currentPun.id, 'up')}
-                          variant="outline"
-                          className="flex items-center space-x-1 text-sm border-[#247BA0] text-[#247BA0] hover:bg-[#247BA0] hover:text-white"
-                        >
-                          <ThumbsUp className="w-4 h-4" />
-                          <span>{gameState.currentPun.votes.up}</span>
-                        </Button>
-                        <Button
-                          onClick={() => handleVote(gameState.currentPun.id, 'down')}
-                          variant="outline"
-                          className="flex items-center space-x-1 text-sm border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
-                        >
-                          <ThumbsDown className="w-4 h-4" />
-                          <span>{gameState.currentPun.votes.down}</span>
-                        </Button>
-                      </div>
+                      <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.5 }}
+                        className="text-xl font-medium text-[#A06CD5] text-center"
+                      >
+                        Correct!
+                      </motion.p>
+                      <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4, duration: 0.5 }}
+                        className="text-lg font-medium text-gray-800 mt-1 text-center"
+                      >
+                        {gameState.correctAnswerDisplay}
+                      </motion.p>
+                      <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6, duration: 0.5 }}
+                        className="text-md font-medium text-[#247BA0] mt-1 text-center"
+                      >
+                        You earned {gameState.lastEarnedPoints} point{gameState.lastEarnedPoints !== 1 ? 's' : ''}!
+                      </motion.p>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8, duration: 0.5 }}
+                        className="flex flex-col items-center space-y-2 mt-2"
+                      >
+                        <p className="text-sm text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
+                        <div className="flex justify-center space-x-2">
+                          <Button
+                            onClick={() => handleVote(gameState.currentPun.id, 'up')}
+                            variant="outline"
+                            className="flex items-center space-x-1 text-sm border-[#247BA0] text-[#247BA0] hover:bg-[#247BA0] hover:text-white"
+                          >
+                            <ThumbsUp className="w-4 h-4" />
+                            <span>{gameState.currentPun.votes.up}</span>
+                          </Button>
+                          <Button
+                            onClick={() => handleVote(gameState.currentPun.id, 'down')}
+                            variant="outline"
+                            className="flex items-center space-x-1 text-sm border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
+                          >
+                            <ThumbsDown className="w-4 h-4" />
+                            <span>{gameState.currentPun.votes.down}</span>
+                          </Button>
+                          <Button
+                            onClick={getNextPun}
+                            variant="outline"
+                            className="flex items-center space-x-1 text-sm border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
+                          >
+                            <ArrowRight className="w-4 h-4" />
+                            <span>Next</span>
+                          </Button>
+                        </div>
+                      </motion.div>
                     </motion.div>
-                  </motion.div>
-                ) : (
-<motion.div
-  key="question"
-  initial={{ opacity: 0, scale: 0.8 }}
-  animate={{ opacity: 1, scale: 1 }}
-  exit={{ opacity: 0, scale: 0.8 }}
-  transition={{ duration: 0.5 }}
-  className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10 text-center"
->
-  <p className="text-lg font-medium text-gray-800 mb-1">
-    {gameState.currentPun.question}
-  </p>
-  <p className="text-sm text-gray-600">
-    Difficulty: {getDifficultyText(gameState.currentPun.difficulty)}
-  </p>
-  {gameState.partialMatch && (
-    <p className="text-sm text-[#247BA0] mt-1">
-      Parts of the answer: "{gameState.partialMatch}"
-    </p>
-  )}
-</motion.div>
-                )}
-              </AnimatePresence>
+                  ) : (
+                    <motion.div
+                      key="question"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.5 }}
+                      className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10 text-center"
+                    >
+                      <p className="text-lg font-medium text-gray-800 mb-1">
+                        {gameState.currentPun.question}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Difficulty: {getDifficultyText(gameState.currentPun.difficulty)}
+                      </p>
+                      {gameState.feedback && (
+                        <p className="text-sm text-[#247BA0] mb-2">
+                          {gameState.feedback}
+                        </p>
+                      )}
+                      {gameState.partialMatch && (
+                        <p className="text-sm text-[#247BA0]">
+                          Parts of the answer: "{gameState.partialMatch}"
+                        </p>
+                      )}
+                      {gameState.gameOver && !gameState.isCorrect && (
+                        <div className="mt-2">
+                          <p className="text-lg font-medium text-gray-800">Game Over!</p>
+                          <p className="text-sm text-gray-600">The correct answer was:</p>
+                          <p className="text-md font-medium text-[#A06CD5]">{gameState.correctAnswerDisplay}</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
               <div className="w-full">
                 <Input
                   type="text"
@@ -588,94 +605,50 @@ export default function PunderfulGame() {
                   Skip
                 </Button>
               </div>
-              {gameState.feedback && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="text-sm text-center text-gray-700"
-                >
-                  {gameState.feedback}
-                </motion.p>
+              <div className="text-center space-y-2 w-full">
+                <h3 className="text-lg font-semibold text-gray-800">Coming Soon: Punderful™ Full Version</h3>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• AI-powered pun game that adapts to your skill level</li>
+                  <li>• Create and share your own puns for inclusion in the game</li>
+                  <li>• Compete with friends and climb the global leaderboard</li>
+                  <li>• Unlock achievements and earn badges as you play</li>
+                  <li>• Daily challenges and themed pun collections</li>
+                </ul>
+              </div>
+              {!emailSubmitted && (
+                <form onSubmit={handleEmailSubmit} className="w-full space-y-2">
+                  <Input
+                    type="email"
+                    placeholder="Enter your email for updates"
+                    value={email}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                    className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
+                    required
+                  />
+                  <Textarea
+                    placeholder="Optional: Share your thoughts or suggestions..."
+                    value={comment}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
+                    className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
+                  />
+                  <Button 
+                    type="submit"
+                    className="w-full bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
+                  >
+                    Get Notified
+                  </Button>
+                </form>
               )}
-              {gameState.partialMatch && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="text-sm text-center text-[#A06CD5] font-medium"
-                >
-                  Partial match: {gameState.partialMatch}
-                </motion.p>
+              {emailSubmitted && (
+                <p className="text-green-600 text-sm">Thank you for your interest! We'll keep you updated.</p>
               )}
-              {gameState.correctLetters.size > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="text-sm text-center text-gray-700"
-                >
-                  <span className="font-medium">Correct letters: </span>
-                  {Array.from(gameState.correctLetters).join(', ')}
-                </motion.div>
-              )}
-              {gameState.gameOver && !gameState.isCorrect && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center space-y-2"
-                >
-                  <p className="text-lg font-medium text-gray-800">Game Over!</p>
-                  <p className="text-sm text-gray-600">The correct answer was:</p>
-                  <p className="text-md font-medium text-[#A06CD5]">{gameState.correctAnswerDisplay}</p>
-                </motion.div>
+              {submitError && (
+                <p className="text-red-500 text-sm">{submitError}</p>
               )}
               <Confetti active={gameState.isCorrect} config={confettiConfig} />
             </>
           )}
         </CardContent>
-        <CardFooter className="flex flex-col items-center space-y-3 border-t border-gray-200 p-3">
-  <div className="text-center space-y-2">
-    <h3 className="text-lg font-semibold text-gray-800">Coming Soon: Punderful™ Full Version</h3>
-    <ul className="text-sm text-gray-600 space-y-1">
-      <li>• AI-powered pun game that adapts to your skill level</li>
-      <li>• Create and share your own puns for inclusion in the game</li>
-      <li>• Compete with friends and climb the global leaderboard</li>
-      <li>• Unlock achievements and earn badges as you play</li>
-      <li>• Daily challenges and themed pun collections</li>
-    </ul>
-  </div>
-  {!emailSubmitted && !dailyLimitReached && (
-    <form onSubmit={handleEmailSubmit} className="w-full space-y-2">
-      <Input
-        type="email"
-        placeholder="Enter your email for updates"
-        value={email}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-        className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
-        required
-      />
-      <Textarea
-        placeholder="Optional: Share your thoughts or suggestions..."
-        value={comment}
-        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
-        className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
-      />
-      <Button 
-        type="submit"
-        className="w-full bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
-      >
-        Get Notified
-      </Button>
-    </form>
-  )}
-  {emailSubmitted && (
-    <p className="text-green-600 text-sm">Thank you for your interest! We'll keep you updated.</p>
-  )}
-  {submitError && (
-    <p className="text-red-500 text-sm">{submitError}</p>
-  )}
-</CardFooter>
       </Card>
     </div>
   )
