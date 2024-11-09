@@ -1,23 +1,34 @@
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL
-const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com'
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465')
-
 export async function POST(request: Request) {
-  try {
-    const { email, comment } = await request.json()
+  console.log('Starting email submission process...')
+  
+  // Get environment variables
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL
+  const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD
+  
+  // Validate environment variables
+  if (!ADMIN_EMAIL || !EMAIL_PASSWORD) {
+    console.error('Missing email credentials in environment variables')
+    return NextResponse.json(
+      { error: 'Server configuration error - missing credentials' },
+      { status: 500 }
+    )
+  }
 
+  try {
+    // Parse request body
+    const { email, comment } = await request.json()
+    console.log('Received submission from:', email)
+
+    // Create transport with explicit authentication
     const transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: true,
+      service: 'gmail',  // Using Gmail service instead of manual SMTP configuration
       auth: {
         user: ADMIN_EMAIL,
         pass: EMAIL_PASSWORD,
-      },
+      }
     })
 
     const mailOptions = {
@@ -36,16 +47,31 @@ Time: ${new Date().toLocaleString()}
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Comment:</strong> ${comment || 'No comment provided'}</p>
         <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-      `,
+      `
     }
 
-    await transporter.sendMail(mailOptions)
+    // Verify connection before sending
+    await transporter.verify()
+    console.log('Email transport verified successfully')
 
-    return NextResponse.json({ success: true })
+    // Send email
+    const info = await transporter.sendMail(mailOptions)
+    console.log('Email sent successfully:', info.messageId)
+
+    return NextResponse.json({ 
+      success: true,
+      messageId: info.messageId
+    })
+
   } catch (error) {
-    console.error('Error sending email:', error)
+    console.error('Error in email submission:', error)
+    
+    const errorMessage = error instanceof Error 
+      ? `Email error: ${error.message}`
+      : 'An unknown error occurred'
+
     return NextResponse.json(
-      { error: 'Failed to process submission' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
