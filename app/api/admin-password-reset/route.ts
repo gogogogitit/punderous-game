@@ -19,15 +19,15 @@ export async function POST(request: Request) {
         port: 587,
         secure: false,
         auth: {
-          user: 'michaeljkatz.email@gmail.com',
-          pass: 'vdfu nkig bchm ccly'
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASSWORD
         }
       });
 
       // Send email
       await transporter.sendMail({
-        from: '"Punderful Admin" <michaeljkatz.email@gmail.com>',
-        to: 'michaeljkatz.email@gmail.com',
+        from: `"Punderful Admin" <${process.env.SMTP_USER}>`,
+        to: process.env.ADMIN_EMAIL,
         subject: 'Password Reset for Punderful Admin',
         text: `Your password reset token is: ${resetToken}`,
         html: `<p>Your password reset token is: <strong>${resetToken}</strong></p>`
