@@ -409,14 +409,14 @@ export default function PunderfulGame() {
         <CardHeader className="text-center border-b border-gray-200 py-3">
           <div className="flex flex-col items-center justify-center">
             <div className="relative w-32 h-32 mb-2">
-              <Image
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/lettuce-IBEXinN0VWnKphTGJhalo65OURRqhY.png"
-                alt="Punderful™ Logo"
-                width={128}
-                height={128}
-                className="object-contain"
-                priority
-              />
+            <Image
+  src="/lettuce.png"
+  alt="Punderful™ Logo"
+  width={128}
+  height={128}
+  className="object-contain"
+  priority
+/>
             </div>
             <p className="text-sm text-gray-600 mb-2">
               A pun-filled word game where we ask the questions and you guess the puns!
