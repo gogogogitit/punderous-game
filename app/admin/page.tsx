@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface Submission {
@@ -21,7 +21,7 @@ function AdminContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [submissions, setSubmissions] = useState<Submission[]>([]) // Initialize as empty array
   const [isSettingPassword, setIsSettingPassword] = useState(false)
   const [isResettingPassword, setIsResettingPassword] = useState(false)
   const [resetEmailSent, setResetEmailSent] = useState(false)
@@ -53,6 +53,7 @@ function AdminContent() {
   }, [])
 
   useEffect(() => {
+    if (!searchParams) return // Guard against searchParams being null
     const resetToken = searchParams.get('reset_token')
     if (resetToken) {
       setIsResettingPassword(true)
@@ -64,6 +65,7 @@ function AdminContent() {
     try {
       setDebugInfo(prev => prev + '\nChecking if password is set...')
       const response = await fetch('/api/admin-password')
+      if (!response.ok) throw new Error('Failed to check password status')
       const data = await response.json()
       setIsSettingPassword(!data.hasPassword)
       setDebugInfo(prev => prev + `\nPassword set: ${data.hasPassword}`)
@@ -78,16 +80,18 @@ function AdminContent() {
     try {
       setDebugInfo(prev => prev + '\nFetching submissions...')
       const response = await fetch('/api/submit-email')
-      if (!response.ok) {
-        throw new Error('Failed to fetch submissions')
-      }
+      if (!response.ok) throw new Error('Failed to fetch submissions')
       const data = await response.json()
+      if (!Array.isArray(data.submissions)) {
+        throw new Error('Invalid submissions data received')
+      }
       setSubmissions(data.submissions)
       setDebugInfo(prev => prev + `\nFetched ${data.submissions.length} submissions`)
     } catch (error) {
       console.error('Error fetching submissions:', error)
       setError('Failed to load submissions')
       setDebugInfo(prev => prev + `\nError fetching submissions: ${error}`)
+      setSubmissions([]) // Reset to empty array on error
     }
   }
 
@@ -100,6 +104,7 @@ function AdminContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password, action: 'login' }),
       })
+      if (!response.ok) throw new Error('Login request failed')
       const data = await response.json()
       if (data.success) {
         setIsAuthenticated(true)
@@ -108,7 +113,7 @@ function AdminContent() {
         await fetchSubmissions()
         setDebugInfo(prev => prev + '\nLogin successful')
       } else {
-        setError('Incorrect password')
+        setError(data.error || 'Incorrect password')
         setDebugInfo(prev => prev + '\nLogin failed: ' + data.error)
       }
     } catch (error) {
@@ -131,6 +136,7 @@ function AdminContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: newPassword, action: 'set' }),
       })
+      if (!response.ok) throw new Error('Failed to set password')
       const data = await response.json()
       if (data.success) {
         setIsSettingPassword(false)
@@ -141,7 +147,7 @@ function AdminContent() {
         await fetchSubmissions()
         setDebugInfo(prev => prev + '\nPassword set successfully')
       } else {
-        setError('Failed to set password')
+        setError(data.error || 'Failed to set password')
         setDebugInfo(prev => prev + '\nFailed to set password: ' + data.error)
       }
     } catch (error) {
@@ -159,13 +165,14 @@ function AdminContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'generate_reset_token' }),
       })
+      if (!response.ok) throw new Error('Failed to generate reset token')
       const data = await response.json()
       if (data.success) {
         setResetEmailSent(true)
         setError('')
         setDebugInfo(prev => prev + '\nReset email sent')
       } else {
-        setError('Failed to send reset email')
+        setError(data.error || 'Failed to send reset email')
         setDebugInfo(prev => prev + '\nFailed to send reset email: ' + data.error)
       }
     } catch (error) {
@@ -183,12 +190,13 @@ function AdminContent() {
     }
     setDebugInfo(prev => prev + '\nAttempting to reset password...')
     try {
-      const resetToken = searchParams.get('reset_token')
+      const resetToken = searchParams?.get('reset_token')
       const response = await fetch('/api/admin-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: newPassword, token: resetToken, action: 'reset_password' }),
       })
+      if (!response.ok) throw new Error('Failed to reset password')
       const data = await response.json()
       if (data.success) {
         setIsResettingPassword(false)
@@ -196,10 +204,10 @@ function AdminContent() {
         localStorage.setItem('isAuthenticated', 'true')
         setError('')
         await fetchSubmissions()
-        router.push('/admin') // Remove the reset_token from the URL
+        router.push('/admin')
         setDebugInfo(prev => prev + '\nPassword reset successfully')
       } else {
-        setError('Failed to reset password')
+        setError(data.error || 'Failed to reset password')
         setDebugInfo(prev => prev + '\nFailed to reset password: ' + data.error)
       }
     } catch (error) {
@@ -233,28 +241,32 @@ function AdminContent() {
                 <div className="flex flex-col space-y-1.5">
                   <Input
                     id="newPassword"
+                    name="new-password"
                     type="password"
                     placeholder="Enter new password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
                 <div className="flex flex-col space-y-1.5">
                   <Input
                     id="confirmPassword"
+                    name="new-password"
                     type="password"
                     placeholder="Confirm new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
+            <div className="p-6 pt-0">
               <Button type="submit" className="w-full">Set Password</Button>
-            </CardFooter>
+            </div>
           </form>
-          {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+          {error && <p className="text-red-500 text-center mt-2 px-6">{error}</p>}
         </Card>
       </div>
     )
@@ -274,28 +286,32 @@ function AdminContent() {
                 <div className="flex flex-col space-y-1.5">
                   <Input
                     id="newPassword"
+                    name="new-password"
                     type="password"
                     placeholder="Enter new password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
                 <div className="flex flex-col space-y-1.5">
                   <Input
                     id="confirmPassword"
+                    name="new-password"
                     type="password"
                     placeholder="Confirm new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
+            <div className="p-6 pt-0">
               <Button type="submit" className="w-full">Reset Password</Button>
-            </CardFooter>
+            </div>
           </form>
-          {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+          {error && <p className="text-red-500 text-center mt-2 px-6">{error}</p>}
         </Card>
       </div>
     )
@@ -321,13 +337,19 @@ function AdminContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {submissions.map((submission) => (
-                  <TableRow key={submission.id}>
-                    <TableCell>{submission.email}</TableCell>
-                    <TableCell>{submission.comment || 'N/A'}</TableCell>
-                    <TableCell>{new Date(submission.timestamp).toLocaleString()}</TableCell>
+                {submissions.length > 0 ? (
+                  submissions.map((submission) => (
+                    <TableRow key={submission.id}>
+                      <TableCell>{submission.email}</TableCell>
+                      <TableCell>{submission.comment || 'N/A'}</TableCell>
+                      <TableCell>{new Date(submission.timestamp).toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center">No submissions available</TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -358,23 +380,27 @@ function AdminContent() {
               <div className="flex flex-col space-y-1.5">
                 <Input
                   id="password"
+                  name="password"
                   type="password"
                   placeholder="Enter password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                 />
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
+          <div className="p-6 pt-0 flex flex-col space-y-2">
             <Button type="submit" className="w-full">Login</Button>
-            <Button variant="outline" onClick={handleGenerateResetToken} className="w-full">Forgot Password</Button>
-          </CardFooter>
+            <Button type="button" variant="outline" onClick={handleGenerateResetToken} className="w-full">
+              Forgot Password
+            </Button>
+          </div>
         </form>
         {resetEmailSent && (
-          <p className="text-green-500 text-center mt-2">Reset email sent. Please check your inbox.</p>
+          <p className="text-green-500 text-center mt-2 px-6">Reset email sent. Please check your inbox.</p>
         )}
-        {error && <p className="text-red-500 text-center mt-2">{error}</p>}
+        {error && <p className="text-red-500 text-center mt-2 px-6">{error}</p>}
       </Card>
       <div className="fixed bottom-4 left-4 bg-gray-800 text-white p-4 rounded">
         <h3 className="font-bold mb-2">Debug Info:</h3>

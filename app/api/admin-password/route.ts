@@ -16,8 +16,20 @@ const transporter = nodemailer.createTransport({
 export async function POST(request: Request) {
   console.log('POST request received to /api/admin-password');
   try {
-    const { password, action, token } = await request.json();
-    console.log(`Received action: ${action}`);
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      console.error('Error parsing request body:', error);
+      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
+    }
+    console.log('Request body:', body);
+    const { password, action, token } = body;
+    console.log('Parsed values:', { action, hasPassword: !!password, hasToken: !!token });
+    if (!action) {
+      console.error('No action specified in request');
+      return NextResponse.json({ success: false, error: 'Action is required' }, { status: 400 });
+    }
     
     if (action === 'set') {
       if (!password) {
