@@ -119,19 +119,29 @@ function AdminContent() {
     try {
       setDebugInfo(prev => prev + '\nFetching submissions...')
       const response = await fetch('/api/submit-email')
-      if (!response.ok) throw new Error('Failed to fetch submissions')
-      const data = await response.json()
-    
-      if (!data?.submissions || !Array.isArray(data.submissions)) {
-        throw new Error('Invalid response format')
+      
+      // Log the raw response for debugging
+      console.log('Raw response:', response);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
-    
+      
+      const data = await response.json()
+      console.log('Response data:', data);
+      
+      if (!data?.submissions || !Array.isArray(data.submissions)) {
+        throw new Error('Invalid response format - expected submissions array')
+      }
+      
       setSubmissions(data.submissions)
       setDebugInfo(prev => prev + `\nFetched ${data.submissions.length} submissions`)
     } catch (error) {
       console.error('Error fetching submissions:', error)
-      setSubmissionsError('Failed to load submissions: ' + (error instanceof Error ? error.message : 'Unknown error'))
-      setDebugInfo(prev => prev + `\nError fetching submissions: ${error}`)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      setSubmissionsError(`Failed to load submissions: ${errorMessage}`)
+      setDebugInfo(prev => prev + `\nError fetching submissions: ${errorMessage}`)
       setSubmissions([])
     } finally {
       setIsLoadingSubmissions(false)
@@ -376,6 +386,8 @@ function AdminContent() {
           <CardContent>
             {submissionsError ? (
               <p className="text-red-500 text-center py-4">{submissionsError}</p>
+            ) : isLoadingSubmissions ? (
+              <p className="text-center py-4">Loading submissions...</p>
             ) : (
               <Table>
                 <TableHeader>
@@ -385,15 +397,7 @@ function AdminContent() {
                     <TableHead>Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
-                <Suspense fallback={
-                  <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-center">Loading submissions...</TableCell>
-                    </TableRow>
-                  </TableBody>
-                }>
-                  <SubmissionsTable submissions={submissions} />
-                </Suspense>
+                <SubmissionsTable submissions={submissions} />
               </Table>
             )}
           </CardContent>
