@@ -125,17 +125,13 @@ function AdminContent() {
       // Log the response data for debugging
       console.log('Submissions response:', data)
     
-      // Handle the raw response format
-      const submissions = Array.isArray(data) ? data : 
-                         data?.submissions ? data.submissions :
-                         data?.data ? data.data : null
-    
-      if (!submissions) {
-        throw new Error('Invalid submissions data format')
+      // The API now returns the array directly
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid response format - expected an array')
       }
     
-      setSubmissions(submissions)
-      setDebugInfo(prev => prev + `\nFetched ${submissions.length} submissions`)
+      setSubmissions(data)
+      setDebugInfo(prev => prev + `\nFetched ${data.length} submissions`)
     } catch (error) {
       console.error('Error fetching submissions:', error)
       setSubmissionsError('Failed to load submissions: ' + (error instanceof Error ? error.message : 'Unknown error'))
