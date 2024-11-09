@@ -2,8 +2,8 @@ import './globals.css'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Punderful - The Ultimate Pun Word Game',
-  description: 'Challenge your wit with Punderful, the ultimate pun word game!',
+  title: 'Punderful - The Ultimate Pun-Filled Word Game',
+  description: 'Lettuce Play.',
   icons: {
     icon: '/favicon.ico',
   },
