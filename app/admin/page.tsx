@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 
 interface Submission {
   id: number
@@ -17,10 +17,10 @@ export default function AdminPage() {
   const [password, setPassword] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
   const [submissions, setSubmissions] = useState<Submission[]>([])
-  const [isResetting, setIsResetting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [message, setMessage] = useState('')
+  const [isResetting, setIsResetting] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -39,17 +39,23 @@ export default function AdminPage() {
     try {
       setError('')
       const res = await fetch('/api/submit-email')
+      
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`)
       }
+      
       const data = await res.json()
+      
+      console.log('Fetched data:', data)
+      
       if (!Array.isArray(data)) {
         throw new Error('Invalid response format')
       }
+      
       setSubmissions(data)
     } catch (err) {
       console.error('Fetch error:', err)
-      setError('Failed to load submissions')
+      setError('Failed to load submissions: ' + (err instanceof Error ? err.message : 'Unknown error'))
       setSubmissions([])
     }
   }
@@ -94,14 +100,15 @@ export default function AdminPage() {
       })
       const data = await res.json()
       if (data.success) {
-        setMessage('Password reset email sent. Please check your inbox.')
+        setMessage('Password reset email sent to michaeljkatz.email@gmail.com. Please check your inbox.')
       } else {
-        setError('Failed to send reset email')
+        setError('Failed to send reset email: ' + (data.error || 'Unknown error'))
       }
     } catch (err) {
-      setError('Failed to initiate password reset')
+      setError('Failed to initiate password reset: ' + (err instanceof Error ? err.message : 'Unknown error'))
+    } finally {
+      setIsResetting(false)
     }
-    setIsResetting(false)
   }
 
   if (isLoading) {

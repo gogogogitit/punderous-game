@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       // Send email
       await transporter.sendMail({
         from: `"Punderful Admin" <${process.env.SMTP_USER}>`,
-        to: process.env.ADMIN_EMAIL,
+        to: 'michaeljkatz.email@gmail.com',
         subject: 'Password Reset for Punderful Admin',
         text: `Your password reset token is: ${resetToken}`,
         html: `<p>Your password reset token is: <strong>${resetToken}</strong></p>`
