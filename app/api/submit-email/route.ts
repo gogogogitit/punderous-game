@@ -23,13 +23,13 @@ export async function POST(request: Request) {
 
     // Attempt database insertion with explicit table creation if needed
     try {
-      // First ensure the table exists
+      // First ensure the table exists with the correct schema
       await sql`
         CREATE TABLE IF NOT EXISTS submissions (
           id SERIAL PRIMARY KEY,
           email TEXT NOT NULL,
           comment TEXT,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `
       
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       const result = await sql`
         INSERT INTO submissions (email, comment)
         VALUES (${email}, ${comment || ''})
-        RETURNING id, email, created_at;
+        RETURNING id, email;
       `
       
       console.log('Submission stored successfully:', result.rows[0])
