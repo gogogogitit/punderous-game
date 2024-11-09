@@ -1,419 +1,167 @@
-'use client'
-
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState } from 'react'
 
-interface Submission {
-  id: number;
-  email: string;
-  comment: string | null;
-  timestamp: string;
-}
+export default function Home() {
+  const [email, setEmail] = useState('')
+  const [comment, setComment] = useState('')
+  const [submitted, setSubmitted] = useState(false)
 
-function AdminContent() {
-  const [password, setPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [submissions, setSubmissions] = useState<Submission[]>([]) // Initialize as empty array
-  const [isSettingPassword, setIsSettingPassword] = useState(false)
-  const [isResettingPassword, setIsResettingPassword] = useState(false)
-  const [resetEmailSent, setResetEmailSent] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string>('')
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      setIsLoading(true)
-      setDebugInfo('Checking authentication status...')
-      try {
-        const storedAuth = localStorage.getItem('isAuthenticated')
-        if (storedAuth === 'true') {
-          setIsAuthenticated(true)
-          setDebugInfo(prev => prev + '\nAuthenticated from local storage')
-          await fetchSubmissions()
-        } else {
-          await checkPasswordSet()
-        }
-      } catch (error) {
-        console.error('Error during initial auth check:', error)
-        setDebugInfo(prev => prev + `\nError during initial auth check: ${error}`)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    checkAuth()
-  }, [])
-
-  useEffect(() => {
-    if (!searchParams) return // Guard against searchParams being null
-    const resetToken = searchParams.get('reset_token')
-    if (resetToken) {
-      setIsResettingPassword(true)
-      setDebugInfo(prev => prev + '\nReset token found in URL')
-    }
-  }, [searchParams])
-
-  const checkPasswordSet = async () => {
-    try {
-      setDebugInfo(prev => prev + '\nChecking if password is set...')
-      const response = await fetch('/api/admin-password')
-      if (!response.ok) throw new Error('Failed to check password status')
-      const data = await response.json()
-      setIsSettingPassword(!data.hasPassword)
-      setDebugInfo(prev => prev + `\nPassword set: ${data.hasPassword}`)
-    } catch (error) {
-      console.error('Error checking password status:', error)
-      setError('Failed to check password status')
-      setDebugInfo(prev => prev + `\nError checking password: ${error}`)
-    }
-  }
-
-  const fetchSubmissions = async () => {
-    try {
-      setDebugInfo(prev => prev + '\nFetching submissions...')
-      const response = await fetch('/api/submit-email')
-      if (!response.ok) throw new Error('Failed to fetch submissions')
-      const data = await response.json()
-      if (!Array.isArray(data.submissions)) {
-        throw new Error('Invalid submissions data received')
-      }
-      setSubmissions(data.submissions)
-      setDebugInfo(prev => prev + `\nFetched ${data.submissions.length} submissions`)
-    } catch (error) {
-      console.error('Error fetching submissions:', error)
-      setError('Failed to load submissions')
-      setDebugInfo(prev => prev + `\nError fetching submissions: ${error}`)
-      setSubmissions([]) // Reset to empty array on error
-    }
-  }
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setDebugInfo(prev => prev + '\nAttempting login...')
     try {
-      const response = await fetch('/api/admin-password', {
+      const response = await fetch('/api/submit-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, action: 'login' }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, comment }),
       })
-      if (!response.ok) throw new Error('Login request failed')
-      const data = await response.json()
-      if (data.success) {
-        setIsAuthenticated(true)
-        localStorage.setItem('isAuthenticated', 'true')
-        setError('')
-        await fetchSubmissions()
-        setDebugInfo(prev => prev + '\nLogin successful')
+      if (response.ok) {
+        setSubmitted(true)
+        setEmail('')
+        setComment('')
       } else {
-        setError(data.error || 'Incorrect password')
-        setDebugInfo(prev => prev + '\nLogin failed: ' + data.error)
+        console.error('Submission failed')
       }
     } catch (error) {
-      console.error('Error during authentication:', error)
-      setError('Authentication failed')
-      setDebugInfo(prev => prev + `\nAuthentication error: ${error}`)
+      console.error('Error:', error)
     }
   }
 
-  const handleSetPassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-    setDebugInfo(prev => prev + '\nAttempting to set password...')
-    try {
-      const response = await fetch('/api/admin-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: newPassword, action: 'set' }),
-      })
-      if (!response.ok) throw new Error('Failed to set password')
-      const data = await response.json()
-      if (data.success) {
-        setIsSettingPassword(false)
-        setIsResettingPassword(false)
-        setIsAuthenticated(true)
-        localStorage.setItem('isAuthenticated', 'true')
-        setError('')
-        await fetchSubmissions()
-        setDebugInfo(prev => prev + '\nPassword set successfully')
-      } else {
-        setError(data.error || 'Failed to set password')
-        setDebugInfo(prev => prev + '\nFailed to set password: ' + data.error)
-      }
-    } catch (error) {
-      console.error('Error setting password:', error)
-      setError('Failed to set password')
-      setDebugInfo(prev => prev + `\nError setting password: ${error}`)
-    }
-  }
-
-  const handleGenerateResetToken = async () => {
-    setDebugInfo(prev => prev + '\nGenerating reset token...')
-    try {
-      const response = await fetch('/api/admin-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate_reset_token' }),
-      })
-      if (!response.ok) throw new Error('Failed to generate reset token')
-      const data = await response.json()
-      if (data.success) {
-        setResetEmailSent(true)
-        setError('')
-        setDebugInfo(prev => prev + '\nReset email sent')
-      } else {
-        setError(data.error || 'Failed to send reset email')
-        setDebugInfo(prev => prev + '\nFailed to send reset email: ' + data.error)
-      }
-    } catch (error) {
-      console.error('Error generating reset token:', error)
-      setError('Failed to send reset email')
-      setDebugInfo(prev => prev + `\nError generating reset token: ${error}`)
-    }
-  }
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-    setDebugInfo(prev => prev + '\nAttempting to reset password...')
-    try {
-      const resetToken = searchParams?.get('reset_token')
-      const response = await fetch('/api/admin-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: newPassword, token: resetToken, action: 'reset_password' }),
-      })
-      if (!response.ok) throw new Error('Failed to reset password')
-      const data = await response.json()
-      if (data.success) {
-        setIsResettingPassword(false)
-        setIsAuthenticated(true)
-        localStorage.setItem('isAuthenticated', 'true')
-        setError('')
-        await fetchSubmissions()
-        router.push('/admin')
-        setDebugInfo(prev => prev + '\nPassword reset successfully')
-      } else {
-        setError(data.error || 'Failed to reset password')
-        setDebugInfo(prev => prev + '\nFailed to reset password: ' + data.error)
-      }
-    } catch (error) {
-      console.error('Error resetting password:', error)
-      setError('Failed to reset password')
-      setDebugInfo(prev => prev + `\nError resetting password: ${error}`)
-    }
-  }
-
-  const handleLogout = () => {
-    setIsAuthenticated(false)
-    localStorage.removeItem('isAuthenticated')
-    setDebugInfo(prev => prev + '\nLogged out')
-  }
-
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
-
-  if (isSettingPassword) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <Card className="w-[350px]">
-          <CardHeader>
-            <CardTitle>Set Admin Password</CardTitle>
-            <CardDescription>Create a new password for the admin area</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSetPassword}>
-            <CardContent>
-              <div className="grid w-full items-center gap-4">
-                <div className="flex flex-col space-y-1.5">
-                  <Input
-                    id="newPassword"
-                    name="new-password"
-                    type="password"
-                    placeholder="Enter new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Input
-                    id="confirmPassword"
-                    name="new-password"
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <div className="p-6 pt-0">
-              <Button type="submit" className="w-full">Set Password</Button>
-            </div>
-          </form>
-          {error && <p className="text-red-500 text-center mt-2 px-6">{error}</p>}
-        </Card>
-      </div>
-    )
-  }
-
-  if (isResettingPassword) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <Card className="w-[350px]">
-          <CardHeader>
-            <CardTitle>Reset Admin Password</CardTitle>
-            <CardDescription>Enter a new password for the admin area</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleResetPassword}>
-            <CardContent>
-              <div className="grid w-full items-center gap-4">
-                <div className="flex flex-col space-y-1.5">
-                  <Input
-                    id="newPassword"
-                    name="new-password"
-                    type="password"
-                    placeholder="Enter new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Input
-                    id="confirmPassword"
-                    name="new-password"
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <div className="p-6 pt-0">
-              <Button type="submit" className="w-full">Reset Password</Button>
-            </div>
-          </form>
-          {error && <p className="text-red-500 text-center mt-2 px-6">{error}</p>}
-        </Card>
-      </div>
-    )
-  }
-
-  if (isAuthenticated) {
-    return (
-      <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
-        <p className="mb-6">Welcome to the admin area. Here you can manage your Punderful game.</p>
-        
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Email Submissions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Comment</TableHead>
-                  <TableHead>Timestamp</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {submissions.length > 0 ? (
-                  submissions.map((submission) => (
-                    <TableRow key={submission.id}>
-                      <TableCell>{submission.email}</TableCell>
-                      <TableCell>{submission.comment || 'N/A'}</TableCell>
-                      <TableCell>{new Date(submission.timestamp).toLocaleString()}</TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center">No submissions available</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-        
-        <div className="flex justify-between">
-          <Button onClick={() => router.push('/')} className="mt-4">
-            Back to Home
-          </Button>
-          <Button onClick={handleLogout} variant="destructive" className="mt-4">
-            Logout
-          </Button>
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
+        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+          Get started by editing&nbsp;
+          <code className="font-mono font-bold">app/page.tsx</code>
+        </p>
+        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
+          <a
+            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
+            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            By{' '}
+            <Image
+              src="/vercel.svg"
+              alt="Vercel Logo"
+              className="dark:invert"
+              width={100}
+              height={24}
+              priority
+            />
+          </a>
         </div>
       </div>
-    )
-  }
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-[350px]">
-        <CardHeader>
-          <CardTitle>Admin Login</CardTitle>
-          <CardDescription>Enter the password to access the admin area</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent>
-            <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Enter password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                />
-              </div>
-            </div>
-          </CardContent>
-          <div className="p-6 pt-0 flex flex-col space-y-2">
-            <Button type="submit" className="w-full">Login</Button>
-            <Button type="button" variant="outline" onClick={handleGenerateResetToken} className="w-full">
-              Forgot Password
-            </Button>
-          </div>
-        </form>
-        {resetEmailSent && (
-          <p className="text-green-500 text-center mt-2 px-6">Reset email sent. Please check your inbox.</p>
-        )}
-        {error && <p className="text-red-500 text-center mt-2 px-6">{error}</p>}
-      </Card>
-      <div className="fixed bottom-4 left-4 bg-gray-800 text-white p-4 rounded">
-        <h3 className="font-bold mb-2">Debug Info:</h3>
-        <pre className="whitespace-pre-wrap">{debugInfo}</pre>
+      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px]">
+        <Image
+          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
+          src="/lettuce.png"
+          alt="Punderful Logo"
+          width={180}
+          height={37}
+          priority
+        />
       </div>
-    </div>
-  )
-}
 
-export default function AdminPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <AdminContent />
-    </Suspense>
+      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
+        <a
+          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Docs{' '}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Find in-depth information about Next.js features and API.
+          </p>
+        </a>
+
+        <a
+          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Learn{' '}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Learn about Next.js in an interactive course with&nbsp;quizzes!
+          </p>
+        </a>
+
+        <a
+          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Templates{' '}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Explore the Next.js 13 playground.
+          </p>
+        </a>
+
+        <a
+          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            Deploy{' '}
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            Instantly deploy your Next.js site to a shareable URL with Vercel.
+          </p>
+        </a>
+      </div>
+
+      <div className="mt-10 w-full max-w-md">
+        {!submitted ? (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <Input
+              type="text"
+              placeholder="Leave a comment (optional)"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+            <Button type="submit" className="w-full">
+              Submit
+            </Button>
+          </form>
+        ) : (
+          <p className="text-center text-green-500">Thank you for your submission!</p>
+        )}
+      </div>
+    </main>
   )
 }
