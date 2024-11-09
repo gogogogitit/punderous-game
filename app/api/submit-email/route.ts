@@ -3,17 +3,30 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    // Test connection first
+    await sql`SELECT 1`;
+    
     const result = await sql`
       SELECT id, email, comment, created_at 
       FROM email_submissions 
       ORDER BY created_at DESC
     `;
     
+    // Log for debugging
+    console.log('Database query successful:', result.rows.length, 'rows');
+    
+    if (!result?.rows) {
+      throw new Error('No rows returned from database');
+    }
+    
     return NextResponse.json(result.rows);
     
   } catch (error) {
     console.error('Database error:', error);
-    return NextResponse.json([], { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch submissions' }, 
+      { status: 500 }
+    );
   }
 }
 
@@ -22,7 +35,10 @@ export async function POST(request: Request) {
     const { email, comment } = await request.json();
     
     if (!email) {
-      return NextResponse.json({ error: 'Email required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Email required' }, 
+        { status: 400 }
+      );
     }
 
     const result = await sql`
@@ -34,6 +50,9 @@ export async function POST(request: Request) {
     return NextResponse.json(result.rows[0]);
   } catch (error) {
     console.error('Database error:', error);
-    return NextResponse.json({ error: 'Failed to submit' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to submit' }, 
+      { status: 500 }
+    );
   }
 }

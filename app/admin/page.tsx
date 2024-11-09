@@ -17,7 +17,10 @@ export default function AdminPage() {
   const [password, setPassword] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
   const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [isResetting, setIsResetting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -25,27 +28,35 @@ export default function AdminPage() {
       const storedAuth = localStorage.getItem('isAuthenticated')
       if (storedAuth === 'true') {
         setIsAuthenticated(true)
-        fetchSubmissions()
+        await fetchSubmissions()
       }
+      setIsLoading(false)
     }
     checkAuth()
   }, [])
 
   const fetchSubmissions = async () => {
     try {
+      setError('')
       const res = await fetch('/api/submit-email')
-      if (!res.ok) throw new Error('Failed to fetch')
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
       const data = await res.json()
-      console.log('Fetched data:', data)
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid response format')
+      }
       setSubmissions(data)
     } catch (err) {
       console.error('Fetch error:', err)
       setError('Failed to load submissions')
+      setSubmissions([])
     }
   }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
     try {
       const res = await fetch('/api/admin-password', {
         method: 'POST',
@@ -56,7 +67,7 @@ export default function AdminPage() {
       if (data.success) {
         setIsAuthenticated(true)
         localStorage.setItem('isAuthenticated', 'true')
-        fetchSubmissions()
+        await fetchSubmissions()
       } else {
         setError('Invalid password')
       }
@@ -69,6 +80,36 @@ export default function AdminPage() {
     setIsAuthenticated(false)
     localStorage.removeItem('isAuthenticated')
     router.push('/admin')
+  }
+
+  const handleForgotPassword = async () => {
+    setIsResetting(true)
+    setError('')
+    setMessage('')
+    try {
+      const res = await fetch('/api/admin-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'generate_reset_token' }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setMessage('Password reset email sent. Please check your inbox.')
+      } else {
+        setError('Failed to send reset email')
+      }
+    } catch (err) {
+      setError('Failed to initiate password reset')
+    }
+    setIsResetting(false)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    )
   }
 
   if (!isAuthenticated) {
@@ -86,14 +127,27 @@ export default function AdminPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
+                autoComplete="current-password"
               />
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-2">
               <Button type="submit" className="w-full">Login</Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full"
+                onClick={handleForgotPassword}
+                disabled={isResetting}
+              >
+                {isResetting ? 'Sending...' : 'Forgot Password'}
+              </Button>
             </CardFooter>
           </form>
           {error && (
             <p className="text-red-500 text-center mt-2 px-4 mb-4">{error}</p>
+          )}
+          {message && (
+            <p className="text-green-500 text-center mt-2 px-4 mb-4">{message}</p>
           )}
         </Card>
       </div>
@@ -117,7 +171,7 @@ export default function AdminPage() {
           {error ? (
             <p className="text-red-500">{error}</p>
           ) : submissions.length === 0 ? (
-            <p>Loading submissions...</p>
+            <p>No submissions found</p>
           ) : (
             <div className="space-y-4">
               {submissions.map((sub) => (
