@@ -21,18 +21,30 @@ export async function POST(request: Request) {
     const { email, comment } = body
     console.log('Processing submission for:', email)
 
-    // Attempt database insertion
+    // Attempt database insertion with explicit table creation if needed
     try {
+      // First ensure the table exists
+      await sql`
+        CREATE TABLE IF NOT EXISTS submissions (
+          id SERIAL PRIMARY KEY,
+          email TEXT NOT NULL,
+          comment TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `
+      
+      // Then perform the insertion
       const result = await sql`
         INSERT INTO submissions (email, comment)
         VALUES (${email}, ${comment || ''})
-        RETURNING id;
+        RETURNING id, email, created_at;
       `
-      console.log('Submission stored successfully with ID:', result.rows[0].id)
+      
+      console.log('Submission stored successfully:', result.rows[0])
       
       return NextResponse.json({ 
         success: true,
-        message: 'Submission stored successfully',
+        message: 'Thank you for your interest! We\'ll keep you updated.',
         id: result.rows[0].id
       })
     } catch (error: unknown) {
