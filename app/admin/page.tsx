@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 interface EmailSubmission {
   id: number;
@@ -53,7 +53,6 @@ function AdminContent() {
       setIsResettingPassword(true)
     }
   }, [searchParams])
-
 
   const fetchSubmissions = async () => {
     try {
@@ -182,10 +181,10 @@ function AdminContent() {
             </CardFooter>
           </form>
           {error && (
-            <div className="p-4 mt-4 mx-4 text-red-500 bg-red-50 border border-red-200 rounded-md">
-              <div className="font-semibold">Error</div>
-              <div>{error}</div>
-            </div>
+            <Alert variant="destructive" className="mt-4 mx-4">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
         </Card>
       </div>
@@ -201,10 +200,10 @@ function AdminContent() {
             <Button onClick={handleLogout} variant="destructive">Logout</Button>
           </div>
           {error && (
-            <div className="p-4 mt-4 mx-4 text-red-500 bg-red-50 border border-red-200 rounded-md">
-              <div className="font-semibold">Error</div>
-              <div>{error}</div>
-            </div>
+            <Alert variant="destructive" className="mb-6">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
           {submissions.length === 0 ? (
             <p className="text-gray-500 text-center">No submissions yet.</p>
@@ -255,10 +254,10 @@ function AdminContent() {
           </CardFooter>
         </form>
         {error && (
-          <div className="p-4 mt-4 mx-4 text-red-500 bg-red-50 border border-red-200 rounded-md">
-            <div className="font-semibold">Error</div>
-            <div>{error}</div>
-          </div>
+          <Alert variant="destructive" className="mt-4 mx-4">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
       </Card>
       {isResettingPassword && !resetEmailSent && (
@@ -289,15 +288,21 @@ function AdminContent() {
         </Card>
       )}
       {resetEmailSent && (
-        <div className="p-4 mt-4 mx-4 text-green-500 bg-green-50 border border-green-200 rounded-md">
-          <div className="font-semibold">Success</div>
-          <div>Password reset email sent. Please check your inbox.</div>
-        </div>
+        <Alert className="mt-4 w-[350px]">
+          <AlertTitle>Success</AlertTitle>
+          <AlertDescription>Password reset email sent. Please check your inbox.</AlertDescription>
+        </Alert>
       )}
     </div>
   )
 }
 
-export default function AdminPage() {
-  return <AdminContent />
+function AdminPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <AdminContent />
+    </Suspense>
+  )
 }
+
+export default AdminPage
