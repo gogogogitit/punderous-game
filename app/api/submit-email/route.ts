@@ -10,18 +10,21 @@ export async function GET() {
       SELECT 
         id,
         email,
-        comment,
+        COALESCE(comment, '') as comment,
         created_at as timestamp
       FROM email_submissions
       ORDER BY created_at DESC;
     `;
     
     // Log the result for debugging
-    console.log('Submissions query result:', result);
+    console.log('Database query successful. Row count:', result.rows.length);
     
+    // Ensure we always return an object with a submissions array
     return NextResponse.json({
-      submissions: result.rows,
-      count: result.rows.length
+      submissions: result.rows.map(row => ({
+        ...row,
+        comment: row.comment || null // Convert empty string back to null for consistency
+      }))
     });
     
   } catch (error) {
@@ -31,13 +34,17 @@ export async function GET() {
     // Check if it's a connection error
     if (error instanceof Error && error.message.includes('connect')) {
       return NextResponse.json(
-        { error: 'Database connection failed' },
+        { error: 'Database connection failed', details: error.message },
         { status: 503 }
       );
     }
     
+    // For all other errors
     return NextResponse.json(
-      { error: 'Failed to fetch submissions' },
+      { 
+        error: 'Failed to fetch submissions',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
@@ -73,13 +80,16 @@ export async function POST(request: Request) {
     // Check if it's a connection error
     if (error instanceof Error && error.message.includes('connect')) {
       return NextResponse.json(
-        { error: 'Database connection failed' },
+        { error: 'Database connection failed', details: error.message },
         { status: 503 }
       );
     }
     
     return NextResponse.json(
-      { error: 'Failed to submit email' },
+      { 
+        error: 'Failed to submit email',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
