@@ -1,102 +1,52 @@
-import { sql } from '@vercel/postgres';
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import nodemailer from 'nodemailer'
 
-export async function GET() {
-  try {
-    // First test the connection
-    await sql`SELECT 1`;
-    
-    // Then perform the actual query
-    const result = await sql`
-      SELECT id, email, comment, created_at 
-      FROM email_submissions 
-      ORDER BY created_at DESC;
-    `;
-    
-    // Log for debugging
-    console.log('Database query result:', {
-      rowCount: result.rows.length,
-      firstRow: result.rows[0]
-    });
-    
-    // Return a proper JSON response
-    return new NextResponse(
-      JSON.stringify(result.rows),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-    
-  } catch (error) {
-    // Log the full error
-    console.error('Database error:', error);
-    
-    // Return a proper error response
-    return new NextResponse(
-      JSON.stringify({ 
-        error: 'Failed to fetch submissions',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-  }
-}
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL
+const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com'
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465')
 
 export async function POST(request: Request) {
   try {
-    const { email, comment } = await request.json();
-    
-    if (!email) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Email is required' }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+    const { email, comment } = await request.json()
+
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: true,
+      auth: {
+        user: ADMIN_EMAIL,
+        pass: EMAIL_PASSWORD,
+      },
+    })
+
+    const mailOptions = {
+      from: ADMIN_EMAIL,
+      to: ADMIN_EMAIL,
+      subject: 'New Punderful Submission',
+      text: `
+New submission received:
+
+Email: ${email}
+Comment: ${comment || 'No comment provided'}
+Time: ${new Date().toLocaleString()}
+      `,
+      html: `
+        <h2>New submission received</h2>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Comment:</strong> ${comment || 'No comment provided'}</p>
+        <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+      `,
     }
 
-    // Test connection before insert
-    await sql`SELECT 1`;
+    await transporter.sendMail(mailOptions)
 
-    const result = await sql`
-      INSERT INTO email_submissions (email, comment)
-      VALUES (${email}, ${comment})
-      RETURNING id, email, comment, created_at;
-    `;
-
-    return new NextResponse(
-      JSON.stringify(result.rows[0]),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Database error:', error);
-    return new NextResponse(
-      JSON.stringify({ 
-        error: 'Failed to submit email',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    console.error('Error sending email:', error)
+    return NextResponse.json(
+      { error: 'Failed to process submission' },
+      { status: 500 }
+    )
   }
 }
