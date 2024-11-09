@@ -7,10 +7,11 @@ export async function POST(request: Request) {
   console.log('Starting submission process...')
 
   try {
-    // Validate request body
+    // Parse and validate request body
     const body = await request.json()
     
     if (!body.email) {
+      console.log('Email missing from submission')
       return NextResponse.json(
         { error: 'Email is required' },
         { status: 400 }
@@ -18,26 +19,40 @@ export async function POST(request: Request) {
     }
 
     const { email, comment } = body
-    console.log('Received submission from:', email)
+    console.log('Processing submission for:', email)
 
-    // Store in database
-    await sql`
-      INSERT INTO submissions (email, comment)
-      VALUES (${email}, ${comment || ''})
-    `
+    // Attempt database insertion
+    try {
+      const result = await sql`
+        INSERT INTO submissions (email, comment)
+        VALUES (${email}, ${comment || ''})
+        RETURNING id;
+      `
+      console.log('Submission stored successfully with ID:', result.rows[0].id)
+      
+      return NextResponse.json({ 
+        success: true,
+        message: 'Submission stored successfully',
+        id: result.rows[0].id
+      })
+    } catch (error: unknown) {
+      console.error('Database error:', error)
+      if (error instanceof Error) {
+        throw new Error(`Database error: ${error.message}`)
+      } else {
+        throw new Error('An unknown database error occurred')
+      }
+    }
 
-    console.log('Submission stored successfully')
-    return NextResponse.json({ 
-      success: true,
-      message: 'Submission stored successfully'
-    })
-
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in submission process:', error)
     
-    const errorMessage = error instanceof Error 
-      ? `Submission error: ${error.message}`
-      : 'An unknown error occurred'
+    let errorMessage: string
+    if (error instanceof Error) {
+      errorMessage = `Submission error: ${error.message}`
+    } else {
+      errorMessage = 'An unknown error occurred'
+    }
 
     return NextResponse.json(
       { error: errorMessage },
