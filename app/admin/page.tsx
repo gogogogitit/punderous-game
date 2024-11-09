@@ -1,206 +1,303 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 
-interface Submission {
-  id: number
-  email: string
-  comment: string | null
-  created_at: string
+
+interface EmailSubmission {
+  id: number;
+  email: string;
+  comment: string | null;
+  timestamp: string;
 }
 
-export default function AdminPage() {
+function AdminContent() {
   const [password, setPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [error, setError] = useState('')
-  const [submissions, setSubmissions] = useState<Submission[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [message, setMessage] = useState('')
-  const [isResetting, setIsResetting] = useState(false)
+  const [error, setError] = useState('')
+  const [submissions, setSubmissions] = useState<EmailSubmission[]>([])
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetEmailSent, setResetEmailSent] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     const checkAuth = async () => {
-      const storedAuth = localStorage.getItem('isAuthenticated')
-      if (storedAuth === 'true') {
-        setIsAuthenticated(true)
-        await fetchSubmissions()
+      setIsLoading(true)
+      try {
+        const storedAuth = localStorage.getItem('isAuthenticated')
+        if (storedAuth === 'true') {
+          setIsAuthenticated(true)
+          await fetchSubmissions()
+        }
+      } catch (error) {
+        console.error('Error during initial auth check:', error)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
     checkAuth()
   }, [])
 
+  useEffect(() => {
+    if (!searchParams) return
+    const resetToken = searchParams.get('reset_token')
+    if (resetToken) {
+      setIsResettingPassword(true)
+    }
+  }, [searchParams])
+
+
   const fetchSubmissions = async () => {
     try {
-      setError('')
-      const res = await fetch('/api/submit-email')
-      
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`)
-      }
-      
-      const data = await res.json()
-      
-      console.log('Fetched data:', data)
-      
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid response format')
-      }
-      
+      const response = await fetch('/api/admin/submissions')
+      if (!response.ok) throw new Error('Failed to fetch submissions')
+      const data = await response.json()
       setSubmissions(data)
-    } catch (err) {
-      console.error('Fetch error:', err)
-      setError('Failed to load submissions: ' + (err instanceof Error ? err.message : 'Unknown error'))
-      setSubmissions([])
+    } catch (error) {
+      console.error('Error fetching submissions:', error)
+      setError('Failed to load submissions')
     }
   }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
     try {
-      const res = await fetch('/api/admin-password', {
+      const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, action: 'login' }),
+        body: JSON.stringify({ password }),
       })
-      const data = await res.json()
-      if (data.success) {
+      if (response.ok) {
         setIsAuthenticated(true)
         localStorage.setItem('isAuthenticated', 'true')
+        setError('')
         await fetchSubmissions()
       } else {
-        setError('Invalid password')
+        setError('Incorrect password')
       }
-    } catch (err) {
-      setError('Login failed')
+    } catch (error) {
+      console.error('Error during authentication:', error)
+      setError('Authentication failed')
     }
   }
 
   const handleLogout = () => {
     setIsAuthenticated(false)
     localStorage.removeItem('isAuthenticated')
-    router.push('/admin')
+    setSubmissions([])
   }
 
-  const handleForgotPassword = async () => {
-    setIsResetting(true)
-    setError('')
-    setMessage('')
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
     try {
-      const res = await fetch('/api/admin-password-reset', {
+      const response = await fetch('/api/admin/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate_reset_token' }),
+        body: JSON.stringify({ email: resetEmail }),
       })
-      const data = await res.json()
-      if (data.success) {
-        setMessage('Password reset email sent to michaeljkatz.email@gmail.com. Please check your inbox.')
+      if (response.ok) {
+        setResetEmailSent(true)
+        setError('')
       } else {
-        setError('Failed to send reset email: ' + (data.error || 'Unknown error'))
+        const data = await response.json()
+        setError(data.error || 'Failed to send reset email')
       }
-    } catch (err) {
-      setError('Failed to initiate password reset: ' + (err instanceof Error ? err.message : 'Unknown error'))
-    } finally {
-      setIsResetting(false)
+    } catch (error) {
+      console.error('Error sending reset email:', error)
+      setError('Failed to send reset email')
+    }
+  }
+
+  const handleNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+    try {
+      const resetToken = searchParams?.get('reset_token')
+      const response = await fetch('/api/admin/new-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPassword, token: resetToken }),
+      })
+      if (response.ok) {
+        setIsResettingPassword(false)
+        setIsAuthenticated(true)
+        localStorage.setItem('isAuthenticated', 'true')
+        setError('')
+        await fetchSubmissions()
+        router.push('/admin')
+      } else {
+        const data = await response.json()
+        setError(data.error || 'Failed to set new password')
+      }
+    } catch (error) {
+      console.error('Error setting new password:', error)
+      setError('Failed to set new password')
     }
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p>
-      </div>
-    )
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
-  if (!isAuthenticated) {
+  if (isResettingPassword) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <Card className="w-[350px]">
           <CardHeader>
-            <CardTitle>Admin Login</CardTitle>
-            <CardDescription>Enter password to access admin area</CardDescription>
+            <CardTitle>Reset Password</CardTitle>
+            <CardDescription>Enter your new password</CardDescription>
           </CardHeader>
-          <form onSubmit={handleLogin}>
-            <CardContent>
+          <form onSubmit={handleNewPassword}>
+            <CardContent className="space-y-4">
               <Input
+                id="newPassword"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                autoComplete="current-password"
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
               />
             </CardContent>
-            <CardFooter className="flex flex-col space-y-2">
-              <Button type="submit" className="w-full">Login</Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full"
-                onClick={handleForgotPassword}
-                disabled={isResetting}
-              >
-                {isResetting ? 'Sending...' : 'Forgot Password'}
-              </Button>
+            <CardFooter>
+              <Button type="submit" className="w-full">Set New Password</Button>
             </CardFooter>
           </form>
           {error && (
-            <p className="text-red-500 text-center mt-2 px-4 mb-4">{error}</p>
-          )}
-          {message && (
-            <p className="text-green-500 text-center mt-2 px-4 mb-4">{message}</p>
+            <div className="p-4 mt-4 mx-4 text-red-500 bg-red-50 border border-red-200 rounded-md">
+              <div className="font-semibold">Error</div>
+              <div>{error}</div>
+            </div>
           )}
         </Card>
       </div>
     )
   }
 
-  return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <Button onClick={handleLogout} variant="destructive">
-          Logout
-        </Button>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Email Submissions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {error ? (
-            <p className="text-red-500">{error}</p>
-          ) : submissions.length === 0 ? (
-            <p>No submissions found</p>
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen p-8 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-4xl font-bold text-gray-900">Email Submissions</h1>
+            <Button onClick={handleLogout} variant="destructive">Logout</Button>
+          </div>
+          {error && (
+            <div className="p-4 mt-4 mx-4 text-red-500 bg-red-50 border border-red-200 rounded-md">
+              <div className="font-semibold">Error</div>
+              <div>{error}</div>
+            </div>
+          )}
+          {submissions.length === 0 ? (
+            <p className="text-gray-500 text-center">No submissions yet.</p>
           ) : (
             <div className="space-y-4">
               {submissions.map((sub) => (
-                <div key={sub.id} className="border p-4 rounded-lg">
-                  <p><strong>Email:</strong> {sub.email}</p>
-                  {sub.comment && (
-                    <p><strong>Comment:</strong> {sub.comment}</p>
-                  )}
-                  <p><strong>Date:</strong> {new Date(sub.created_at).toLocaleString()}</p>
-                </div>
+                <Card key={sub.id}>
+                  <CardHeader>
+                    <CardTitle>{sub.email}</CardTitle>
+                    <CardDescription>{new Date(sub.timestamp).toLocaleString()}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p>{sub.comment || 'No comment'}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+    )
+  }
 
-      <Button 
-        onClick={() => router.push('/')} 
-        className="mt-4"
-      >
-        Back to Home
-      </Button>
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <Card className="w-[350px]">
+        <CardHeader>
+          <CardTitle>Admin Login</CardTitle>
+          <CardDescription>Enter the password to access the admin area</CardDescription>
+        </CardHeader>
+        <form onSubmit={handleLogin}>
+          <CardContent>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-2">
+            <Button type="submit" className="w-full">Login</Button>
+            <Button variant="outline" onClick={() => setIsResettingPassword(true)} className="w-full">
+              Forgot Password
+            </Button>
+          </CardFooter>
+        </form>
+        {error && (
+          <div className="p-4 mt-4 mx-4 text-red-500 bg-red-50 border border-red-200 rounded-md">
+            <div className="font-semibold">Error</div>
+            <div>{error}</div>
+          </div>
+        )}
+      </Card>
+      {isResettingPassword && !resetEmailSent && (
+        <Card className="w-[350px] mt-4">
+          <CardHeader>
+            <CardTitle>Reset Password</CardTitle>
+            <CardDescription>Enter your email to receive a password reset link</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleResetPassword}>
+            <CardContent>
+              <Input
+                id="resetEmail"
+                name="resetEmail"
+                type="email"
+                placeholder="Enter your email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+              />
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-2">
+              <Button type="submit" className="w-full">Send Reset Link</Button>
+              <Button variant="outline" onClick={() => setIsResettingPassword(false)} className="w-full">
+                Back to Login
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+      {resetEmailSent && (
+        <div className="p-4 mt-4 mx-4 text-green-500 bg-green-50 border border-green-200 rounded-md">
+          <div className="font-semibold">Success</div>
+          <div>Password reset email sent. Please check your inbox.</div>
+        </div>
+      )}
     </div>
   )
+}
+
+export default function AdminPage() {
+  return <AdminContent />
 }
