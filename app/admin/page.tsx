@@ -122,15 +122,15 @@ function AdminContent() {
       if (!response.ok) throw new Error('Failed to fetch submissions')
       const data = await response.json()
     
-      // Check if data exists and has the correct structure
-      if (!data) {
-        throw new Error('No data received from server')
-      }
+      // Log the response data for debugging
+      console.log('Submissions response:', data)
     
-      // Handle case where submissions might be directly on data object
-      const submissions = Array.isArray(data) ? data : data.submissions
+      // Handle the raw response format
+      const submissions = Array.isArray(data) ? data : 
+                         data?.submissions ? data.submissions :
+                         data?.data ? data.data : null
     
-      if (!Array.isArray(submissions)) {
+      if (!submissions) {
         throw new Error('Invalid submissions data format')
       }
     
