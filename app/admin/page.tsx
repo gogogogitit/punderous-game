@@ -121,16 +121,24 @@ function AdminContent() {
       const response = await fetch('/api/submit-email')
       if (!response.ok) throw new Error('Failed to fetch submissions')
       const data = await response.json()
-      
-      if (!data || !Array.isArray(data.submissions)) {
-        throw new Error('Invalid response format')
+    
+      // Check if data exists and has the correct structure
+      if (!data) {
+        throw new Error('No data received from server')
       }
-      
-      setSubmissions(data.submissions)
-      setDebugInfo(prev => prev + `\nFetched ${data.submissions.length} submissions`)
+    
+      // Handle case where submissions might be directly on data object
+      const submissions = Array.isArray(data) ? data : data.submissions
+    
+      if (!Array.isArray(submissions)) {
+        throw new Error('Invalid submissions data format')
+      }
+    
+      setSubmissions(submissions)
+      setDebugInfo(prev => prev + `\nFetched ${submissions.length} submissions`)
     } catch (error) {
       console.error('Error fetching submissions:', error)
-      setSubmissionsError('Failed to load submissions')
+      setSubmissionsError('Failed to load submissions: ' + (error instanceof Error ? error.message : 'Unknown error'))
       setDebugInfo(prev => prev + `\nError fetching submissions: ${error}`)
       setSubmissions([])
     } finally {
