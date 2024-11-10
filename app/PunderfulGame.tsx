@@ -5,12 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardDescription, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import Confetti from 'react-dom-confetti'
 import Image from 'next/image'
-import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight } from 'lucide-react'
 
 interface Pun {
   id: number;
@@ -26,9 +24,6 @@ interface Pun {
 const initialPuns: Pun[] = [
   { id: 1, question: "What do you call a rabbit with a positive future outlook?", answer: "A hoptimist", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 2, question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, votes: { up: 0, down: 0 } },
-  { id: 3, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, votes: { up: 0, down: 0 } },
-  { id: 4, question: "What do you call a bear with no teeth?", answer: "A gummy bear", difficulty: 1, votes: { up: 0, down: 0 } },
-  { id: 5, question: "Why did the scarecrow win an award?", answer: "They were outstanding in their field", difficulty: 3, votes: { up: 0, down: 0 } },
   { id: 3, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 4, question: "What do you call a bear with no teeth?", answer: "A gummy bear", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 5, question: "Why did the scarecrow win an award?", answer: "They were outstanding in their field", difficulty: 3, votes: { up: 0, down: 0 } },
@@ -70,7 +65,7 @@ const initialPuns: Pun[] = [
   { id: 41, question: "Why did the skeleton go to the party alone?", answer: "He had no body to go with him", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 42, question: "Why did the belt get arrested?", answer: "It held up a pair of pants", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 43, question: "What do you call a snowman with a six-pack?", answer: "An abdominal snowman", difficulty: 2, votes: { up: 0, down: 0 } },
-];
+]
 
 interface GameState {
   currentPun: Pun;
@@ -83,12 +78,11 @@ interface GameState {
   playerSkillLevel: number;
   feedback: string;
   isCorrect: boolean;
-  partialMatch: string;
   showCorrectAnswer: boolean;
   correctAnswerDisplay: string;
-  correctLetters: Set<string>;
   usedPunIds: Set<number>;
   unlimitedMode: boolean;
+  partialMatch: string;
 }
 
 const confettiConfig = {
@@ -105,30 +99,43 @@ const confettiConfig = {
 }
 
 export default function PunderfulGame() {
-  const [gameState, setGameState] = useState<GameState>({
-    currentPun: initialPuns[0],
-    userAnswer: '',
-    guessedAnswers: [],
-    attempts: 5,
-    score: 0,
-    gameOver: false,
-    dailyGamesPlayed: 0,
-    playerSkillLevel: 1,
-    feedback: '',
-    isCorrect: false,
-    partialMatch: '',
-    showCorrectAnswer: false,
-    correctAnswerDisplay: '',
-    correctLetters: new Set<string>(),
-    usedPunIds: new Set<number>([initialPuns[0].id]),
-    unlimitedMode: false
-  })
+  const [gameState, setGameState] = useState<GameState>(() => {
+    // Use a stable initial pun (first one) for hydration
+    const initialPun = initialPuns[0];
+    return {
+      currentPun: initialPun,
+      userAnswer: '',
+      guessedAnswers: [],
+      attempts: 5,
+      score: 0,
+      gameOver: false,
+      dailyGamesPlayed: 0,
+      playerSkillLevel: 1,
+      feedback: '',
+      isCorrect: false,
+      showCorrectAnswer: false,
+      correctAnswerDisplay: '',
+      usedPunIds: new Set<number>([initialPun.id]),
+      unlimitedMode: false,
+      partialMatch: '',
+    };
+  });
   const [puns, setPuns] = useState<Pun[]>(initialPuns)
   const [email, setEmail] = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const [dailyLimitReached, setDailyLimitReached] = useState(false)
   const [comment, setComment] = useState('')
   const [submitError, setSubmitError] = useState('')
+
+  // Add a new effect to randomize the initial pun after hydration
+  useEffect(() => {
+    const randomPun = initialPuns[Math.floor(Math.random() * initialPuns.length)];
+    setGameState(prev => ({
+      ...prev,
+      currentPun: randomPun,
+      usedPunIds: new Set<number>([randomPun.id])
+    }));
+  }, []); // Empty dependency array means this runs once after mount
 
   useEffect(() => {
     const storedPuns = localStorage.getItem('punderfulPuns')
@@ -158,7 +165,6 @@ export default function PunderfulGame() {
         setGameState(prevState => ({
           ...prevState,
           ...parsedState,
-          correctLetters: new Set(Array.isArray(parsedState.correctLetters) ? parsedState.correctLetters : []),
           usedPunIds: new Set(Array.isArray(parsedState.usedPunIds) ? parsedState.usedPunIds : []),
         }))
         if (parsedState.dailyGamesPlayed >= 5 && !parsedState.unlimitedMode) {
@@ -168,13 +174,6 @@ export default function PunderfulGame() {
         console.error('Error parsing stored game state:', error)
       }
     } else {
-      setGameState(prevState => ({
-        ...prevState,
-        dailyGamesPlayed: 0,
-        usedPunIds: new Set<number>(),
-        unlimitedMode: false
-      }))
-      setDailyLimitReached(false)
       localStorage.setItem('punderfulLastPlayedDate', currentDate)
     }
   }, [])
@@ -185,23 +184,12 @@ export default function PunderfulGame() {
       localStorage.setItem('punderfulPuns', JSON.stringify(punsToStore))
       localStorage.setItem('punderfulGameState', JSON.stringify({
         ...gameState,
-        correctLetters: Array.from(gameState.correctLetters),
         usedPunIds: Array.from(gameState.usedPunIds),
       }))
     } catch (error) {
       console.error('Error saving to localStorage:', error)
     }
   }, [puns, gameState])
-
-  const findPartialMatch = useCallback((userGuess: string, correctAnswer: string, previousGuesses: string[]): string | null => {
-    const correctWords = correctAnswer.toLowerCase().split(' ')
-    const allGuesses = [...previousGuesses, userGuess].map(guess => guess.toLowerCase())
-    
-    const matchedParts = correctWords.filter(word => 
-      allGuesses.some(guess => guess.includes(word))
-    )
-    return matchedParts.length > 0 ? matchedParts.join(' ') : null
-  }, [])
 
   const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
     const cleanAnswer = (answer: string) => 
@@ -223,10 +211,14 @@ export default function PunderfulGame() {
     return allWordsPresent || matchPercentage >= 0.7;
   }, [])
 
-  const findCorrectLetters = useCallback((userGuess: string, correctAnswer: string): Set<string> => {
-    const guessLetters = new Set(userGuess.toLowerCase().replace(/\s/g, ''))
-    const answerLetters = new Set(correctAnswer.toLowerCase().replace(/\s/g, ''))
-    return new Set([...guessLetters].filter(letter => answerLetters.has(letter)))
+  const findPartialMatch = useCallback((userGuess: string, correctAnswer: string, previousGuesses: string[]): string | null => {
+    const correctWords = correctAnswer.toLowerCase().split(' ')
+    const allGuesses = [...previousGuesses, userGuess].map(guess => guess.toLowerCase())
+    
+    const matchedParts = correctWords.filter(word => 
+      allGuesses.some(guess => guess.includes(word))
+    )
+    return matchedParts.length > 0 ? matchedParts.join(' ') : null
   }, [])
 
   const handleAnswerSubmit = useCallback(() => {
@@ -256,32 +248,29 @@ export default function PunderfulGame() {
         dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
         feedback: `Correct! You earned ${pointsEarned} point${pointsEarned > 1 ? 's' : ''}.`,
         usedPunIds: new Set([...prev.usedPunIds, prev.currentPun.id]),
+        guessedAnswers: [...prev.guessedAnswers, userGuess],
       }))
     } else {
-      const newCorrectLetters = findCorrectLetters(userGuess, correctAnswer)
       setGameState(prev => {
         const newAttempts = prev.attempts - 1
         const partialMatchResult = findPartialMatch(userGuess, correctAnswer, prev.guessedAnswers)
         const newFeedback = newAttempts === 0
           ? `Game over!`
-          : partialMatchResult
-            ? `Close! You're on the right track. Parts of the answer: "${partialMatchResult}"`
-            : `Not quite! You have ${newAttempts} attempts left.`
+          : `Not quite! You have ${newAttempts} attempts left.`
         return {
           ...prev,
           attempts: newAttempts,
-          guessedAnswers: [...prev.guessedAnswers, prev.userAnswer],
+          guessedAnswers: [...prev.guessedAnswers, userGuess],
           partialMatch: partialMatchResult || '',
           feedback: newFeedback,
           gameOver: newAttempts === 0,
           userAnswer: '',
           showCorrectAnswer: newAttempts === 0,
           correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
-          correctLetters: new Set([...prev.correctLetters, ...newCorrectLetters]),
         }
       })
     }
-  }, [gameState, compareAnswers, findCorrectLetters, findPartialMatch])
+  }, [gameState, compareAnswers, findPartialMatch])
 
   const getNextPun = useCallback(() => {
     if (gameState.dailyGamesPlayed >= 5 && !gameState.unlimitedMode) {
@@ -298,14 +287,13 @@ export default function PunderfulGame() {
         currentPun: shuffledPuns[0],
         attempts: 5,
         guessedAnswers: [],
-        partialMatch: '',
         showCorrectAnswer: false,
         isCorrect: false,
         feedback: '',
         userAnswer: '',
-        correctLetters: new Set<string>(),
         usedPunIds: new Set([shuffledPuns[0].id]),
         dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
+        partialMatch: '',
       }))
     } else {
       const randomPun = unusedPuns[Math.floor(Math.random() * unusedPuns.length)]
@@ -314,14 +302,13 @@ export default function PunderfulGame() {
         currentPun: randomPun,
         attempts: 5,
         guessedAnswers: [],
-        partialMatch: '',
         showCorrectAnswer: false,
         isCorrect: false,
         feedback: '',
         userAnswer: '',
-        correctLetters: new Set<string>(),
         usedPunIds: new Set([...prev.usedPunIds, randomPun.id]),
         dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
+        partialMatch: '',
       }))
     }
   }, [gameState, puns])
@@ -332,10 +319,11 @@ export default function PunderfulGame() {
       return
     }
     const shuffledPuns = [...puns].sort(() => Math.random() - 0.5)
+    const randomPun = shuffledPuns[0]
     setPuns(shuffledPuns)
     setGameState(prev => ({
       ...prev,
-      currentPun: shuffledPuns[0],
+      currentPun: randomPun,
       userAnswer: '',
       guessedAnswers: [],
       attempts: 5,
@@ -344,12 +332,11 @@ export default function PunderfulGame() {
       playerSkillLevel: 1,
       feedback: '',
       isCorrect: false,
-      partialMatch: '',
       showCorrectAnswer: false,
       correctAnswerDisplay: '',
-      correctLetters: new Set<string>(),
-      usedPunIds: new Set([shuffledPuns[0].id]),
+      usedPunIds: new Set([randomPun.id]),
       dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
+      partialMatch: '',
     }))
   }, [gameState, puns])
 
@@ -387,25 +374,15 @@ export default function PunderfulGame() {
         ? { ...pun, votes: { ...pun.votes, [voteType]: pun.votes[voteType] + 1 } }
         : pun
     ))
-    getNextPun()
-  }, [getNextPun])
+  }, [])
 
   const handleSkip = useCallback(() => {
     if (!gameState.isCorrect && !gameState.gameOver) getNextPun()
   }, [gameState, getNextPun])
 
-  const getDifficultyText = (difficulty: number): string => {
-    switch (difficulty) {
-      case 1:
-        return "Easy (1 point)"
-      case 2:
-        return "Medium (2 points)"
-      case 3:
-        return "Hard (3 points)"
-      default:
-        return "Unknown"
-    }
-  }
+  const getDifficultyText = (difficulty: number): string => difficulty === 1 ? "Easy (1 point)" :
+    difficulty === 2 ? "Medium (2 points)" :
+    difficulty === 3 ? "Hard (3 points)" : "Unknown";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#A06CD5] to-[#6247AA] p-2">
@@ -533,6 +510,14 @@ export default function PunderfulGame() {
                           <ThumbsDown className="w-4 h-4" />
                           <span>{gameState.currentPun.votes.down}</span>
                         </Button>
+                        <Button
+                          onClick={getNextPun}
+                          variant="outline"
+                          className="flex items-center space-x-1 text-sm border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                          <span>Next</span>
+                        </Button>
                       </div>
                     </motion.div>
                   </motion.div>
@@ -551,10 +536,25 @@ export default function PunderfulGame() {
                     <p className="text-sm text-gray-600">
                       Difficulty: {getDifficultyText(gameState.currentPun.difficulty)}
                     </p>
-                    {gameState.partialMatch && (
-                      <p className="text-sm text-[#247BA0] mt-1">
-                        Parts of the answer: "{gameState.partialMatch}"
+                    {gameState.feedback && (
+                      <p className="text-sm text-center text-gray-700 mt-2">
+                        {gameState.feedback}
                       </p>
+                    )}
+                    {gameState.partialMatch && (
+                      <p className="text-sm text-center text-[#247BA0] font-medium mt-2">
+                        Parts of the answer: {gameState.partialMatch}
+                      </p>
+                    )}
+                    {gameState.guessedAnswers.length > 0 && (
+                      <div className="text-sm text-center text-gray-700 mt-2">
+                        <span className="font-medium">Previous guesses:</span>
+                        <ol className="list-decimal list-inside">
+                          {gameState.guessedAnswers.map((guess, index) => (
+                            <li key={index}>{guess}</li>
+                          ))}
+                        </ol>
+                      </div>
                     )}
                   </motion.div>
                 )}
@@ -592,48 +592,6 @@ export default function PunderfulGame() {
                   Skip
                 </Button>
               </div>
-              {gameState.feedback && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="text-sm text-center text-gray-700"
-                >
-                  {gameState.feedback}
-                </motion.p>
-              )}
-              {gameState.partialMatch && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="text-sm text-center text-[#A06CD5] font-medium"
-                >
-                  Partial match: {gameState.partialMatch}
-                </motion.p>
-              )}
-              {gameState.correctLetters.size > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="text-sm text-center text-gray-700"
-                >
-                  <span className="font-medium">Correct letters: </span>
-                  {Array.from(gameState.correctLetters).join(', ')}
-                </motion.div>
-              )}
-              {gameState.guessedAnswers.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="text-sm text-center text-gray-700 mt-2"
-                >
-                  <span className="font-medium">Previous guesses: </span>
-                  {gameState.guessedAnswers.join(', ')}
-                </motion.div>
-              )}
               {gameState.gameOver && !gameState.isCorrect && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -643,6 +601,12 @@ export default function PunderfulGame() {
                   <p className="text-lg font-medium text-gray-800">Game Over!</p>
                   <p className="text-sm text-gray-600">The correct answer was:</p>
                   <p className="text-md font-medium text-[#A06CD5]">{gameState.correctAnswerDisplay}</p>
+                  <Button
+                    onClick={resetGame}
+                    className="w-full bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2 mt-2"
+                  >
+                    Play Again
+                  </Button>
                 </motion.div>
               )}
               <Confetti active={gameState.isCorrect} config={confettiConfig} />
