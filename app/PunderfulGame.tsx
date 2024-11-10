@@ -74,14 +74,12 @@ interface GameState {
   attempts: number;
   score: number;
   gameOver: boolean;
-  dailyGamesPlayed: number;
   playerSkillLevel: number;
   feedback: string;
   isCorrect: boolean;
   showCorrectAnswer: boolean;
   correctAnswerDisplay: string;
   usedPunIds: Set<number>;
-  unlimitedMode: boolean;
   partialMatch: string;
 }
 
@@ -100,8 +98,7 @@ const confettiConfig = {
 
 export default function PunderfulGame() {
   const [gameState, setGameState] = useState<GameState>(() => {
-    // Use a stable initial pun (first one) for hydration
-    const initialPun = initialPuns[0];
+    const initialPun = initialPuns[Math.floor(Math.random() * initialPuns.length)];
     return {
       currentPun: initialPun,
       userAnswer: '',
@@ -109,72 +106,34 @@ export default function PunderfulGame() {
       attempts: 5,
       score: 0,
       gameOver: false,
-      dailyGamesPlayed: 0,
       playerSkillLevel: 1,
       feedback: '',
       isCorrect: false,
       showCorrectAnswer: false,
       correctAnswerDisplay: '',
       usedPunIds: new Set<number>([initialPun.id]),
-      unlimitedMode: false,
       partialMatch: '',
     };
   });
   const [puns, setPuns] = useState<Pun[]>(initialPuns)
   const [email, setEmail] = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
-  const [dailyLimitReached, setDailyLimitReached] = useState(false)
   const [comment, setComment] = useState('')
   const [submitError, setSubmitError] = useState('')
 
-  // Add a new effect to randomize the initial pun after hydration
-  useEffect(() => {
-    const randomPun = initialPuns[Math.floor(Math.random() * initialPuns.length)];
-    setGameState(prev => ({
-      ...prev,
-      currentPun: randomPun,
-      usedPunIds: new Set<number>([randomPun.id])
-    }));
-  }, []); // Empty dependency array means this runs once after mount
-
   useEffect(() => {
     const storedPuns = localStorage.getItem('punderfulPuns')
-    const storedState = localStorage.getItem('punderfulGameState')
-    const storedDate = localStorage.getItem('punderfulLastPlayedDate')
-    const currentDate = new Date().toDateString()
-
-    let updatedPuns = [...initialPuns]
     if (storedPuns) {
       try {
         const parsedStoredPuns = JSON.parse(storedPuns)
-        updatedPuns = initialPuns.map(pun => {
+        const updatedPuns = initialPuns.map(pun => {
           const storedPun = parsedStoredPuns.find((p: Pun) => p.id === pun.id)
           return storedPun ? { ...pun, votes: storedPun.votes } : pun
         })
+        setPuns(updatedPuns)
       } catch (error) {
         console.error('Error parsing stored puns:', error)
       }
-    }
-
-    const shuffledPuns = updatedPuns.sort(() => Math.random() - 0.5)
-    setPuns(shuffledPuns)
-
-    if (storedState && storedDate === currentDate) {
-      try {
-        const parsedState = JSON.parse(storedState)
-        setGameState(prevState => ({
-          ...prevState,
-          ...parsedState,
-          usedPunIds: new Set(Array.isArray(parsedState.usedPunIds) ? parsedState.usedPunIds : []),
-        }))
-        if (parsedState.dailyGamesPlayed >= 5 && !parsedState.unlimitedMode) {
-          setDailyLimitReached(true)
-        }
-      } catch (error) {
-        console.error('Error parsing stored game state:', error)
-      }
-    } else {
-      localStorage.setItem('punderfulLastPlayedDate', currentDate)
     }
   }, [])
 
@@ -182,14 +141,10 @@ export default function PunderfulGame() {
     try {
       const punsToStore = puns.map(({ id, votes }) => ({ id, votes }))
       localStorage.setItem('punderfulPuns', JSON.stringify(punsToStore))
-      localStorage.setItem('punderfulGameState', JSON.stringify({
-        ...gameState,
-        usedPunIds: Array.from(gameState.usedPunIds),
-      }))
     } catch (error) {
-      console.error('Error saving to localStorage:', error)
+      console.error('Error saving puns to localStorage:', error)
     }
-  }, [puns, gameState])
+  }, [puns])
 
   const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
     const cleanAnswer = (answer: string) => 
@@ -223,16 +178,6 @@ export default function PunderfulGame() {
 
   const handleAnswerSubmit = useCallback(() => {
     if (gameState.userAnswer.trim() === '' || gameState.gameOver) return
-    if (gameState.userAnswer.toLowerCase() === '#playforever') {
-      setGameState(prev => ({
-        ...prev,
-        unlimitedMode: true,
-        userAnswer: '',
-        feedback: 'Unlimited mode activated! You can now play forever.',
-      }))
-      setDailyLimitReached(false)
-      return
-    }
     const correctAnswer = gameState.currentPun.answer;
     const userGuess = gameState.userAnswer;
     if (compareAnswers(userGuess, correctAnswer)) {
@@ -245,7 +190,6 @@ export default function PunderfulGame() {
         showCorrectAnswer: true,
         correctAnswerDisplay: correctAnswer,
         userAnswer: '',
-        dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
         feedback: `Correct! You earned ${pointsEarned} point${pointsEarned > 1 ? 's' : ''}.`,
         usedPunIds: new Set([...prev.usedPunIds, prev.currentPun.id]),
         guessedAnswers: [...prev.guessedAnswers, userGuess],
@@ -273,10 +217,6 @@ export default function PunderfulGame() {
   }, [gameState, compareAnswers, findPartialMatch])
 
   const getNextPun = useCallback(() => {
-    if (gameState.dailyGamesPlayed >= 5 && !gameState.unlimitedMode) {
-      setDailyLimitReached(true)
-      return
-    }
     const unusedPuns = puns.filter(pun => !gameState.usedPunIds.has(pun.id) && pun.difficulty <= gameState.playerSkillLevel)
     
     if (unusedPuns.length === 0) {
@@ -292,7 +232,6 @@ export default function PunderfulGame() {
         feedback: '',
         userAnswer: '',
         usedPunIds: new Set([shuffledPuns[0].id]),
-        dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
         partialMatch: '',
       }))
     } else {
@@ -307,22 +246,16 @@ export default function PunderfulGame() {
         feedback: '',
         userAnswer: '',
         usedPunIds: new Set([...prev.usedPunIds, randomPun.id]),
-        dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
         partialMatch: '',
       }))
     }
   }, [gameState, puns])
 
   const resetGame = useCallback(() => {
-    if (gameState.dailyGamesPlayed >= 5 && !gameState.unlimitedMode) {
-      setDailyLimitReached(true)
-      return
-    }
     const shuffledPuns = [...puns].sort(() => Math.random() - 0.5)
     const randomPun = shuffledPuns[0]
     setPuns(shuffledPuns)
-    setGameState(prev => ({
-      ...prev,
+    setGameState({
       currentPun: randomPun,
       userAnswer: '',
       guessedAnswers: [],
@@ -335,10 +268,9 @@ export default function PunderfulGame() {
       showCorrectAnswer: false,
       correctAnswerDisplay: '',
       usedPunIds: new Set([randomPun.id]),
-      dailyGamesPlayed: prev.unlimitedMode ? prev.dailyGamesPlayed : prev.dailyGamesPlayed + 1,
       partialMatch: '',
-    }))
-  }, [gameState, puns])
+    })
+  }, [puns])
 
   const handleEmailSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -408,210 +340,170 @@ export default function PunderfulGame() {
           </div>
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-3 p-3">
-          {dailyLimitReached ? (
-            <div className="text-center space-y-3 p-3">
-              <p className="text-xl font-bold text-gray-800">
-                Daily Limit Reached!
-              </p>
-              <p className="text-lg text-gray-600">You've played 5 games today. Come back tomorrow for more puns!</p>
-              <div className="rounded-lg border-2 border-[#A06CD5] bg-[#A06CD5]/10 p-2 w-full">
-                <p className="text-sm text-center text-gray-800">
-                  Don't forget to share your email address to be invited to the full version of the game as soon as it's ready!
-                </p>
-              </div>
-              {!emailSubmitted && (
-                <form onSubmit={handleEmailSubmit} className="space-y-2 mt-3">
-                  <Input
-                    type="email"
-                    placeholder="Enter your email for updates"
-                    value={email}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                    className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
-                    required
-                  />
-                  <Textarea
-                    placeholder="Optional: Share your thoughts or suggestions..."
-                    value={comment}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
-                    className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
-                  />
-                  <Button 
-                    type="submit"
-                    className="w-full bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
-                  >
-                    Get Notified
-                  </Button>
-                </form>
-              )}
+          <div className="flex flex-wrap justify-center gap-2 text-sm">
+            <div className="px-2 py-1 bg-[#FFD151] text-gray-800 rounded-full">
+              <Trophy className="w-4 h-4 inline-block mr-1" />
+              Score: {gameState.score}
             </div>
-          ) : (
-            <>
-              <div className="flex flex-wrap justify-center gap-2 text-sm">
-                <div className="px-2 py-1 bg-[#FFD151] text-gray-800 rounded-full">
-                  <Trophy className="w-4 h-4 inline-block mr-1" />
-                  Score: {gameState.score}
-                </div>
-                <div className="px-2 py-1 bg-[#FF6B35] text-white rounded-full">
-                  <ChevronRight className="w-4 h-4 inline-block mr-1" />
-                  Attempts: {gameState.attempts}
-                </div>
-                <div className="px-2 py-1 bg-[#247BA0] text-white rounded-full">
-                  <Star className="w-4 h-4 inline-block mr-1" />
-                  Level: {gameState.playerSkillLevel}
-                </div>
-              </div>
-              <AnimatePresence mode="wait">
-                {gameState.isCorrect && gameState.showCorrectAnswer ? (
-                  <motion.div
-                    key="correct-answer"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10"
-                  >
-                    <motion.p
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2, duration: 0.5 }}
-                      className="text-xl font-medium text-[#A06CD5] text-center"
-                    >
-                      Correct!
-                    </motion.p>
-                    <motion.p
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4, duration: 0.5 }}
-                      className="text-lg font-medium text-gray-800 mt-1 text-center"
-                    >
-                      {gameState.correctAnswerDisplay}
-                    </motion.p>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.6, duration: 0.5 }}
-                      className="flex flex-col items-center space-y-2 mt-2"
-                    >
-                      <p className="text-sm text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
-                      <div className="flex justify-center space-x-2">
-                        <Button
-                          onClick={() => handleVote(gameState.currentPun.id, 'up')}
-                          variant="outline"
-                          className="flex items-center space-x-1 text-sm border-[#247BA0] text-[#247BA0] hover:bg-[#247BA0] hover:text-white"
-                        >
-                          <ThumbsUp className="w-4 h-4" />
-                          <span>{gameState.currentPun.votes.up}</span>
-                        </Button>
-                        <Button
-                          onClick={() => handleVote(gameState.currentPun.id, 'down')}
-                          variant="outline"
-                          className="flex items-center space-x-1 text-sm border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
-                        >
-                          <ThumbsDown className="w-4 h-4" />
-                          <span>{gameState.currentPun.votes.down}</span>
-                        </Button>
-                        <Button
-                          onClick={getNextPun}
-                          variant="outline"
-                          className="flex items-center space-x-1 text-sm border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
-                        >
-                          <ArrowRight className="w-4 h-4" />
-                          <span>Next</span>
-                        </Button>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="question"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10 text-center"
-                  >
-                    <p className="text-lg font-medium text-gray-800 mb-1">
-                      {gameState.currentPun.question}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Difficulty: {getDifficultyText(gameState.currentPun.difficulty)}
-                    </p>
-                    {gameState.feedback && (
-                      <p className="text-sm text-center text-gray-700 mt-2">
-                        {gameState.feedback}
-                      </p>
-                    )}
-                    {gameState.partialMatch && (
-                      <p className="text-sm text-center text-[#247BA0] font-medium mt-2">
-                        Parts of the answer: {gameState.partialMatch}
-                      </p>
-                    )}
-                    {gameState.guessedAnswers.length > 0 && (
-                      <div className="text-sm text-center text-gray-700 mt-2">
-                        <span className="font-medium">Previous guesses:</span>
-                        <ol className="list-decimal list-inside">
-                          {gameState.guessedAnswers.map((guess, index) => (
-                            <li key={index}>{guess}</li>
-                          ))}
-                        </ol>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <div className="w-full">
-                <Input
-                  type="text"
-                  placeholder="Enter your answer"
-                  value={gameState.userAnswer}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
-                  onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      handleAnswerSubmit()
-                    }
-                  }}
-                  className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
-                  disabled={gameState.gameOver || gameState.isCorrect}
-                />
-              </div>
-              <div className="flex justify-between w-full space-x-2">
-                <Button
-                  onClick={handleAnswerSubmit}
-                  className="flex-1 bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
-                  disabled={gameState.gameOver || gameState.isCorrect}
+            <div className="px-2 py-1 bg-[#FF6B35] text-white rounded-full">
+              <ChevronRight className="w-4 h-4 inline-block mr-1" />
+              Attempts: {gameState.attempts}
+            </div>
+            <div className="px-2 py-1 bg-[#247BA0] text-white rounded-full">
+              <Star className="w-4 h-4 inline-block mr-1" />
+              Level: {gameState.playerSkillLevel}
+            </div>
+          </div>
+          <AnimatePresence mode="wait">
+            {gameState.isCorrect && gameState.showCorrectAnswer ? (
+              <motion.div
+                key="correct-answer"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.5 }}
+                className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10"
+              >
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="text-xl font-medium text-[#A06CD5] text-center"
                 >
-                  <Send className="w-4 h-4 mr-2" />
-                  Submit
-                </Button>
-                <Button
-                  onClick={handleSkip}
-                  className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm py-2"
-                  disabled={gameState.isCorrect || gameState.gameOver}
+                  Correct!
+                </motion.p>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                  className="text-lg font-medium text-gray-800 mt-1 text-center"
                 >
-                  Skip
-                </Button>
-              </div>
-              {gameState.gameOver && !gameState.isCorrect && (
+                  {gameState.correctAnswerDisplay}
+                </motion.p>
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center space-y-2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  className="flex flex-col items-center space-y-2 mt-2"
                 >
-                  <p className="text-lg font-medium text-gray-800">Game Over!</p>
-                  <p className="text-sm text-gray-600">The correct answer was:</p>
-                  <p className="text-md font-medium text-[#A06CD5]">{gameState.correctAnswerDisplay}</p>
-                  <Button
-                    onClick={resetGame}
-                    className="w-full bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2 mt-2"
-                  >
-                    Play Again
-                  </Button>
+                  <p className="text-sm text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
+                  <div className="flex justify-center space-x-2">
+                    <Button
+                      onClick={() => handleVote(gameState.currentPun.id, 'up')}
+                      variant="outline"
+                      className="flex items-center space-x-1 text-sm border-[#247BA0] text-[#247BA0] hover:bg-[#247BA0] hover:text-white"
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                      <span>{gameState.currentPun.votes.up}</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleVote(gameState.currentPun.id, 'down')}
+                      variant="outline"
+                      className="flex items-center space-x-1 text-sm border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
+                    >
+                      <ThumbsDown className="w-4 h-4" />
+                      <span>{gameState.currentPun.votes.down}</span>
+                    </Button>
+                    <Button
+                      onClick={getNextPun}
+                      variant="outline"
+                      className="flex items-center space-x-1 text-sm border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                      <span>Next</span>
+                    </Button>
+                  </div>
                 </motion.div>
-              )}
-              <Confetti active={gameState.isCorrect} config={confettiConfig} />
-            </>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="question"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.5 }}
+                className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10 text-center"
+              >
+                <p className="text-lg font-medium text-gray-800 mb-1">
+                  {gameState.currentPun.question}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Difficulty: {getDifficultyText(gameState.currentPun.difficulty)}
+                </p>
+                {gameState.feedback && (
+                  <p className="text-sm text-center text-gray-700 mt-2">
+                    {gameState.feedback}
+                  </p>
+                )}
+                {gameState.partialMatch && (
+                  <p className="text-sm text-center text-[#247BA0] font-medium mt-2">
+                    Parts of the answer: {gameState.partialMatch}
+                  </p>
+                )}
+                {gameState.guessedAnswers.length > 0 && (
+                  <div className="text-sm text-center text-gray-700 mt-2">
+                    <span className="font-medium">Previous guesses:</span>
+                    <ol className="list-decimal list-inside">
+                      {gameState.guessedAnswers.map((guess, index) => (
+                        <li key={index}>{guess}</li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <div className="w-full">
+            <Input
+              type="text"
+              placeholder="Enter your answer"
+              value={gameState.userAnswer}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
+              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleAnswerSubmit()
+                }
+              }}
+              className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
+              disabled={gameState.gameOver || gameState.isCorrect}
+            />
+          </div>
+          <div className="flex justify-between w-full space-x-2">
+            <Button
+              onClick={handleAnswerSubmit}
+              className="flex-1 bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
+              disabled={gameState.gameOver || gameState.isCorrect}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Submit
+            </Button>
+            <Button
+              onClick={handleSkip}
+              className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm py-2"
+              disabled={gameState.isCorrect || gameState.gameOver}
+            >
+              Skip
+            </Button>
+          </div>
+          {gameState.gameOver && !gameState.isCorrect && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center space-y-2"
+            >
+              <p className="text-lg font-medium text-gray-800">Game Over!</p>
+              <p className="text-sm text-gray-600">The correct answer was:</p>
+              <p className="text-md font-medium text-[#A06CD5]">{gameState.correctAnswerDisplay}</p>
+              <Button
+                onClick={resetGame}
+                className="w-full bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2 mt-2"
+              >
+                Play Again
+              </Button>
+            </motion.div>
           )}
+          <Confetti active={gameState.isCorrect} config={confettiConfig} />
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-3 border-t border-gray-200 p-3">
           <div className="text-center space-y-2">
@@ -624,7 +516,7 @@ export default function PunderfulGame() {
               <li>• Daily challenges and themed pun collections</li>
             </ul>
           </div>
-          {!emailSubmitted && !dailyLimitReached && (
+          {!emailSubmitted && (
             <form onSubmit={handleEmailSubmit} className="w-full space-y-2">
               <Input
                 type="email"
@@ -657,14 +549,6 @@ export default function PunderfulGame() {
             <p className="text-sm text-red-600 font-medium">
               {submitError}
             </p>
-          )}
-          {!dailyLimitReached && (
-            <Button
-              onClick={resetGame}
-              className="w-full bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm py-2"
-            >
-              Play Again
-            </Button>
           )}
         </CardFooter>
       </Card>
