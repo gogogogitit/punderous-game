@@ -10,6 +10,7 @@ import Confetti from 'react-dom-confetti'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight } from 'lucide-react'
+import { Analytics } from "@vercel/analytics/react"
 
 interface Pun {
   id: number;
