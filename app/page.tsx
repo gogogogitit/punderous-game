@@ -1,9 +1,9 @@
-import PunderfulGame from './PunderfulGame'
+import PunderousGame from './PunderousGame'
 
 export default function Home() {
   return (
     <main>
-      <PunderfulGame />
+      <PunderousGame />
     </main>
   )
 }

@@ -34,7 +34,7 @@ const initialPuns: Pun[] = [
   { id: 10, question: "Why did the golfer bring two pairs of pants?", answer: "In case they got a hole in one", difficulty: 3, votes: { up: 0, down: 0 } },
   { id: 11, question: "What do you call a sleeping bull?", answer: "A bulldozer", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 12, question: "Why don't skeletons fight each other?", answer: "They don't have the guts", difficulty: 2, votes: { up: 0, down: 0 } },
-  { id: 13, question: "What do you call a parade of rabbits hopping backwards?", answer: "A receding hare-line", difficulty: 3, votes: { up: 0, down: 0 } },
+  { id: 13, question: "What do you call a parade of rabbits hopping backwards?", answer: "A receding hare line", difficulty: 3, votes: { up: 0, down: 0 } },
   { id: 14, question: "Why don't scientists trust stairs?", answer: "They're always up to something", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 15, question: "What do you call a fake stone in Ireland?", answer: "A sham rock", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 16, question: "What do you call a belt made of watches?", answer: "A waist of time", difficulty: 2, votes: { up: 0, down: 0 } },
@@ -81,6 +81,7 @@ interface GameState {
   correctAnswerDisplay: string;
   usedPunIds: Set<number>;
   partialMatch: string;
+  revealedLetters: string[];
 }
 
 const confettiConfig = {
@@ -93,13 +94,49 @@ const confettiConfig = {
   stagger: 3,
   width: "10px",
   height: "10px",
-  colors: ["#FF6B35", "#FFD151", "#A06CD5", "#247BA0", "#FFFFFF"]
+  colors: ["#FF6B35", "#A06CD5", "#00B4D8", "#247BA0", "#FFFFFF"]
 }
 
-export default function PunderfulGame() {
-  const [gameState, setGameState] = useState<GameState>(() => {
+const LetterHint: React.FC<{ answer: string; revealedLetters: string[] }> = ({ answer, revealedLetters }) => {
+  const words = answer.split(' ');
+  const isShortAnswer = answer.length <= 12;
+
+  const renderHintLine = (line: string) => (
+    <div className="flex justify-center space-x-1">
+      {line.split('').map((letter, index) => (
+        <span key={index} className="text-lg font-bold w-6 h-8 flex items-center justify-center">
+          {letter === ' ' ? '\u00A0' : (revealedLetters.includes(letter.toLowerCase()) ? letter : '_')}
+        </span>
+      ))}
+    </div>
+  );
+
+  if (isShortAnswer) {
+    return <div className="mt-2">{renderHintLine(answer)}</div>;
+  }
+
+  const firstHalf = words.slice(0, Math.ceil(words.length / 2)).join(' ');
+  const secondHalf = words.slice(Math.ceil(words.length / 2)).join(' ');
+
+  return (
+    <div className="mt-2 space-y-1">
+      {renderHintLine(firstHalf)}
+      {renderHintLine(secondHalf)}
+    </div>
+  );
+};
+
+export default function PunderousGame() {
+  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [puns, setPuns] = useState<Pun[]>([])
+  const [email, setEmail] = useState('')
+  const [emailSubmitted, setEmailSubmitted] = useState(false)
+  const [comment, setComment] = useState('')
+  const [submitError, setSubmitError] = useState('')
+
+  useEffect(() => {
     const initialPun = initialPuns[Math.floor(Math.random() * initialPuns.length)];
-    return {
+    setGameState({
       currentPun: initialPun,
       userAnswer: '',
       guessedAnswers: [],
@@ -113,16 +150,14 @@ export default function PunderfulGame() {
       correctAnswerDisplay: '',
       usedPunIds: new Set<number>([initialPun.id]),
       partialMatch: '',
-    };
-  });
-  const [puns, setPuns] = useState<Pun[]>(initialPuns)
-  const [email, setEmail] = useState('')
-  const [emailSubmitted, setEmailSubmitted] = useState(false)
-  const [comment, setComment] = useState('')
-  const [submitError, setSubmitError] = useState('')
+      revealedLetters: [],
+    });
+    setPuns(initialPuns);
+  }, []);
 
   useEffect(() => {
-    const storedPuns = localStorage.getItem('punderfulPuns')
+    if (!gameState) return;
+    const storedPuns = localStorage.getItem('punderousPuns')
     if (storedPuns) {
       try {
         const parsedStoredPuns = JSON.parse(storedPuns)
@@ -135,16 +170,17 @@ export default function PunderfulGame() {
         console.error('Error parsing stored puns:', error)
       }
     }
-  }, [])
+  }, [gameState])
 
   useEffect(() => {
+    if (!gameState) return;
     try {
       const punsToStore = puns.map(({ id, votes }) => ({ id, votes }))
-      localStorage.setItem('punderfulPuns', JSON.stringify(punsToStore))
+      localStorage.setItem('punderousPuns', JSON.stringify(punsToStore))
     } catch (error) {
       console.error('Error saving puns to localStorage:', error)
     }
-  }, [puns])
+  }, [puns, gameState])
 
   const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
     const cleanAnswer = (answer: string) => 
@@ -163,7 +199,7 @@ export default function PunderfulGame() {
     const allWordsPresent = correctWords.every(word => userWords.includes(word));
     const matchPercentage = correctWords.filter(word => userWords.includes(word)).length / correctWords.length;
 
-    return allWordsPresent || matchPercentage >= 0.7;
+    return allWordsPresent || matchPercentage >= 0.6;
   }, [])
 
   const findPartialMatch = useCallback((userGuess: string, correctAnswer: string, previousGuesses: string[]): string | null => {
@@ -177,53 +213,68 @@ export default function PunderfulGame() {
   }, [])
 
   const handleAnswerSubmit = useCallback(() => {
-    if (gameState.userAnswer.trim() === '' || gameState.gameOver) return
+    if (!gameState || gameState.userAnswer.trim() === '' || gameState.gameOver) return
     const correctAnswer = gameState.currentPun.answer;
     const userGuess = gameState.userAnswer;
-    if (compareAnswers(userGuess, correctAnswer)) {
+    const newRevealedLetters = [...gameState.revealedLetters]
+    userGuess.toLowerCase().split('').forEach(letter => {
+      if (correctAnswer.toLowerCase().includes(letter) && !newRevealedLetters.includes(letter)) {
+        newRevealedLetters.push(letter)
+      }
+    })
+
+    const isFullyRevealed = correctAnswer.toLowerCase().split('').every(letter => 
+      letter === ' ' || newRevealedLetters.includes(letter)
+    );
+
+    if (compareAnswers(userGuess, correctAnswer) || isFullyRevealed) {
       const pointsEarned = gameState.currentPun.difficulty;
       setGameState(prev => ({
-        ...prev,
-        score: prev.score + pointsEarned,
-        playerSkillLevel: Math.min(prev.playerSkillLevel + 1, 3),
+        ...prev!,
+        score: prev!.score + pointsEarned,
+        playerSkillLevel: prev!.playerSkillLevel + 1,
         isCorrect: true,
         showCorrectAnswer: true,
         correctAnswerDisplay: correctAnswer,
         userAnswer: '',
         feedback: `Correct! You earned ${pointsEarned} point${pointsEarned > 1 ? 's' : ''}.`,
-        usedPunIds: new Set([...prev.usedPunIds, prev.currentPun.id]),
-        guessedAnswers: [...prev.guessedAnswers, userGuess],
+        usedPunIds: new Set([...prev!.usedPunIds, prev!.currentPun.id]),
+        guessedAnswers: [...prev!.guessedAnswers, userGuess],
+        revealedLetters: Array.from(new Set([...newRevealedLetters, ...correctAnswer.toLowerCase().split('')])),
       }))
     } else {
       setGameState(prev => {
-        const newAttempts = prev.attempts - 1
-        const partialMatchResult = findPartialMatch(userGuess, correctAnswer, prev.guessedAnswers)
+        const newAttempts = prev!.attempts - 1
+        const partialMatchResult = findPartialMatch(userGuess, correctAnswer, prev!.guessedAnswers)
         const newFeedback = newAttempts === 0
           ? `Game over!`
           : `Not quite! You have ${newAttempts} attempts left.`
         return {
-          ...prev,
+          ...prev!,
           attempts: newAttempts,
-          guessedAnswers: [...prev.guessedAnswers, userGuess],
+          playerSkillLevel: 1,
+          guessedAnswers: [...prev!.guessedAnswers, userGuess],
           partialMatch: partialMatchResult || '',
           feedback: newFeedback,
           gameOver: newAttempts === 0,
           userAnswer: '',
           showCorrectAnswer: newAttempts === 0,
           correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
+          revealedLetters: newRevealedLetters,
         }
       })
     }
   }, [gameState, compareAnswers, findPartialMatch])
 
   const getNextPun = useCallback(() => {
+    if (!gameState) return;
     const unusedPuns = puns.filter(pun => !gameState.usedPunIds.has(pun.id) && pun.difficulty <= gameState.playerSkillLevel)
     
     if (unusedPuns.length === 0) {
       const shuffledPuns = [...puns].sort(() => Math.random() - 0.5)
       setPuns(shuffledPuns)
       setGameState(prev => ({
-        ...prev,
+        ...prev!,
         currentPun: shuffledPuns[0],
         attempts: 5,
         guessedAnswers: [],
@@ -233,11 +284,12 @@ export default function PunderfulGame() {
         userAnswer: '',
         usedPunIds: new Set([shuffledPuns[0].id]),
         partialMatch: '',
+        revealedLetters: [],
       }))
     } else {
       const randomPun = unusedPuns[Math.floor(Math.random() * unusedPuns.length)]
       setGameState(prev => ({
-        ...prev,
+        ...prev!,
         currentPun: randomPun,
         attempts: 5,
         guessedAnswers: [],
@@ -245,8 +297,9 @@ export default function PunderfulGame() {
         isCorrect: false,
         feedback: '',
         userAnswer: '',
-        usedPunIds: new Set([...prev.usedPunIds, randomPun.id]),
+        usedPunIds: new Set([...prev!.usedPunIds, randomPun.id]),
         partialMatch: '',
+        revealedLetters: [],
       }))
     }
   }, [gameState, puns])
@@ -269,6 +322,7 @@ export default function PunderfulGame() {
       correctAnswerDisplay: '',
       usedPunIds: new Set([randomPun.id]),
       partialMatch: '',
+      revealedLetters: [],
     })
   }, [puns])
 
@@ -309,33 +363,37 @@ export default function PunderfulGame() {
   }, [])
 
   const handleSkip = useCallback(() => {
-    if (!gameState.isCorrect && !gameState.gameOver) getNextPun()
+    if (gameState && !gameState.isCorrect && !gameState.gameOver) getNextPun()
   }, [gameState, getNextPun])
 
   const getDifficultyText = (difficulty: number): string => difficulty === 1 ? "Easy (1 point)" :
     difficulty === 2 ? "Medium (2 points)" :
     difficulty === 3 ? "Hard (3 points)" : "Unknown";
 
+  if (!gameState) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#A06CD5] to-[#6247AA] p-2">
+    <div className="min-h-screen flex items-center justify-center bg-[#00B4D8] p-2">
       <Card className="w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center border-b border-gray-200 py-3">
           <div className="flex flex-col items-center justify-center">
-            <div className="relative w-32 h-32 mb-2">
+            <div className="relative w-[180px] h-[180px] mb-2">
               <Image
-                src="/lettuce.png"
-                alt="Punderful™ Logo"
-                width={128}
-                height={128}
-                className="object-contain"
+                src="/punderous-logo.png"
+                alt="Punderous™ Logo"
+                width={200}
+                height={200}
+                className="object-contain drop-shadow-lg"
                 priority
               />
             </div>
             <p className="text-sm text-gray-600 mb-2">
               A pun-filled word game where we ask the questions and you guess the puns!
             </p>
-            <CardDescription className="text-lg font-medium text-[#A06CD5]">
-              Lettuce play.
+            <CardDescription className="text-lg font-medium text-[#00B4D8]">
+              Let the Brainstorm Begin!
             </CardDescription>
           </div>
         </CardHeader>
@@ -349,7 +407,7 @@ export default function PunderfulGame() {
               <ChevronRight className="w-4 h-4 inline-block mr-1" />
               Attempts: {gameState.attempts}
             </div>
-            <div className="px-2 py-1 bg-[#247BA0] text-white rounded-full">
+            <div className="px-2 py-1 bg-[#A06CD5] text-white rounded-full">
               <Star className="w-4 h-4 inline-block mr-1" />
               Level: {gameState.playerSkillLevel}
             </div>
@@ -362,13 +420,13 @@ export default function PunderfulGame() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.5 }}
-                className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10"
+                className="w-full rounded-lg border-2 border-[#00B4D8] p-3 bg-[#00B4D8]/10"
               >
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className="text-xl font-medium text-[#A06CD5] text-center"
+                  className="text-xl font-medium text-[#00B4D8] text-center"
                 >
                   Correct!
                 </motion.p>
@@ -391,7 +449,7 @@ export default function PunderfulGame() {
                     <Button
                       onClick={() => handleVote(gameState.currentPun.id, 'up')}
                       variant="outline"
-                      className="flex items-center space-x-1 text-sm border-[#247BA0] text-[#247BA0] hover:bg-[#247BA0] hover:text-white"
+                      className="flex items-center space-x-1 text-sm border-[#00B4D8] text-[#00B4D8] hover:bg-[#00B4D8] hover:text-white"
                     >
                       <ThumbsUp className="w-4 h-4" />
                       <span>{gameState.currentPun.votes.up}</span>
@@ -422,7 +480,7 @@ export default function PunderfulGame() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.5 }}
-                className="w-full rounded-lg border-2 border-[#A06CD5] p-3 bg-[#A06CD5]/10 text-center"
+                className="w-full rounded-lg border-2 border-[#00B4D8] p-3 bg-[#00B4D8]/10 text-center"
               >
                 <p className="text-lg font-medium text-gray-800 mb-1">
                   {gameState.currentPun.question}
@@ -435,8 +493,9 @@ export default function PunderfulGame() {
                     {gameState.feedback}
                   </p>
                 )}
+                <LetterHint answer={gameState.currentPun.answer} revealedLetters={gameState.revealedLetters} />
                 {gameState.partialMatch && (
-                  <p className="text-sm text-center text-[#247BA0] font-medium mt-2">
+                  <p className="text-sm text-center text-[#00B4D8] font-medium mt-2">
                     Parts of the answer: {gameState.partialMatch}
                   </p>
                 )}
@@ -458,21 +517,21 @@ export default function PunderfulGame() {
               type="text"
               placeholder="Enter your answer"
               value={gameState.userAnswer}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGameState(prev => ({ ...prev!, userAnswer: e.target.value }))}
               onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
                   handleAnswerSubmit()
                 }
               }}
-              className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
+              className="w-full text-sm border-2 border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8]"
               disabled={gameState.gameOver || gameState.isCorrect}
             />
           </div>
           <div className="flex justify-between w-full space-x-2">
             <Button
               onClick={handleAnswerSubmit}
-              className="flex-1 bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
+              className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-sm py-2"
               disabled={gameState.gameOver || gameState.isCorrect}
             >
               <Send className="w-4 h-4 mr-2" />
@@ -494,10 +553,10 @@ export default function PunderfulGame() {
             >
               <p className="text-lg font-medium text-gray-800">Game Over!</p>
               <p className="text-sm text-gray-600">The correct answer was:</p>
-              <p className="text-md font-medium text-[#A06CD5]">{gameState.correctAnswerDisplay}</p>
+              <p className="text-md font-medium text-[#00B4D8]">{gameState.correctAnswerDisplay}</p>
               <Button
                 onClick={resetGame}
-                className="w-full bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2 mt-2"
+                className="w-full bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-sm py-2 mt-2"
               >
                 Play Again
               </Button>
@@ -507,7 +566,7 @@ export default function PunderfulGame() {
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-3 border-t border-gray-200 p-3">
           <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">Coming Soon: Punderful™ Full Version</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Coming Soon: Punderous™ Full Version</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• AI-powered pun game that adapts to your skill level</li>
               <li>• Create and share your own puns for inclusion in the game</li>
@@ -523,18 +582,18 @@ export default function PunderfulGame() {
                 placeholder="Enter your email for updates"
                 value={email}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
+                className="w-full text-sm border-2 border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8]"
                 required
               />
               <Textarea
                 placeholder="Optional: Share your thoughts or suggestions..."
                 value={comment}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
-                className="w-full text-sm border-2 border-gray-300 focus:border-[#A06CD5] focus:ring-[#A06CD5]"
+                className="w-full text-sm border-2 border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8]"
               />
               <Button 
                 type="submit"
-                className="w-full bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-sm py-2"
+                className="w-full bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-sm py-2"
               >
                 Get Notified
               </Button>
