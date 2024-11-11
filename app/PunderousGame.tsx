@@ -138,6 +138,24 @@ export default function PunderousGame() {
   const [comment, setComment] = useState('')
   const [submitError, setSubmitError] = useState('')
 
+  const wordCache = new Map<string, boolean>();
+
+  useEffect(() => {
+    const metaViewport = document.querySelector('meta[name=viewport]')
+    const viewportContent = metaViewport ? metaViewport.getAttribute('content') : ''
+    const disableZoom = ', maximum-scale=1.0, user-scalable=0'
+
+    if (metaViewport && !viewportContent?.includes(disableZoom)) {
+      metaViewport.setAttribute('content', `${viewportContent}${disableZoom}`)
+    }
+
+    return () => {
+      if (metaViewport && viewportContent) {
+        metaViewport.setAttribute('content', viewportContent)
+      }
+    }
+  }, [])
+
   useEffect(() => {
     const initialPun = initialPuns[Math.floor(Math.random() * initialPuns.length)];
     setGameState({
@@ -225,18 +243,20 @@ export default function PunderousGame() {
     return alphabet.split('').every(letter => lowercaseInput.includes(letter));
   }
 
-  const isEnglishWord = (word: string): boolean => {
-    // This is a basic check. In a production environment, you might want to use a more comprehensive dictionary.
-    const commonEnglishWords = new Set([
-      'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'I',
-      'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
-      'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she',
-      'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what',
-      'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me',
-      // Add more common words as needed
-    ]);
+  const isEnglishWord = async (word: string): Promise<boolean> => {
+    if (wordCache.has(word)) {
+      return wordCache.get(word)!;
+    }
 
-    return commonEnglishWords.has(word.toLowerCase());
+    try {
+      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+      const result = response.ok;
+      wordCache.set(word, result);
+      return result;
+    } catch (error) {
+      console.error('Error checking word:', error);
+      return false;
+    }
   }
 
   const isPartOfAnswer = (word: string, answer: string): boolean => {
@@ -244,41 +264,20 @@ export default function PunderousGame() {
     return answerWords.some(answerWord => answerWord.includes(word.toLowerCase()));
   }
 
-  const isRandomLetters = (input: string, correctAnswer: string): boolean => {
-    const words = input.trim().split(/\s+/);
-    
-    const isLikelyWord = (word: string): boolean => {
-      // Check if the word is part of the answer or a valid English word
-      if (isPartOfAnswer(word, correctAnswer) || isEnglishWord(word)) return true;
-
-      // Check if the word is at least 2 characters long
-      if (word.length < 2) return false;
-
-      // Check for vowels
-      if (!/[aeiou]/i.test(word)) return false;
-
-      // Check for unusually long consonant clusters
-      if (/[bcdfghjklmnpqrstvwxyz]{5,}/i.test(word)) return false;
-
-      // Check for repeating letters (more than 2 in a row)
-      if (/(.)\1{2,}/.test(word)) return false;
-
-      return true;
-    };
-
-    return words.some(word => !isLikelyWord(word));
+  const isValidWord = async (word: string, answer: string): Promise<boolean> => {
+    return isPartOfAnswer(word, answer) || await isEnglishWord(word);
   }
 
   const hasTooManyWords = (input: string, correctAnswer: string): boolean => {
     const inputWords = input.trim().split(/\s+/);
     const answerWords = correctAnswer.trim().split(/\s+/);
-    return inputWords.length > answerWords.length + 2; // Allow for a bit of flexibility
+    return inputWords.length > answerWords.length + 2;
   }
 
-  const handleAnswerSubmit = useCallback(() => {
-    if (!gameState || gameState.userAnswer.trim() === '' || gameState.gameOver) return
+  const handleAnswerSubmit = useCallback(async () => {
+    if (!gameState || gameState.userAnswer.trim() === '' || gameState.gameOver) return;
     const correctAnswer = gameState.currentPun.answer;
-    const userGuess = gameState.userAnswer;
+    const userGuess = gameState.userAnswer.trim();
 
     if (containsFullAlphabet(userGuess)) {
       setGameState(prev => ({
@@ -288,18 +287,6 @@ export default function PunderousGame() {
         tooManyWordsAttempt: false,
         userAnswer: '',
         feedback: 'Entering the full alphabet isn\'t allowed.',
-      }));
-      return;
-    }
-
-    if (isRandomLetters(userGuess, correctAnswer)) {
-      setGameState(prev => ({
-        ...prev!,
-        fullAlphabetAttempt: false,
-        randomLettersAttempt: true,
-        tooManyWordsAttempt: false,
-        userAnswer: '',
-        feedback: 'Please enter valid words only.',
       }));
       return;
     }
@@ -316,12 +303,33 @@ export default function PunderousGame() {
       return;
     }
 
-    const newRevealedLetters = [...gameState.revealedLetters]
+    const words = userGuess.split(/\s+/);
+    const invalidWords: string[] = [];
+
+    for (const word of words) {
+      if (!(await isValidWord(word, correctAnswer))) {
+        invalidWords.push(word);
+      }
+    }
+
+    if (invalidWords.length > 0) {
+      setGameState(prev => ({
+        ...prev!,
+        fullAlphabetAttempt: false,
+        randomLettersAttempt: true,
+        tooManyWordsAttempt: false,
+        userAnswer: '',
+        feedback: `Invalid word${invalidWords.length > 1 ? 's' : ''}: ${invalidWords.join(', ')}. Please use valid English words.`,
+      }));
+      return;
+    }
+
+    const newRevealedLetters = [...gameState.revealedLetters];
     userGuess.toLowerCase().split('').forEach(letter => {
       if (correctAnswer.toLowerCase().includes(letter) && !newRevealedLetters.includes(letter)) {
-        newRevealedLetters.push(letter)
+        newRevealedLetters.push(letter);
       }
-    })
+    });
 
     const isFullyRevealed = correctAnswer.toLowerCase().split('').every(letter => 
       letter === ' ' || newRevealedLetters.includes(letter)
@@ -344,18 +352,18 @@ export default function PunderousGame() {
         fullAlphabetAttempt: false,
         randomLettersAttempt: false,
         tooManyWordsAttempt: false,
-      }))
+      }));
     } else {
       setGameState(prev => {
-        const newAttempts = prev!.attempts - 1
-        const partialMatchResult = findPartialMatch(userGuess, correctAnswer, prev!.guessedAnswers)
+        const newAttempts = prev!.attempts - 1;
+        const partialMatchResult = findPartialMatch(userGuess, correctAnswer, prev!.guessedAnswers);
         const newFeedback = newAttempts === 0
           ? `Game over!`
-          : `Not quite! You have ${newAttempts} attempts left.`
+          : `Not quite! You have ${newAttempts} attempts left.`;
         return {
           ...prev!,
           attempts: newAttempts,
-          playerSkillLevel: 1,
+          playerSkillLevel: newAttempts === 0 ? 1 : prev!.playerSkillLevel,
           guessedAnswers: [...prev!.guessedAnswers, userGuess],
           partialMatch: partialMatchResult || '',
           feedback: newFeedback,
@@ -367,10 +375,10 @@ export default function PunderousGame() {
           fullAlphabetAttempt: false,
           randomLettersAttempt: false,
           tooManyWordsAttempt: false,
-        }
-      })
+        };
+      });
     }
-  }, [gameState, compareAnswers, findPartialMatch])
+  }, [gameState, compareAnswers, findPartialMatch, ]);
 
   const getNextPun = useCallback(() => {
     if (!gameState) return;
@@ -493,9 +501,9 @@ export default function PunderousGame() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#00B4D8] p-2">
       <Card className="w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-sm">
-        <CardHeader className="text-center border-b border-gray-200 py-3">
+        <CardHeader className="text-center border-b border-gray-200 py-1.5">
           <div className="flex flex-col items-center justify-center">
-            <div className="relative w-[300px] h-[300px] mb-2">
+            <div className="relative w-[300px] h-[300px] mb-3">
               <Image
                 src="/punderous-logo.png"
                 alt="Punderous™ Logo"
@@ -660,7 +668,7 @@ export default function PunderousGame() {
           </div>
           <div className="flex justify-between w-full space-x-2">
             <Button
-              onClick={handleAnswerSubmit}
+              onClick={() => handleAnswerSubmit()}
               className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-sm py-2"
               disabled={gameState.gameOver || gameState.isCorrect || gameState.fullAlphabetAttempt || gameState.randomLettersAttempt || gameState.tooManyWordsAttempt}
             >
