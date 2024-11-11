@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import Confetti from 'react-dom-confetti'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight } from 'lucide-react'
+import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign } from 'lucide-react'
 import { Analytics } from "@vercel/analytics/react"
 
 interface Pun {
@@ -32,7 +32,6 @@ const initialPuns: Pun[] = [
   { id: 6, question: "Why don't eggs tell jokes?", answer: "They crack up", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 7, question: "What do you call a can opener that doesn't work?", answer: "A can't opener", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 8, question: "Why did the math book look so sad?", answer: "It had too many problems", difficulty: 2, votes: { up: 0, down: 0 } },
-  { id: 9, question: "What do you call a boomerang that doesn't come back?", answer: "A stick", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 10, question: "Why did the golfer bring two pairs of pants?", answer: "In case they got a hole in one", difficulty: 3, votes: { up: 0, down: 0 } },
   { id: 11, question: "What do you call a sleeping bull?", answer: "A bulldozer", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 12, question: "Why don't skeletons fight each other?", answer: "They don't have the guts", difficulty: 2, votes: { up: 0, down: 0 } },
@@ -47,8 +46,7 @@ const initialPuns: Pun[] = [
   { id: 21, question: "Why don't oysters donate to charity?", answer: "They're shellfish", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 22, question: "Why did the lazy gym close down?", answer: "It didn't work out", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 23, question: "Why did the bicycle fall over?", answer: "It was two-tired", difficulty: 1, votes: { up: 0, down: 0 } },
-  { id: 24, question: "How does the moon cut its hair?", answer: "Eclipse it", difficulty: 2, votes: { up: 0, down: 0 } },
-  { id: 25, question: "Why did the tomato turn red?", answer: "It saw the salad dressing", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 24, question: "How does the moon cut his hair?", answer: "Eclipse it", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 26, question: "What do you call cheese that isn't yours?", answer: "Nacho cheese", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 27, question: "Why are ghosts bad at lying?", answer: "They're too transparent", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 28, question: "How do trees access the internet?", answer: "They log in", difficulty: 1, votes: { up: 0, down: 0 } },
@@ -56,15 +54,14 @@ const initialPuns: Pun[] = [
   { id: 30, question: "How do celebrities stay cool?", answer: "Lots of fans", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 31, question: "Why did the banana go to the doctor?", answer: "It wasn't peeling well", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 32, question: "What's orange and sounds like a parrot?", answer: "A carrot", difficulty: 1, votes: { up: 0, down: 0 } },
-  { id: 33, question: "What did one wall say to the other wall?", answer: "Let's meet at the corner", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 34, question: "What did the ocean say to the beach?", answer: "Nothing, it waved", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 35, question: "Why can't a nose be 12 inches long?", answer: "It would be a foot", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 36, question: "What kind of shoes do ninjas wear?", answer: "Sneakers", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 37, question: "How does a train eat?", answer: "Chew chew", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 38, question: "What's brown and sticky?", answer: "A stick", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 39, question: "Why do melons have formal weddings?", answer: "Because they cantaloupe", difficulty: 2, votes: { up: 0, down: 0 } },
-  { id: 40, question: "How do you make a tissue dance?", answer: "Put a little boogie in it", difficulty: 2, votes: { up: 0, down: 0 } },
-  { id: 41, question: "Why did the skeleton go to the party alone?", answer: "He had no body to go with him", difficulty: 2, votes: { up: 0, down: 0 } },
+  { id: 40, question: "How do you make a tissue dance?", answer: "Put a boogie in it", difficulty: 2, votes: { up: 0, down: 0 } },
+  { id: 41, question: "Why did the skeleton go to the party alone?", answer: "They had no body to go with", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 42, question: "Why did the belt get arrested?", answer: "It held up a pair of pants", difficulty: 2, votes: { up: 0, down: 0 } },
   { id: 43, question: "What do you call a snowman with a six-pack?", answer: "An abdominal snowman", difficulty: 2, votes: { up: 0, down: 0 } },
 ]
@@ -372,7 +369,7 @@ export default function PunderousGame() {
         tooManyWordsAttempt: false,
       }));
     }
-  }, [gameState, compareAnswers, findPartialMatch, ]);
+  }, [gameState, compareAnswers, findPartialMatch]);
 
   const getNextPun = useCallback(() => {
     if (!gameState) return;
@@ -483,6 +480,13 @@ export default function PunderousGame() {
   const handleSkip = useCallback(() => {
     if (gameState && !gameState.isCorrect && !gameState.gameOver) getNextPun()
   }, [gameState, getNextPun])
+
+  const handleDonation = useCallback((platform: 'paypal' | 'venmo') => {
+    const paypalUrl = 'https://www.paypal.com/ncp/payment/RJJZ7Z78PTDUW'
+    const venmoUrl = 'https://venmo.com/u/punderousgame'
+
+    window.open(platform === 'paypal' ? paypalUrl : venmoUrl, '_blank', 'noopener,noreferrer')
+  }, [])
 
   const getDifficultyText = (difficulty: number): string => difficulty === 1 ? "Easy (1 point)" :
     difficulty === 2 ? "Medium (2 points)" :
@@ -707,40 +711,68 @@ export default function PunderousGame() {
               <li>• Daily challenges and themed pun collections</li>
             </ul>
           </div>
-          {!emailSubmitted && (
-            <form onSubmit={handleEmailSubmit} className="w-full space-y-2">
-              <Input
-                type="email"
-                placeholder="Enter your email for updates"
-                value={email}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                className="w-full text-sm border-2 border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8]"
-                required
-              />
-              <Textarea
-                placeholder="Optional: Share your thoughts or suggestions..."
-                value={comment}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
-                className="w-full text-sm border-2 border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8]"
-              />
-              <Button 
-                type="submit"
-                className="w-full bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-sm py-2"
+
+          <div className="w-full space-y-2 mt-4">
+            {!emailSubmitted && (
+              <form onSubmit={handleEmailSubmit} className="w-full space-y-2">
+                <Input
+                  type="email"
+                  placeholder="Enter your email for updates"
+                  value={email}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                  className="w-full text-sm border-2 border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8]"
+                  required
+                />
+                <Textarea
+                  placeholder="Optional: Share your thoughts or suggestions..."
+                  value={comment}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
+                  className="w-full text-sm border-2 border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8]"
+                />
+                <Button 
+                  type="submit"
+                  className="w-full bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-sm py-2"
+                >
+                  Get Notified
+                </Button>
+              </form>
+            )}
+            {emailSubmitted && (
+              <p className="text-sm text-green-600 font-medium">
+                Thank you for your interest! We'll keep you updated on the full version release.
+              </p>
+            )}
+            {submitError && (
+              <p className="text-sm text-red-600 font-medium">
+                {submitError}
+              </p>
+            )}
+          </div>
+
+          <div className="w-full space-y-2 mt-4">
+            <h3 className="text-lg font-semibold text-gray-800 text-center">Support Punderous™ Development</h3>
+            <p className="text-sm text-gray-600 text-center mb-4">Your contribution helps bring the full version to life! Choose your preferred payment method:</p>
+            <div className="flex flex-col sm:flex-row justify-center gap-2">
+              <Button
+                onClick={() => handleDonation('paypal')}
+                className="bg-[#0070BA] text-white hover:bg-[#003087] text-sm py-2 flex-1"
               >
-                Get Notified
+                <CircleDollarSign className="w-4 h-4 mr-2" />
+                Support with PayPal
               </Button>
-            </form>
-          )}
-          {emailSubmitted && (
-            <p className="text-sm text-green-600 font-medium">
-              Thank you for your interest! We'll keep you updated on the full version release.
+              <Button
+                onClick={() => handleDonation('venmo')}
+                className="bg-[#008CFF] text-white hover:bg-[#0070BA] text-sm py-2 flex-1"
+              >
+                <CircleDollarSign className="w-4 h-4 mr-2" />
+                Support with Venmo
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 text-center mt-2">
+              All donations directly support game development and future features.
             </p>
-          )}
-          {submitError && (
-            <p className="text-sm text-red-600 font-medium">
-              {submitError}
-            </p>
-          )}
+          </div>
+
           <div className="text-xs text-gray-500 mt-4">
             © 2024 MJKUltra. All rights reserved.
             <Link href="/privacy-policy" className="ml-2 text-[#00B4D8] hover:underline">
