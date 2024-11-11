@@ -501,7 +501,7 @@ export default function PunderousGame() {
       <Card className="w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center border-b border-gray-200 py-1.5">
           <div className="flex flex-col items-center justify-center">
-            <div className="relative w-[300px] h-[300px] mb-3">
+            <div className="relative w-[250px] h-[250px] mb-3">
               <Image
                 src="/punderous-logo.png"
                 alt="Punderous™ Logo"
