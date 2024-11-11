@@ -495,12 +495,12 @@ export default function PunderousGame() {
       <Card className="w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center border-b border-gray-200 py-3">
           <div className="flex flex-col items-center justify-center">
-            <div className="relative w-[180px] h-[180px] mb-2">
+            <div className="relative w-[300px] h-[300px] mb-2">
               <Image
                 src="/punderous-logo.png"
                 alt="Punderous™ Logo"
-                width={220}
-                height={220}
+                width={300}
+                height={300}
                 className="object-contain drop-shadow-lg"
                 priority
               />
