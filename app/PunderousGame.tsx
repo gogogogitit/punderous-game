@@ -780,10 +780,10 @@ export default function PunderousGame() {
           <div className="text-center space-y-2">
             <h3 className="text-xl font-semibold text-gray-800">Coming Soon: Punderous™ Full Version</h3>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• AI-powered pun game that adapts to your skill level</li>
+              <li>• AI-powered pun game that adapts to your skill</li>
               <li>• Create and share your own puns in the game</li>
               <li>• Compete with friends and climb the leaderboard</li>
-              <li>• Unlock achievements and earn badges as you play</li>
+              <li>• Unlock achievements and earn badges</li>
               <li>• Earn points for speed and consecutive answers</li>
             </ul>
           </div>
