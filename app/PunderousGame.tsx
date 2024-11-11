@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import Confetti from 'react-dom-confetti'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign } from 'lucide-react'
+import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
 import { Analytics } from "@vercel/analytics/react"
 
 interface Pun {
@@ -216,33 +216,6 @@ export default function PunderousGame() {
     setPuns(initialPuns);
   }, []);
 
-  useEffect(() => {
-    if (!gameState) return;
-    const storedPuns = localStorage.getItem('punderousPuns')
-    if (storedPuns) {
-      try {
-        const parsedStoredPuns = JSON.parse(storedPuns)
-        const updatedPuns = initialPuns.map(pun => {
-          const storedPun = parsedStoredPuns.find((p: Pun) => p.id === pun.id)
-          return storedPun ? { ...pun, votes: storedPun.votes } : pun
-        })
-        setPuns(updatedPuns)
-      } catch (error) {
-        console.error('Error parsing stored puns:', error)
-      }
-    }
-  }, [gameState])
-
-  useEffect(() => {
-    if (!gameState) return;
-    try {
-      const punsToStore = puns.map(({ id, votes }) => ({ id, votes }))
-      localStorage.setItem('punderousPuns', JSON.stringify(punsToStore))
-    } catch (error) {
-      console.error('Error saving puns to localStorage:', error)
-    }
-  }, [puns, gameState])
-
   const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
     const cleanAnswer = (answer: string) => 
       answer.toLowerCase()
@@ -411,8 +384,7 @@ export default function PunderousGame() {
 
   const getNextPun = useCallback(() => {
     if (!gameState) return;
-    const unusedPuns = puns.filter(pun => !gameState.usedPunIds.has(pun.id) && pun.difficulty <= gameState.playerSkillLevel
-    )
+    const unusedPuns = puns.filter(pun => !gameState.usedPunIds.has(pun.id) && pun.difficulty <= gameState.playerSkillLevel)
     
     if (unusedPuns.length === 0) {
       const shuffledPuns = [...puns].sort(() => Math.random() - 0.5)
@@ -524,6 +496,30 @@ export default function PunderousGame() {
     const venmoUrl = 'https://venmo.com/u/punderousgame'
 
     window.open(platform === 'paypal' ? paypalUrl : venmoUrl, '_blank', 'noopener,noreferrer')
+  }, [])
+
+  const handleShare = useCallback(() => {
+    const shareUrl = window.location.origin
+    const shareText = "Check out Punderous™ - A pun-filled word game that will make you laugh and groan!"
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'Punderous™',
+        text: shareText,
+        url: shareUrl,
+      })
+        .then(() => console.log('Successful share'))
+        .catch((error) => console.error('Error sharing:', error));
+    } else {
+      navigator.clipboard.writeText(`${shareText} ${shareUrl}`)
+        .then(() => {
+          alert('Link copied to clipboard! Share it with your friends!');
+        })
+        .catch((error) => {
+          console.error('Error copying text:', error);
+          alert('Unable to copy link. Please try again.');
+        });
+    }
   }, [])
 
   const getDifficultyText = (difficulty: number): string => difficulty === 1 ? "Easy (1 point)" :
@@ -719,6 +715,17 @@ export default function PunderousGame() {
               Skip
             </Button>
           </div>
+          
+          <div className="w-full space-y-2 mt-4">
+            <Button 
+              onClick={handleShare}
+              className="w-full bg-[#4267B2] text-white hover:bg-[#365899] text-sm py-2 flex items-center justify-center"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Share Punderous™
+            </Button>
+          </div>
+
           {gameState.gameOver && !gameState.isCorrect && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
