@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import Confetti from 'react-dom-confetti'
 import Image from 'next/image'
+import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight } from 'lucide-react'
 
 interface Pun {
@@ -383,8 +384,8 @@ export default function PunderousGame() {
               <Image
                 src="/punderous-logo.png"
                 alt="Punderous™ Logo"
-                width={200}
-                height={200}
+                width={180}
+                height={180}
                 className="object-contain drop-shadow-lg"
                 priority
               />
@@ -609,6 +610,12 @@ export default function PunderousGame() {
               {submitError}
             </p>
           )}
+          <div className="text-xs text-gray-500 mt-4">
+            © 2024 MJKUltra. All rights reserved.
+            <Link href="/privacy-policy" className="ml-2 text-[#00B4D8] hover:underline">
+              Privacy Policy
+            </Link>
+          </div>
         </CardFooter>
       </Card>
     </div>
