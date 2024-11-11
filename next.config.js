@@ -1,8 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    domains: ['punderous.com'],
+  reactStrictMode: true,
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        zlib: false,
+      };
+    }
+    return config;
   },
-}
+};
 
-module.exports = nextConfig
+export default nextConfig;

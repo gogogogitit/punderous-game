@@ -1,6 +1,8 @@
-cat << EOF > scripts/create-dictionary.js
 import fs from 'fs/promises';
 import zlib from 'zlib';
+import { promisify } from 'util';
+
+const gzip = promisify(zlib.gzip);
 
 const top500Words = [
   'I', 'a', 'of', 'to', 'in', 'it', 'is', 'be', 'as', 'at', 'so', 'we', 'he', 'by', 'or', 'on', 'do', 'if', 'me', 'my', 'up', 'an', 'go', 'no', 'us', 'am',
@@ -9,8 +11,12 @@ const top500Words = [
 ];
 
 const content = top500Words.join('\n');
-const compressed = zlib.gzipSync(content);
 
-await fs.writeFile('public/dictionary.gz', compressed);
-console.log('Compressed dictionary with top 500 words created successfully.');
-EOF
+try {
+  const compressed = await gzip(content);
+  await fs.writeFile('public/dictionary.gz', compressed);
+  console.log('Compressed dictionary with top 500 words created successfully.');
+} catch (error) {
+  console.error('Error creating compressed dictionary:', error);
+  process.exit(1);
+}
