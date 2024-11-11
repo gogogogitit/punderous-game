@@ -83,6 +83,9 @@ interface GameState {
   usedPunIds: Set<number>;
   partialMatch: string;
   revealedLetters: string[];
+  fullAlphabetAttempt: boolean;
+  randomLettersAttempt: boolean;
+  tooManyWordsAttempt: boolean;
 }
 
 const confettiConfig = {
@@ -152,6 +155,9 @@ export default function PunderousGame() {
       usedPunIds: new Set<number>([initialPun.id]),
       partialMatch: '',
       revealedLetters: [],
+      fullAlphabetAttempt: false,
+      randomLettersAttempt: false,
+      tooManyWordsAttempt: false,
     });
     setPuns(initialPuns);
   }, []);
@@ -213,10 +219,103 @@ export default function PunderousGame() {
     return matchedParts.length > 0 ? matchedParts.join(' ') : null
   }, [])
 
+  const containsFullAlphabet = (input: string): boolean => {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+    const lowercaseInput = input.toLowerCase();
+    return alphabet.split('').every(letter => lowercaseInput.includes(letter));
+  }
+
+  const isEnglishWord = (word: string): boolean => {
+    // This is a basic check. In a production environment, you might want to use a more comprehensive dictionary.
+    const commonEnglishWords = new Set([
+      'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'I',
+      'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
+      'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she',
+      'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what',
+      'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me',
+      // Add more common words as needed
+    ]);
+
+    return commonEnglishWords.has(word.toLowerCase());
+  }
+
+  const isPartOfAnswer = (word: string, answer: string): boolean => {
+    const answerWords = answer.toLowerCase().split(/\s+/);
+    return answerWords.some(answerWord => answerWord.includes(word.toLowerCase()));
+  }
+
+  const isRandomLetters = (input: string, correctAnswer: string): boolean => {
+    const words = input.trim().split(/\s+/);
+    
+    const isLikelyWord = (word: string): boolean => {
+      // Check if the word is part of the answer or a valid English word
+      if (isPartOfAnswer(word, correctAnswer) || isEnglishWord(word)) return true;
+
+      // Check if the word is at least 2 characters long
+      if (word.length < 2) return false;
+
+      // Check for vowels
+      if (!/[aeiou]/i.test(word)) return false;
+
+      // Check for unusually long consonant clusters
+      if (/[bcdfghjklmnpqrstvwxyz]{5,}/i.test(word)) return false;
+
+      // Check for repeating letters (more than 2 in a row)
+      if (/(.)\1{2,}/.test(word)) return false;
+
+      return true;
+    };
+
+    return words.some(word => !isLikelyWord(word));
+  }
+
+  const hasTooManyWords = (input: string, correctAnswer: string): boolean => {
+    const inputWords = input.trim().split(/\s+/);
+    const answerWords = correctAnswer.trim().split(/\s+/);
+    return inputWords.length > answerWords.length + 2; // Allow for a bit of flexibility
+  }
+
   const handleAnswerSubmit = useCallback(() => {
     if (!gameState || gameState.userAnswer.trim() === '' || gameState.gameOver) return
     const correctAnswer = gameState.currentPun.answer;
     const userGuess = gameState.userAnswer;
+
+    if (containsFullAlphabet(userGuess)) {
+      setGameState(prev => ({
+        ...prev!,
+        fullAlphabetAttempt: true,
+        randomLettersAttempt: false,
+        tooManyWordsAttempt: false,
+        userAnswer: '',
+        feedback: 'Entering the full alphabet isn\'t allowed.',
+      }));
+      return;
+    }
+
+    if (isRandomLetters(userGuess, correctAnswer)) {
+      setGameState(prev => ({
+        ...prev!,
+        fullAlphabetAttempt: false,
+        randomLettersAttempt: true,
+        tooManyWordsAttempt: false,
+        userAnswer: '',
+        feedback: 'Please enter valid words only.',
+      }));
+      return;
+    }
+
+    if (hasTooManyWords(userGuess, correctAnswer)) {
+      setGameState(prev => ({
+        ...prev!,
+        fullAlphabetAttempt: false,
+        randomLettersAttempt: false,
+        tooManyWordsAttempt: true,
+        userAnswer: '',
+        feedback: 'Too many words. Try a shorter answer.',
+      }));
+      return;
+    }
+
     const newRevealedLetters = [...gameState.revealedLetters]
     userGuess.toLowerCase().split('').forEach(letter => {
       if (correctAnswer.toLowerCase().includes(letter) && !newRevealedLetters.includes(letter)) {
@@ -242,6 +341,9 @@ export default function PunderousGame() {
         usedPunIds: new Set([...prev!.usedPunIds, prev!.currentPun.id]),
         guessedAnswers: [...prev!.guessedAnswers, userGuess],
         revealedLetters: Array.from(new Set([...newRevealedLetters, ...correctAnswer.toLowerCase().split('')])),
+        fullAlphabetAttempt: false,
+        randomLettersAttempt: false,
+        tooManyWordsAttempt: false,
       }))
     } else {
       setGameState(prev => {
@@ -262,6 +364,9 @@ export default function PunderousGame() {
           showCorrectAnswer: newAttempts === 0,
           correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
           revealedLetters: newRevealedLetters,
+          fullAlphabetAttempt: false,
+          randomLettersAttempt: false,
+          tooManyWordsAttempt: false,
         }
       })
     }
@@ -269,7 +374,8 @@ export default function PunderousGame() {
 
   const getNextPun = useCallback(() => {
     if (!gameState) return;
-    const unusedPuns = puns.filter(pun => !gameState.usedPunIds.has(pun.id) && pun.difficulty <= gameState.playerSkillLevel)
+    const unusedPuns = puns.filter(pun => !gameState.usedPunIds.has(pun.id) && pun.difficulty <= gameState.playerSkillLevel
+    )
     
     if (unusedPuns.length === 0) {
       const shuffledPuns = [...puns].sort(() => Math.random() - 0.5)
@@ -286,6 +392,9 @@ export default function PunderousGame() {
         usedPunIds: new Set([shuffledPuns[0].id]),
         partialMatch: '',
         revealedLetters: [],
+        fullAlphabetAttempt: false,
+        randomLettersAttempt: false,
+        tooManyWordsAttempt: false,
       }))
     } else {
       const randomPun = unusedPuns[Math.floor(Math.random() * unusedPuns.length)]
@@ -301,6 +410,9 @@ export default function PunderousGame() {
         usedPunIds: new Set([...prev!.usedPunIds, randomPun.id]),
         partialMatch: '',
         revealedLetters: [],
+        fullAlphabetAttempt: false,
+        randomLettersAttempt: false,
+        tooManyWordsAttempt: false,
       }))
     }
   }, [gameState, puns])
@@ -324,6 +436,9 @@ export default function PunderousGame() {
       usedPunIds: new Set([randomPun.id]),
       partialMatch: '',
       revealedLetters: [],
+      fullAlphabetAttempt: false,
+      randomLettersAttempt: false,
+      tooManyWordsAttempt: false,
     })
   }, [puns])
 
@@ -384,8 +499,8 @@ export default function PunderousGame() {
               <Image
                 src="/punderous-logo.png"
                 alt="Punderous™ Logo"
-                width={180}
-                height={180}
+                width={220}
+                height={220}
                 className="object-contain drop-shadow-lg"
                 priority
               />
@@ -474,6 +589,24 @@ export default function PunderousGame() {
                   </div>
                 </motion.div>
               </motion.div>
+            ) : gameState.fullAlphabetAttempt || gameState.randomLettersAttempt || gameState.tooManyWordsAttempt ? (
+              <motion.div
+                key="invalid-attempt"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.5 }}
+                className="w-full rounded-lg border-2 border-[#FF6B35] p-3 bg-[#FF6B35]/10 text-center"
+              >
+                <p className="text-xl font-medium text-[#FF6B35] mb-2">Nice Try!</p>
+                <p className="text-sm text-gray-700 mb-4">{gameState.feedback}</p>
+                <Button
+                  onClick={() => setGameState(prev => ({ ...prev!, fullAlphabetAttempt: false, randomLettersAttempt: false, tooManyWordsAttempt: false }))}
+                  className="bg-[#FF6B35] text-white hover:bg-[#FF6B35]/90"
+                >
+                  Try Again
+                </Button>
+              </motion.div>
             ) : (
               <motion.div
                 key="question"
@@ -495,11 +628,7 @@ export default function PunderousGame() {
                   </p>
                 )}
                 <LetterHint answer={gameState.currentPun.answer} revealedLetters={gameState.revealedLetters} />
-                {gameState.partialMatch && (
-                  <p className="text-sm text-center text-[#00B4D8] font-medium mt-2">
-                    Parts of the answer: {gameState.partialMatch}
-                  </p>
-                )}
+
                 {gameState.guessedAnswers.length > 0 && (
                   <div className="text-sm text-center text-gray-700 mt-2">
                     <span className="font-medium">Previous guesses:</span>
@@ -526,14 +655,14 @@ export default function PunderousGame() {
                 }
               }}
               className="w-full text-sm border-2 border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8]"
-              disabled={gameState.gameOver || gameState.isCorrect}
+              disabled={gameState.gameOver || gameState.isCorrect || gameState.fullAlphabetAttempt || gameState.randomLettersAttempt || gameState.tooManyWordsAttempt}
             />
           </div>
           <div className="flex justify-between w-full space-x-2">
             <Button
               onClick={handleAnswerSubmit}
               className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-sm py-2"
-              disabled={gameState.gameOver || gameState.isCorrect}
+              disabled={gameState.gameOver || gameState.isCorrect || gameState.fullAlphabetAttempt || gameState.randomLettersAttempt || gameState.tooManyWordsAttempt}
             >
               <Send className="w-4 h-4 mr-2" />
               Submit
