@@ -499,8 +499,8 @@ export default function PunderousGame() {
   }, [])
 
   const handleShare = useCallback(() => {
-    const shareUrl = window.location.origin
-    const shareText = "Check out Punderous™ - A pun-filled word game that will make you laugh and groan!"
+    const shareUrl = 'https://punderous.com'
+    const shareText = "Check out Punderous™ - A pun-filled word game!"
 
     if (navigator.share) {
       navigator.share({
