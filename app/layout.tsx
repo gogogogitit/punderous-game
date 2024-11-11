@@ -1,12 +1,12 @@
-import './globals.css'
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Punderful - The Ultimate Pun-Filled Word Game',
-  description: 'Lettuce Play.',
-  icons: {
-    icon: '/favicon.ico',
-  },
+  title: 'Punderous - The Ultimate Pun-Filled Word Game',
+  description: 'A pun-filled word game where we ask the questions and you guess the puns!',
 }
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }
