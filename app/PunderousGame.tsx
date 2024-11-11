@@ -11,6 +11,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
 import { Analytics } from "@vercel/analytics/react"
+import type { inflate } from 'pako'
+import pako from 'pako'
 
 interface Pun {
   id: number;
@@ -173,8 +175,7 @@ export default function PunderousGame() {
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const [comment, setComment] = useState('')
   const [submitError, setSubmitError] = useState('')
-
-  const wordCache = new Map<string, boolean>();
+  const [dictionary, setDictionary] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const metaViewport = document.querySelector('meta[name=viewport]')
@@ -190,6 +191,22 @@ export default function PunderousGame() {
         metaViewport.setAttribute('content', viewportContent)
       }
     }
+  }, [])
+
+  useEffect(() => {
+    const loadDictionary = async () => {
+      try {
+        const response = await fetch('/dictionary.gz')
+        const compressedData = await response.arrayBuffer()
+        const decompressedData = pako.inflate(new Uint8Array(compressedData), { to: 'string' })
+        const words = decompressedData.split('\n')
+        setDictionary(new Set(words))
+      } catch (error) {
+        console.error('Error loading dictionary:', error)
+      }
+    }
+
+    loadDictionary()
   }, [])
 
   useEffect(() => {
@@ -253,18 +270,19 @@ export default function PunderousGame() {
   }
 
   const isEnglishWord = async (word: string): Promise<boolean> => {
-    if (wordCache.has(word)) {
-      return wordCache.get(word)!;
+    const lowerWord = word.toLowerCase()
+    
+    if (dictionary.has(lowerWord)) {
+      return true
     }
 
     try {
-      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-      const result = response.ok;
-      wordCache.set(word, result);
-      return result;
+      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${lowerWord}`)
+      const result = response.ok
+      return result
     } catch (error) {
-      console.error('Error checking word:', error);
-      return false;
+      console.error('Error checking word:', error)
+      return false
     }
   }
 
@@ -380,7 +398,7 @@ export default function PunderousGame() {
         tooManyWordsAttempt: false,
       }));
     }
-  }, [gameState, compareAnswers, findPartialMatch]);
+  }, [gameState, compareAnswers, findPartialMatch, isValidWord]);
 
   const getNextPun = useCallback(() => {
     if (!gameState) return;
@@ -747,7 +765,7 @@ export default function PunderousGame() {
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-3 border-t border-gray-200 p-3">
           <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">Coming Soon: Punderous™ Full Version</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Coming Soon: Punderous™ Full Version</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• AI-powered pun game that adapts to your skill level</li>
               <li>• Create and share your own puns for inclusion in the game</li>

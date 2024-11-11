@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/create-dictionary.js && next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -22,6 +22,7 @@
     "framer-motion": "^10.16.5",
     "lucide-react": "^0.292.0",
     "next": "^14.0.3",
+    "pako": "^2.1.0",
     "postcss": "^8.4.31",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.9.2",
+    "@types/pako": "^2.0.3",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "eslint": "^8.54.0",
