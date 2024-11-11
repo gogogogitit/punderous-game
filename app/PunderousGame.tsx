@@ -103,7 +103,20 @@ const initialPuns: Pun[] = [
   { id: 95, question: "Why are frogs so happy?", answer: "They eat whatever bugs them", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 96, question: "What noise does a nut make when it sneezes?", answer: "Cashew!", difficulty: 1, votes: { up: 0, down: 0 } },
   { id: 97, question: "What do you call a clever duck?", answer: "A wise quacker", difficulty: 1, votes: { up: 0, down: 0 } },
-  { id: 98, question: "What do you call a bagel that flies?", answer: "A plane bagel", difficulty: 1, votes: { up: 0, down: 0 } }
+  { id: 98, question: "What do you call a bagel that flies?", answer: "A plane bagel", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 99, question: "Why did the computer go to the doctor?", answer: "It had a virus", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 100, question: "What do you call a bear that's stuck in the rain?", answer: "A drizzly bear", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 101, question: "Why did the opera singer need a ladder?", answer: "To reach the high notes", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 102, question: "What do you call a kangaroo who watches TV all day?", answer: "A pouch potato", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 103, question: "What do you call a cow that plays an instrument?", answer: "A moosician", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 104, question: "What do you call a pony with a cough?", answer: "A little hoarse", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 105, question: "What do you call a factory that makes okay products?", answer: "A satisfactory", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 106, question: "What do you call a cow with two legs?", answer: "Lean beef", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 107, question: "How do trees access the internet?", answer: "They log on", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 108, question: "What do you call a snake building a house?", answer: "A boa constructor", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 109, question: "What do you call a bear that never wants to grow up?", answer: "Peter Panda", difficulty: 1, votes: { up: 0, down: 0 } },
+  { id: 110, question: "What do you call a cow with no legs?", answer: "Ground beef", difficulty: 1, votes: { up: 0, down: 0 } },
+  
 ]
 
 interface GameState {
