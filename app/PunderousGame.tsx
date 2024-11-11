@@ -826,6 +826,7 @@ export default function PunderousGame() {
           </div>
         </CardFooter>
       </Card>
+      <Analytics />
     </div>
   )
 }
