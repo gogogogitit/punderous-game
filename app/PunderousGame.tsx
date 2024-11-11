@@ -272,7 +272,7 @@ export default function PunderousGame() {
   const hasTooManyWords = (input: string, correctAnswer: string): boolean => {
     const inputWords = input.trim().split(/\s+/);
     const answerWords = correctAnswer.trim().split(/\s+/);
-    return inputWords.length > answerWords.length + 2;
+    return inputWords.length > answerWords.length;
   }
 
   const handleAnswerSubmit = useCallback(async () => {
@@ -299,7 +299,7 @@ export default function PunderousGame() {
         randomLettersAttempt: false,
         tooManyWordsAttempt: true,
         userAnswer: '',
-        feedback: 'Too many words. Try a shorter answer.',
+        feedback: 'Too many words! Try a shorter answer.',
       }));
       return;
     }
@@ -355,29 +355,22 @@ export default function PunderousGame() {
         tooManyWordsAttempt: false,
       }));
     } else {
-      setGameState(prev => {
-        const newAttempts = prev!.attempts - 1;
-        const partialMatchResult = findPartialMatch(userGuess, correctAnswer, prev!.guessedAnswers);
-        const newFeedback = newAttempts === 0
-          ? `Game over!`
-          : `Not quite! You have ${newAttempts} attempts left.`;
-        return {
-          ...prev!,
-          attempts: newAttempts,
-          playerSkillLevel: newAttempts === 0 ? 1 : prev!.playerSkillLevel,
-          guessedAnswers: [...prev!.guessedAnswers, userGuess],
-          partialMatch: partialMatchResult || '',
-          feedback: newFeedback,
-          gameOver: newAttempts === 0,
-          userAnswer: '',
-          showCorrectAnswer: newAttempts === 0,
-          correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
-          revealedLetters: newRevealedLetters,
-          fullAlphabetAttempt: false,
-          randomLettersAttempt: false,
-          tooManyWordsAttempt: false,
-        };
-      });
+      setGameState(prev => ({
+        ...prev!,
+        attempts: prev!.attempts - 1,
+        playerSkillLevel: prev!.attempts === 0 ? 1 : prev!.playerSkillLevel,
+        guessedAnswers: [...prev!.guessedAnswers, userGuess],
+        partialMatch: findPartialMatch(userGuess, correctAnswer, prev!.guessedAnswers) || '',
+        feedback: prev!.attempts - 1 === 0 ? `Game over!` : `Not quite! You have ${prev!.attempts - 1} attempts left.`,
+        gameOver: prev!.attempts - 1 === 0,
+        userAnswer: '',
+        showCorrectAnswer: prev!.attempts - 1 === 0,
+        correctAnswerDisplay: prev!.attempts - 1 === 0 ? correctAnswer : '',
+        revealedLetters: newRevealedLetters,
+        fullAlphabetAttempt: false,
+        randomLettersAttempt: false,
+        tooManyWordsAttempt: false,
+      }));
     }
   }, [gameState, compareAnswers, findPartialMatch, ]);
 
