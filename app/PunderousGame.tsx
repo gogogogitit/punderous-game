@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
 import { submitFeedback, votePun } from './actions'
 import { track } from '@vercel/analytics'
-import ReactConfetti from 'react-confetti'
+import Confetti from 'react-dom-confetti'
 
 interface Pun {
   question: string;
@@ -46,6 +46,19 @@ const initialPuns: Pun[] = [
   { question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
   { question: "What do you call a bear with no teeth?", answer: "A gummy bear", difficulty: 1, upVotes: 0, downVotes: 0 },
 ]
+
+const confettiConfig = {
+  angle: 90,
+  spread: 360,
+  startVelocity: 40,
+  elementCount: 70,
+  dragFriction: 0.12,
+  duration: 3000,
+  stagger: 3,
+  width: "10px",
+  height: "10px",
+  colors: ["#FF6B35", "#A06CD5", "#00B4D8", "#247BA0", "#FFFFFF"]
+}
 
 const LetterHint: React.FC<{ answer: string; revealedLetters: string[] }> = ({ answer, revealedLetters }) => {
   const words = answer.split(' ');
@@ -130,7 +143,6 @@ export default function PunderousGame() {
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const [comment, setComment] = useState('')
   const [submitError, setSubmitError] = useState('')
-  const [showConfetti, setShowConfetti] = useState(false)
 
   useEffect(() => {
     const randomPun = getRandomPun(initialPuns);
@@ -192,8 +204,6 @@ export default function PunderousGame() {
         guessedAnswers: [...prev.guessedAnswers, userGuess],
         revealedLetters: newRevealedLetters,
       }));
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
       track('Correct Answer', { difficulty: gameState.currentPun.difficulty });
     } else {
       const newAttempts = gameState.attempts - 1;
@@ -326,17 +336,6 @@ export default function PunderousGame() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#00B4D8] p-1">
-      {showConfetti && (
-        <ReactConfetti
-          width={window.innerWidth}
-          height={window.innerHeight}
-          recycle={false}
-          numberOfPieces={200}
-          gravity={0.3}
-          initialVelocityY={20}
-          confettiSource={{x: 0, y: 0, w: window.innerWidth, h: 0}}
-        />
-      )}
       <Card className="w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center border-b border-gray-200 py-1.5">
           <div className="flex flex-col items-center justify-center">
@@ -353,8 +352,10 @@ export default function PunderousGame() {
             <p className="text-sm text-gray-600 mb-2.5">
               A pun-filled word game where we ask the questions and you guess the puns!
             </p>
-            <CardDescription className="text-lg font-medium text-[#00B4D8]">
+            <CardDescription className="text-lg font-medium text-[#00B4D8] flex items-center justify-center">
+              <span className="mr-2">⚡</span>
               Let the Brainstorm Begin!
+              <span className="ml-2">⚡</span>
             </CardDescription>
           </div>
         </CardHeader>
@@ -389,7 +390,19 @@ export default function PunderousGame() {
                   transition={{ delay: 0.2, duration: 0.5 }}
                   className={`text-[22.5px] font-medium text-center ${gameState.isCorrect ? 'text-[#00B4D8]' : 'text-[#FF6B35]'}`}
                 >
-                  {gameState.isCorrect ? "Correct!" : "Game Over!"}
+                  {gameState.isCorrect ? (
+                    <span>
+                      <span className="mr-2">⚡</span>
+                      Correct!
+                      <span className="ml-2">⚡</span>
+                    </span>
+                  ) : (
+                    <span>
+                      <span className="mr-2">☁️</span>
+                      Game Over!
+                      <span className="ml-2">☁️</span>
+                    </span>
+                  )}
                 </motion.p>
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
@@ -605,6 +618,9 @@ export default function PunderousGame() {
           </div>
         </CardFooter>
       </Card>
+      <div style={{ position: 'absolute', top: '50%', left: '50%' }}>
+        <Confetti active={gameState.isCorrect} config={confettiConfig} />
+      </div>
     </div>
   )
 }
