@@ -164,30 +164,36 @@ const getRandomPun = (puns: Pun[]): Pun => {
 };
 
 export default function PunderousGame() {
-  const [gameState, setGameState] = useState<GameState>(() => {
-    const initialPun = getRandomPun(initialPuns);
-    return {
-      currentPun: initialPun,
-      userAnswer: '',
-      guessedAnswers: [],
-      attempts: 5,
-      score: 0,
-      gameOver: false,
-      playerSkillLevel: 1,
-      feedback: '',
-      isCorrect: false,
-      showCorrectAnswer: false,
-      correctAnswerDisplay: '',
-      usedPunIds: new Set([initialPun.question.length]),
-      partialMatch: '',
-      revealedLetters: [],
-    };
-  });
+  const [gameState, setGameState] = useState<GameState>(() => ({
+    currentPun: initialPuns[0],
+    userAnswer: '',
+    guessedAnswers: [],
+    attempts: 5,
+    score: 0,
+    gameOver: false,
+    playerSkillLevel: 1,
+    feedback: '',
+    isCorrect: false,
+    showCorrectAnswer: false,
+    correctAnswerDisplay: '',
+    usedPunIds: new Set([initialPuns[0].question.length]),
+    partialMatch: '',
+    revealedLetters: [],
+  }));
   const [puns, setPuns] = useState<Pun[]>(initialPuns)
   const [email, setEmail] = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const [comment, setComment] = useState('')
   const [submitError, setSubmitError] = useState('')
+
+  useEffect(() => {
+    const randomPun = getRandomPun(initialPuns);
+    setGameState(prev => ({
+      ...prev,
+      currentPun: randomPun,
+      usedPunIds: new Set([randomPun.question.length])
+    }));
+  }, []);
 
   const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
     const cleanAnswer = (answer: string) => 
@@ -430,7 +436,6 @@ export default function PunderousGame() {
                       className="flex items-center space-x-1 text-sm border-[#00B4D8] text-[#00B4D8] "
                     >
                       <ThumbsUp className="w-4 h-4" />
-                      <span>{gameState.currentPun.upVotes}</span>
                     </Button>
                     <Button
                       onClick={() => handleVote(gameState.currentPun, 'down')}
@@ -438,7 +443,6 @@ export default function PunderousGame() {
                       className="flex items-center space-x-1 text-sm border-[#FF6B35] text-[#FF6B35]"
                     >
                       <ThumbsDown className="w-4 h-4" />
-                      <span>{gameState.currentPun.downVotes}</span>
                     </Button>
                     <Button
                       onClick={getNextPun}
@@ -539,7 +543,7 @@ export default function PunderousGame() {
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-3 border-t border-gray-200 p-3">
           <div className="text-center space-y-2">
-            <h3 className="text-xl font-semibold text-gray-800">Coming Soon: Punderous™ Full Version</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Coming Soon: Punderous™ Plus</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• AI-powered pun game that adapts to your skill</li>
               <li>• Create and share your own puns in the game</li>
