@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
 import { submitFeedback, votePun } from './actions'
 
+
 interface Pun {
   question: string;
   answer: string;
