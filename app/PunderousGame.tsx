@@ -295,7 +295,7 @@ export default function PunderousGame() {
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="flex flex-col items-center space-y-2 p-1.5">
+        <CardContent className="flex flex-col items-center space-y-2.5 p-1.5">
           <div className="flex justify-center gap-1 text-[11px] mb-3">
             <div className="px-1 py-0.5 bg-[#FFD151] text-gray-800 rounded-full flex items-center">
               <Trophy className="w-2 h-2 mr-0.5" />
@@ -408,11 +408,11 @@ export default function PunderousGame() {
                   handleAnswerSubmit()
                 }
               }}
-              className="w-full text-[11px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-8"
+              className="w-full text-[11px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-10"
               disabled={gameState.gameOver || gameState.isCorrect}
             />
           </div>
-          <div className="flex flex-col w-full space-y-2">
+          <div className="flex flex-col w-full space-y-2.5">
             <div className="flex justify-between w-full space-x-2">
               <Button
                 onClick={handleAnswerSubmit}
@@ -450,7 +450,7 @@ export default function PunderousGame() {
                   window.open(fallbackShareUrl, '_blank');
                 }
               }}
-              className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-[13px] py-1 h-9"
+              className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-[13px] py-1 h-9 mt-0.5"
               aria-label="Share Punderous game"
             >
               <Share2 className="w-3 h-3 mr-1" />
