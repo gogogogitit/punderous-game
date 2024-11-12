@@ -24,7 +24,6 @@ async function main() {
         { question: "What do you call a dinosaur that crashes their car?", answer: "Tyrannosaurus wrecks", difficulty: 2, upVotes: 0, downVotes: 0 },
         { question: "Why don't oysters donate to charity?", answer: "They're shellfish", difficulty: 2, upVotes: 0, downVotes: 0 },
         { question: "Why did the gym get smaller and close down?", answer: "It didn't work out", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, upVotes: 0, downVotes: 0 },
         { question: "Why did the cookie go to the doctor?", answer: "Because it was feeling crumbly", difficulty: 2, upVotes: 0, downVotes: 0 },
         { question: "What do you call a snowman with a six-pack?", answer: "An abdominal snowman", difficulty: 2, upVotes: 0, downVotes: 0 },
         { question: "What did the grape do when it got stepped on?", answer: "Let out a little wine", difficulty: 2, upVotes: 0, downVotes: 0 },
