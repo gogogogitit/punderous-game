@@ -10,7 +10,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
 import { submitFeedback, votePun } from './actions'
-import { track } from '@vercel/analytics';
+import { track } from '@vercel/analytics'
+import ReactConfetti from 'react-confetti'
 
 interface Pun {
   question: string;
@@ -35,6 +36,7 @@ interface GameState {
   usedPunIds: Set<number>;
   partialMatch: string;
   revealedLetters: string[];
+  showAnswerCard: boolean;
 }
 
 const initialPuns: Pun[] = [
@@ -74,6 +76,33 @@ const LetterHint: React.FC<{ answer: string; revealedLetters: string[] }> = ({ a
   );
 };
 
+const PreviousAnswers: React.FC<{ answers: string[] }> = ({ answers }) => {
+  if (answers.length === 0) return null;
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full rounded-lg border border-gray-200 p-2 bg-white/50 mt-2 mb-2 text-center"
+    >
+      <p className="text-[15.6px] font-medium text-gray-600 mb-1">Previous Answers:</p>
+      <div className="space-y-0.5">
+        {answers.map((answer, index) => (
+          <motion.p
+            key={index}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="text-[14.4px] text-gray-700"
+          >
+            {index + 1}. {answer}
+          </motion.p>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
 const getRandomPun = (puns: Pun[]): Pun => {
   return puns[Math.floor(Math.random() * puns.length)];
 };
@@ -94,12 +123,14 @@ export default function PunderousGame() {
     usedPunIds: new Set([initialPuns[0].question.length]),
     partialMatch: '',
     revealedLetters: [],
+    showAnswerCard: false,
   }));
   const [puns, setPuns] = useState<Pun[]>(initialPuns)
   const [email, setEmail] = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const [comment, setComment] = useState('')
   const [submitError, setSubmitError] = useState('')
+  const [showConfetti, setShowConfetti] = useState(false)
 
   useEffect(() => {
     const randomPun = getRandomPun(initialPuns);
@@ -142,7 +173,12 @@ export default function PunderousGame() {
       }
     });
 
-    if (compareAnswers(userGuess, correctAnswer)) {
+    // Check if all letters are revealed
+    const allLettersRevealed = correctAnswer.toLowerCase().split('').every(letter => 
+      letter === ' ' || newRevealedLetters.includes(letter)
+    );
+
+    if (compareAnswers(userGuess, correctAnswer) || allLettersRevealed) {
       const pointsEarned = gameState.currentPun.difficulty;
       setGameState(prev => ({
         ...prev,
@@ -156,20 +192,24 @@ export default function PunderousGame() {
         guessedAnswers: [...prev.guessedAnswers, userGuess],
         revealedLetters: newRevealedLetters,
       }));
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
       track('Correct Answer', { difficulty: gameState.currentPun.difficulty });
     } else {
+      const newAttempts = gameState.attempts - 1;
       setGameState(prev => ({
         ...prev,
-        attempts: prev.attempts - 1,
+        attempts: newAttempts,
         guessedAnswers: [...prev.guessedAnswers, userGuess],
-        feedback: prev.attempts - 1 === 0 ? `Game over!` : `Not quite! You have ${prev.attempts - 1} attempts left.`,
-        gameOver: prev.attempts - 1 === 0,
+        feedback: newAttempts === 0 ? `Game over!` : `Not quite! You have ${newAttempts} attempts left.`,
+        gameOver: newAttempts === 0,
         userAnswer: '',
-        showCorrectAnswer: prev.attempts - 1 === 0,
-        correctAnswerDisplay: prev.attempts - 1 === 0 ? correctAnswer : '',
+        showCorrectAnswer: newAttempts === 0,
+        correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
         revealedLetters: newRevealedLetters,
+        showAnswerCard: newAttempts === 0,
       }));
-      track('Incorrect Answer', { attemptsLeft: gameState.attempts - 1 });
+      track('Incorrect Answer', { attemptsLeft: newAttempts });
     }
   }, [gameState, compareAnswers]);
 
@@ -191,6 +231,8 @@ export default function PunderousGame() {
         userAnswer: '',
         usedPunIds: new Set([newPun.question.length]),
         revealedLetters: [],
+        showAnswerCard: false,
+        gameOver: false,
       }))
       track('New Game Started');
     } else {
@@ -206,6 +248,8 @@ export default function PunderousGame() {
         userAnswer: '',
         usedPunIds: new Set([...prev.usedPunIds, randomPun.question.length]),
         revealedLetters: [],
+        showAnswerCard: false,
+        gameOver: false,
       }))
       track('Next Pun');
     }
@@ -282,6 +326,17 @@ export default function PunderousGame() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#00B4D8] p-1">
+      {showConfetti && (
+        <ReactConfetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.3}
+          initialVelocityY={20}
+          confettiSource={{x: 0, y: 0, w: window.innerWidth, h: 0}}
+        />
+      )}
       <Card className="w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center border-b border-gray-200 py-1.5">
           <div className="flex flex-col items-center justify-center">
@@ -304,7 +359,7 @@ export default function PunderousGame() {
           </div>
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-2.5 p-1.5">
-          <div className="flex justify-center gap-1 text-[11px] mb-2"> {/* Updated: mb-2 */}
+          <div className="flex justify-center gap-1 text-[11px] mb-2">
             <div className="px-1 py-0.5 bg-[#FFD151] text-gray-800 rounded-full flex items-center">
               <Trophy className="w-2 h-2 mr-0.5" />
               <span>Score: {gameState.score}</span>
@@ -319,62 +374,64 @@ export default function PunderousGame() {
             </div>
           </div>
           <AnimatePresence mode="wait">
-            {gameState.isCorrect && gameState.showCorrectAnswer ? (
+            {(gameState.isCorrect && gameState.showCorrectAnswer) || gameState.showAnswerCard ? (
               <motion.div
                 key="correct-answer"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.5 }}
-                className="w-full rounded-lg border-2 border-[#00B4D8] p-2 bg-[#00B4D8]/10"
+                className={`w-full rounded-lg border-2 p-2 ${gameState.isCorrect ? 'border-[#00B4D8] bg-[#00B4D8]/10' : 'border-[#FF6B35] bg-[#FF6B35]/10'}`}
               >
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className="text-sm font-medium text-[#00B4D8] text-center"
+                  className={`text-[22.5px] font-medium text-center ${gameState.isCorrect ? 'text-[#00B4D8]' : 'text-[#FF6B35]'}`}
                 >
-                  Correct!
+                  {gameState.isCorrect ? "Correct!" : "Game Over!"}
                 </motion.p>
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.5 }}
-                  className="text-xs font-medium text-gray-800 mt-1 text-center"
+                  className="text-[16.875px] font-medium text-gray-800 mt-1 text-center"
                 >
-                  {gameState.correctAnswerDisplay}
+                  {gameState.isCorrect ? '' : 'The answer is: '}{gameState.correctAnswerDisplay}
                 </motion.p>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6, duration: 0.5 }}
-                  className="flex flex-col items-center space-y-1 mt-1"
+                  className="flex flex-col items-center space-y-2 mt-3"
                 >
-                  <p className="text-[10px] text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
-                  <div className="flex justify-center space-x-1">
+                  <p className="text-[12.5px] text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
+                  <div className="flex justify-center space-x-2">
                     <Button
                       onClick={() => handleVote(gameState.currentPun, 'up')}
                       variant="outline"
                       size="sm"
-                      className="h-7 px-1.5 text-[11px] border-[#00B4D8] text-[#00B4D8]"
+                      className="h-9 w-[72px] text-[13.75px] border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
                     >
-                      <ThumbsUp className="w-2 h-2" />
+                      <ThumbsUp className="w-4 h-4 mr-1.5" />
+                      Good
                     </Button>
                     <Button
                       onClick={() => handleVote(gameState.currentPun, 'down')}
                       variant="outline"
                       size="sm"
-                      className="h-7 px-1.5 text-[11px] border-[#FF6B35] text-[#FF6B35]"
+                      className="h-9 w-[72px] text-[13.75px] border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
                     >
-                      <ThumbsDown className="w-2 h-2" />
+                      <ThumbsDown className="w-4 h-4 mr-1.5" />
+                      Bad
                     </Button>
                     <Button
                       onClick={getNextPun}
                       variant="outline"
                       size="sm"
-                      className="h-7 px-1.5 text-[11px] border-[#A06CD5] text-[#A06CD5]"
+                      className="h-9 w-[72px] text-[13.75px] border-[#00B4D8] text-[#00B4D8] hover:bg-[#00B4D8] hover:text-white"
                     >
-                      <ArrowRight className="w-2 h-2 mr-0.5" />
+                      <ArrowRight className="w-4 h-4 mr-1.5" />
                       <span>Next</span>
                     </Button>
                   </div>
@@ -396,7 +453,7 @@ export default function PunderousGame() {
                   {getDifficultyText(gameState.currentPun.difficulty)}
                 </p>
                 {gameState.feedback && (
-                  <p className="text-[10px] text-center text-gray-700 mt-1">
+                  <p className="text-[12.5px] text-center text-gray-700 mt-1">
                     {gameState.feedback}
                   </p>
                 )}
@@ -404,19 +461,22 @@ export default function PunderousGame() {
               </motion.div>
             )}
           </AnimatePresence>
+          
+          <PreviousAnswers answers={gameState.guessedAnswers} />
+          
           <div className="w-full">
             <Input
               type="text"
               placeholder="Enter your answer"
               value={gameState.userAnswer}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
-              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              onChange={(e) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
+              onKeyPress={(e) => {
                 if (e.key === 'Enter') {
-                  e.preventDefault()
-                  handleAnswerSubmit()
+                  e.preventDefault();
+                  handleAnswerSubmit();
                 }
               }}
-              className="w-full text-[11px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-10"
+              className="w-full text-[13.2px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-10"
               disabled={gameState.gameOver || gameState.isCorrect}
             />
           </div>
@@ -485,14 +545,14 @@ export default function PunderousGame() {
                   type="email"
                   placeholder="Enter your email for updates"
                   value={email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full text-xs border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-8"
                   required
                 />
                 <Textarea
                   placeholder="Optional: Share your thoughts or suggestions..."
                   value={comment}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
+                  onChange={(e) => setComment(e.target.value)}
                   className="w-full text-xs border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-16"
                 />
                 <Button 
