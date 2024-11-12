@@ -10,7 +10,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
 import { submitFeedback, votePun } from './actions'
-import { trackEvent } from '@/lib/analytics'
 
 interface Pun {
   question: string;
@@ -43,7 +42,6 @@ const initialPuns: Pun[] = [
   { question: "What do you call a can opener that doesn't work?", answer: "A can't opener", difficulty: 1, upVotes: 0, downVotes: 0 },
   { question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
   { question: "What do you call a bear with no teeth?", answer: "A gummy bear", difficulty: 1, upVotes: 0, downVotes: 0 },
-  // ... (include all other puns here)
 ]
 
 const LetterHint: React.FC<{ answer: string; revealedLetters: string[] }> = ({ answer, revealedLetters }) => {
@@ -51,9 +49,9 @@ const LetterHint: React.FC<{ answer: string; revealedLetters: string[] }> = ({ a
   const isShortAnswer = answer.length <= 12;
 
   const renderHintLine = (line: string) => (
-    <div className="flex justify-center space-x-1">
+    <div className="flex justify-center space-x-0.5">
       {line.split('').map((letter, index) => (
-        <span key={index} className="text-lg font-bold w-6 h-8 flex items-center justify-center">
+        <span key={index} className="text-base font-bold w-5 h-7 flex items-center justify-center">
           {letter === ' ' ? '\u00A0' : (revealedLetters.includes(letter.toLowerCase()) ? letter : '_')}
         </span>
       ))}
@@ -61,14 +59,14 @@ const LetterHint: React.FC<{ answer: string; revealedLetters: string[] }> = ({ a
   );
 
   if (isShortAnswer) {
-    return <div className="mt-2">{renderHintLine(answer)}</div>;
+    return <div className="mt-1">{renderHintLine(answer)}</div>;
   }
 
   const firstHalf = words.slice(0, Math.ceil(words.length / 2)).join(' ');
   const secondHalf = words.slice(Math.ceil(words.length / 2)).join(' ');
 
   return (
-    <div className="mt-2 space-y-1">
+    <div className="mt-1 space-y-0.5">
       {renderHintLine(firstHalf)}
       {renderHintLine(secondHalf)}
     </div>
@@ -145,10 +143,6 @@ export default function PunderousGame() {
 
     if (compareAnswers(userGuess, correctAnswer)) {
       const pointsEarned = gameState.currentPun.difficulty;
-      trackEvent('correct_answer', {
-        difficulty: gameState.currentPun.difficulty.toString(),
-        score: (gameState.score + pointsEarned).toString()
-      });
       setGameState(prev => ({
         ...prev,
         score: prev.score + pointsEarned,
@@ -162,9 +156,6 @@ export default function PunderousGame() {
         revealedLetters: newRevealedLetters,
       }));
     } else {
-      trackEvent('incorrect_answer', {
-        attempts_remaining: (gameState.attempts - 1).toString()
-      });
       setGameState(prev => ({
         ...prev,
         attempts: prev.attempts - 1,
@@ -213,7 +204,6 @@ export default function PunderousGame() {
         revealedLetters: [],
       }))
     }
-    trackEvent('new_pun');
   }, [gameState.usedPunIds, puns])
 
   const handleEmailSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
@@ -224,16 +214,13 @@ export default function PunderousGame() {
       const result = await submitFeedback(email, comment)
 
       if (result.success) {
-        trackEvent('email_submitted');
         setEmailSubmitted(true)
         setEmail('')
         setComment('')
       } else {
-        trackEvent('email_error');
         setSubmitError(result.error || 'An error occurred while submitting your email.')
       }
     } catch (error) {
-      trackEvent('email_error');
       console.error('Error submitting email:', error)
       setSubmitError('An error occurred while submitting your email. Please try again.')
     }
@@ -264,9 +251,6 @@ export default function PunderousGame() {
           }))
         }
 
-        trackEvent('pun_vote', { vote_type: voteType });
-
-        // Move to the next question after voting
         getNextPun()
       } else {
         console.error('Error submitting vote:', result.error)
@@ -276,12 +260,12 @@ export default function PunderousGame() {
     }
   }, [gameState.currentPun, getNextPun])
 
-  const getDifficultyText = (difficulty: number): string => difficulty === 1 ? "Easy (1 point)" :
-    difficulty === 2 ? "Medium (2 points)" :
-    difficulty === 3 ? "Hard (3 points)" : "Unknown";
+  const getDifficultyText = (difficulty: number): string => 
+    difficulty === 1 ? "Easy (1 pt)" :
+    difficulty === 2 ? "Medium (2 pts)" :
+    difficulty === 3 ? "Hard (3 pts)" : "Unknown";
 
   const handleDonation = useCallback((platform: 'paypal' | 'venmo') => {
-    trackEvent('donation_click', { platform });
     const paypalUrl = 'https://www.paypal.com/ncp/payment/RJJZ7Z78PTDUW'
     const venmoUrl = 'https://venmo.com/u/punderousgame'
 
@@ -289,16 +273,17 @@ export default function PunderousGame() {
   }, [])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#00B4D8] p-4">
-      <Card className="w-full max-w-md shadow-2xl bg-white">
-        <CardHeader className="text-center border-b border-gray-200 pb-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#00B4D8] p-1">
+      <Card className="w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-sm">
+        <CardHeader className="text-center border-b border-gray-200 py-1">
           <div className="flex flex-col items-center justify-center">
-            <div className="relative w-64 h-64 mb-4">
+            <div className="relative w-[220px] h-[220px] mb-3">
               <Image
                 src="/punderous-logo.png"
                 alt="Punderous™ Logo"
-                layout="fill"
-                objectFit="contain"
+                width={220}
+                height={220}
+                className="object-contain drop-shadow-lg"
                 priority
               />
             </div>
@@ -310,19 +295,19 @@ export default function PunderousGame() {
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 p-4">
-          <div className="flex justify-center gap-2 text-sm">
-            <div className="px-2 py-1 bg-[#FFD151] text-gray-800 rounded-full flex items-center">
-              <Trophy className="w-4 h-4 mr-1" />
-              Score: {gameState.score}
+        <CardContent className="flex flex-col items-center space-y-2 p-1.5">
+          <div className="flex justify-center gap-1 text-[11px] mb-3">
+            <div className="px-1 py-0.5 bg-[#FFD151] text-gray-800 rounded-full flex items-center">
+              <Trophy className="w-2 h-2 mr-0.5" />
+              <span>Score: {gameState.score}</span>
             </div>
-            <div className="px-2 py-1 bg-[#FF6B35] text-white rounded-full flex items-center">
-              <ChevronRight className="w-4 h-4 mr-1" />
-              Attempts: {gameState.attempts}
+            <div className="px-1 py-0.5 bg-[#FF6B35] text-white rounded-full flex items-center">
+              <ChevronRight className="w-2 h-2 mr-0.5" />
+              <span>Attempts: {gameState.attempts}</span>
             </div>
-            <div className="px-2 py-1 bg-[#A06CD5] text-white rounded-full flex items-center">
-              <Star className="w-4 h-4 mr-1" />
-              Level: {gameState.playerSkillLevel}
+            <div className="px-1 py-0.5 bg-[#A06CD5] text-white rounded-full flex items-center">
+              <Star className="w-2 h-2 mr-0.5" />
+              <span>Level: {gameState.playerSkillLevel}</span>
             </div>
           </div>
           <AnimatePresence mode="wait">
@@ -333,13 +318,13 @@ export default function PunderousGame() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.5 }}
-                className="rounded-lg border-2 border-[#00B4D8] p-4 bg-[#00B4D8]/10"
+                className="w-full rounded-lg border-2 border-[#00B4D8] p-2 bg-[#00B4D8]/10"
               >
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className="text-xl font-medium text-[#00B4D8] text-center"
+                  className="text-sm font-medium text-[#00B4D8] text-center"
                 >
                   Correct!
                 </motion.p>
@@ -347,7 +332,7 @@ export default function PunderousGame() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.5 }}
-                  className="text-lg font-medium text-gray-800 mt-2 text-center"
+                  className="text-xs font-medium text-gray-800 mt-1 text-center"
                 >
                   {gameState.correctAnswerDisplay}
                 </motion.p>
@@ -355,34 +340,34 @@ export default function PunderousGame() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6, duration: 0.5 }}
-                  className="flex flex-col items-center space-y-2 mt-4"
+                  className="flex flex-col items-center space-y-1 mt-1"
                 >
-                  <p className="text-sm text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
-                  <div className="flex justify-center space-x-2">
+                  <p className="text-[10px] text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
+                  <div className="flex justify-center space-x-1">
                     <Button
                       onClick={() => handleVote(gameState.currentPun, 'up')}
                       variant="outline"
                       size="sm"
-                      className="border-[#00B4D8] text-[#00B4D8]"
+                      className="h-7 px-1.5 text-[11px] border-[#00B4D8] text-[#00B4D8]"
                     >
-                      <ThumbsUp className="w-4 h-4" />
+                      <ThumbsUp className="w-2 h-2" />
                     </Button>
                     <Button
                       onClick={() => handleVote(gameState.currentPun, 'down')}
                       variant="outline"
                       size="sm"
-                      className="border-[#FF6B35] text-[#FF6B35]"
+                      className="h-7 px-1.5 text-[11px] border-[#FF6B35] text-[#FF6B35]"
                     >
-                      <ThumbsDown className="w-4 h-4" />
+                      <ThumbsDown className="w-2 h-2" />
                     </Button>
                     <Button
                       onClick={getNextPun}
                       variant="outline"
                       size="sm"
-                      className="border-[#A06CD5] text-[#A06CD5]"
+                      className="h-7 px-1.5 text-[11px] border-[#A06CD5] text-[#A06CD5]"
                     >
-                      <ArrowRight className="w-4 h-4 mr-1" />
-                      Next
+                      <ArrowRight className="w-2 h-2 mr-0.5" />
+                      <span>Next</span>
                     </Button>
                   </div>
                 </motion.div>
@@ -394,16 +379,16 @@ export default function PunderousGame() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.5 }}
-                className="rounded-lg border-2 border-[#00B4D8] p-4 bg-[#00B4D8]/10 text-center"
+                className="w-full rounded-lg border-2 border-[#00B4D8] p-2 bg-[#00B4D8]/10 text-center"
               >
-                <p className="text-lg font-medium text-gray-800 mb-2">
+                <p className="text-base font-medium text-gray-800 mb-1">
                   {gameState.currentPun.question}
                 </p>
-                <p className="text-sm text-gray-600">
-                  Difficulty: {getDifficultyText(gameState.currentPun.difficulty)}
+                <p className="text-[11px] text-gray-600">
+                  {getDifficultyText(gameState.currentPun.difficulty)}
                 </p>
                 {gameState.feedback && (
-                  <p className="text-sm text-center text-gray-700 mt-2">
+                  <p className="text-[10px] text-center text-gray-700 mt-1">
                     {gameState.feedback}
                   </p>
                 )}
@@ -411,34 +396,35 @@ export default function PunderousGame() {
               </motion.div>
             )}
           </AnimatePresence>
-          <div className="space-y-2">
+          <div className="w-full">
             <Input
               type="text"
               placeholder="Enter your answer"
               value={gameState.userAnswer}
-              onChange={(e) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
-              onKeyPress={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
+              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
                   handleAnswerSubmit()
                 }
               }}
-              className="w-full"
+              className="w-full text-[11px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-8"
               disabled={gameState.gameOver || gameState.isCorrect}
             />
-            <div className="flex space-x-2">
+          </div>
+          <div className="flex flex-col w-full space-y-2">
+            <div className="flex justify-between w-full space-x-2">
               <Button
                 onClick={handleAnswerSubmit}
-                className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90"
+                className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-[13px] py-1 h-9"
                 disabled={gameState.gameOver || gameState.isCorrect}
               >
-                <Send className="w-4 h-4 mr-2" />
+                <Send className="w-3 h-3 mr-1" />
                 Submit
               </Button>
               <Button
                 onClick={getNextPun}
-                variant="secondary"
-                className="flex-1"
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
                 disabled={gameState.isCorrect || gameState.gameOver}
               >
                 Skip
@@ -456,29 +442,26 @@ export default function PunderousGame() {
                     url: shareUrl,
                   }).then(() => {
                     console.log('Successfully shared');
-                    trackEvent('share_success');
                   }).catch((error) => {
                     console.error('Error sharing:', error);
-                    trackEvent('share_error');
                   });
                 } else {
                   const fallbackShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
                   window.open(fallbackShareUrl, '_blank');
-                  trackEvent('share_fallback');
                 }
               }}
-              className="w-full bg-[#0070BA] text-white hover:bg-[#003087]"
+              className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-[13px] py-1 h-9"
               aria-label="Share Punderous game"
             >
-              <Share2 className="w-4 h-4 mr-2" />
+              <Share2 className="w-3 h-3 mr-1" />
               Share Punderous™
             </Button>
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col items-center space-y-4 border-t border-gray-200 p-4">
-          <div className="text-center space-y-2">
-            <h3 className="text-xl font-semibold text-gray-800">Coming Soon: Punderous™ Plus</h3>
-            <ul className="text-sm text-gray-600 space-y-1">
+        <CardFooter className="flex flex-col items-center space-y-3 border-t border-gray-200 p-2">
+          <div className="text-center space-y-1">
+            <h3 className="text-[1.08rem] font-semibold text-gray-800">Coming Soon: Punderous™ Plus</h3>
+            <ul className="text-[14px] text-gray-600 space-y-0.5">
               <li>• AI-powered pun game that adapts to your skill</li>
               <li>• Create and share your own puns in the game</li>
               <li>• Compete with friends and climb the leaderboard</li>
@@ -486,65 +469,68 @@ export default function PunderousGame() {
               <li>• Earn points for speed and consecutive answers</li>
             </ul>
           </div>
-          <div className="w-full space-y-2">
-            {!emailSubmitted ? (
-              <form onSubmit={handleEmailSubmit} className="space-y-2">
+          <div className="w-full space-y-1 mt-2">
+            {!emailSubmitted && (
+              <form onSubmit={handleEmailSubmit} className="w-full space-y-1">
                 <Input
                   type="email"
                   placeholder="Enter your email for updates"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                  className="w-full text-xs border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-8"
                   required
                 />
                 <Textarea
                   placeholder="Optional: Share your thoughts or suggestions..."
                   value={comment}
-                  onChange={(e) => setComment(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
+                  className="w-full text-xs border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-16"
                 />
                 <Button 
                   type="submit"
-                  className="w-full bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90"
+                  className="w-full bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-[13px] py-1 h-9 mt-2"
                 >
                   Get Notified
                 </Button>
               </form>
-            ) : (
-              <p className="text-sm text-green-600 font-medium">
+            )}
+            {emailSubmitted && (
+              <p className="text-xs text-green-600 font-medium">
                 Thank you for your interest! We'll keep you updated on the full version release.
               </p>
             )}
             {submitError && (
-              <p className="text-sm text-red-600 font-medium">
+              <p className="text-xs text-red-600 font-medium">
                 {submitError}
               </p>
             )}
           </div>
-          <div className="w-full space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800 text-center">Support Punderous™ Development</h3>
-            <p className="text-sm text-gray-600 text-center mb-2">Your contribution helps bring the full version to life! Choose your preferred payment method:</p>
-            <div className="flex flex-col sm:flex-row justify-center gap-2">
+          <div className="w-full space-y-1 mt-2">
+            <h3 className="text-[1.08rem] font-semibold text-gray-800 text-center">Support Punderous™ Development</h3>
+            <p className="text-[14px] text-gray-600 text-center mb-1">Your contribution helps bring the full version to life! Choose your preferred payment method:</p>
+            <div className="flex flex-col sm:flex-row justify-center gap-2 mt-2">
               <Button
                 onClick={() => handleDonation('paypal')}
-                className="bg-[#0070BA] text-white hover:bg-[#003087] flex-1"
+                className="bg-[#0070BA] text-white hover:bg-[#003087] text-[15px] py-1 h-10 flex-1"
               >
-                <CircleDollarSign className="w-4 h-4 mr-2" />
+                <CircleDollarSign className="w-4 h-4 mr-1" />
                 Support with PayPal
               </Button>
               <Button
                 onClick={() => handleDonation('venmo')}
-                className="bg-[#008CFF] text-white hover:bg-[#0070BA] flex-1"
+                className="bg-[#008CFF] text-white hover:bg-[#0070BA] text-[15px] py-1 h-10 flex-1"
               >
-                <CircleDollarSign className="w-4 h-4 mr-2" />
+                <CircleDollarSign className="w-4 h-4 mr-1" />
                 Support with Venmo
               </Button>
             </div>
-            <p className="text-xs text-gray-500 text-center mt-2">
+            <p className="text-[12px] text-gray-500 text-center mt-1">
               All donations directly support game development.
             </p>
           </div>
-          <div className="text-xs text-gray-500 mt-2">
+          <div className="text-[8px] text-gray-500 mt-2">
             © 2024 MJKUltra. All rights reserved.
-            <Link href="/privacy-policy" className="ml-2 text-[#00B4D8] hover:underline">
+            <Link href="/privacy-policy" className="ml-1 text-[#00B4D8] hover:underline">
               Privacy Policy
             </Link>
           </div>
