@@ -1,7 +1,8 @@
-import fs from 'fs/promises';
-import zlib from 'zlib';
-import { promisify } from 'util';
+const fs = require('fs');
+const zlib = require('zlib');
+const { promisify } = require('util');
 
+const writeFile = promisify(fs.writeFile);
 const gzip = promisify(zlib.gzip);
 
 const top500Words = [
@@ -13,11 +14,15 @@ const top500Words = [
 
 const content = top500Words.join('\n');
 
-try {
-  const compressed = await gzip(content);
-  await fs.writeFile('public/dictionary.gz', compressed);
-  console.log('Compressed dictionary with top 500 words created successfully.');
-} catch (error) {
-  console.error('Error creating compressed dictionary:', error);
-  process.exit(1);
+async function createCompressedDictionary() {
+  try {
+    const compressed = await gzip(content);
+    await writeFile('public/dictionary.gz', compressed);
+    console.log('Compressed dictionary with top 500 words created successfully.');
+  } catch (error) {
+    console.error('Error creating compressed dictionary:', error);
+    process.exit(1);
+  }
 }
+
+createCompressedDictionary();
