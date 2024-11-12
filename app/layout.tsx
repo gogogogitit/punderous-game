@@ -1,4 +1,13 @@
-import { GoogleAnalytics } from '@next/third-parties/google'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Punderous™ - A Pun-Filled Word Game',
+  description: 'Play Punderous, a fun word game where we ask the questions and you guess the puns!',
+}
 
 export default function RootLayout({
   children,
@@ -7,9 +16,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        {children}
-        <GoogleAnalytics gaId="G-74PSL8QNEV" /> 
+      <body className={inter.className}>
+        <main className="min-h-screen bg-[#00B4D8]">
+          {children}
+        </main>
       </body>
     </html>
   )
