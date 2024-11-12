@@ -159,22 +159,29 @@ const LetterHint: React.FC<{ answer: string; revealedLetters: string[] }> = ({ a
   );
 };
 
+const getRandomPun = (puns: Pun[]): Pun => {
+  return puns[Math.floor(Math.random() * puns.length)];
+};
+
 export default function PunderousGame() {
-  const [gameState, setGameState] = useState<GameState>({
-    currentPun: initialPuns[0],
-    userAnswer: '',
-    guessedAnswers: [],
-    attempts: 5,
-    score: 0,
-    gameOver: false,
-    playerSkillLevel: 1,
-    feedback: '',
-    isCorrect: false,
-    showCorrectAnswer: false,
-    correctAnswerDisplay: '',
-    usedPunIds: new Set([initialPuns[0].question.length]),
-    partialMatch: '',
-    revealedLetters: [],
+  const [gameState, setGameState] = useState<GameState>(() => {
+    const initialPun = getRandomPun(initialPuns);
+    return {
+      currentPun: initialPun,
+      userAnswer: '',
+      guessedAnswers: [],
+      attempts: 5,
+      score: 0,
+      gameOver: false,
+      playerSkillLevel: 1,
+      feedback: '',
+      isCorrect: false,
+      showCorrectAnswer: false,
+      correctAnswerDisplay: '',
+      usedPunIds: new Set([initialPun.question.length]),
+      partialMatch: '',
+      revealedLetters: [],
+    };
   });
   const [puns, setPuns] = useState<Pun[]>(initialPuns)
   const [email, setEmail] = useState('')
@@ -249,20 +256,21 @@ export default function PunderousGame() {
     if (unusedPuns.length === 0) {
       const shuffledPuns = [...puns].sort(() => Math.random() - 0.5)
       setPuns(shuffledPuns)
+      const newPun = getRandomPun(shuffledPuns)
       setGameState(prev => ({
         ...prev,
-        currentPun: shuffledPuns[0],
+        currentPun: newPun,
         attempts: 5,
         guessedAnswers: [],
         showCorrectAnswer: false,
         isCorrect: false,
         feedback: '',
         userAnswer: '',
-        usedPunIds: new Set([shuffledPuns[0].question.length]),
+        usedPunIds: new Set([newPun.question.length]),
         revealedLetters: [],
       }))
     } else {
-      const randomPun = unusedPuns[Math.floor(Math.random() * unusedPuns.length)]
+      const randomPun = getRandomPun(unusedPuns)
       setGameState(prev => ({
         ...prev,
         currentPun: randomPun,
