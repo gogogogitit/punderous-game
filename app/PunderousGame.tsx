@@ -10,7 +10,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
 import { submitFeedback, votePun } from './actions'
-
+import { trackEvent } from '@/lib/analytics'
 
 interface Pun {
   question: string;
@@ -241,6 +241,11 @@ export default function PunderousGame() {
         guessedAnswers: [...prev.guessedAnswers, userGuess],
         revealedLetters: newRevealedLetters,
       }));
+      // Track correct answer
+      trackEvent('correct_answer', {
+        difficulty: gameState.currentPun.difficulty.toString(),
+        score: (gameState.score + pointsEarned).toString()
+      });
     } else {
       setGameState(prev => ({
         ...prev,
@@ -253,6 +258,10 @@ export default function PunderousGame() {
         correctAnswerDisplay: prev.attempts - 1 === 0 ? correctAnswer : '',
         revealedLetters: newRevealedLetters,
       }));
+      // Track incorrect answer
+      trackEvent('incorrect_answer', {
+        attempts_remaining: (gameState.attempts - 1).toString()
+      });
     }
   }, [gameState, compareAnswers]);
 
@@ -290,6 +299,8 @@ export default function PunderousGame() {
         revealedLetters: [],
       }))
     }
+    // Track new pun
+    trackEvent('new_pun');
   }, [gameState.usedPunIds, puns])
 
   const handleEmailSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
@@ -300,13 +311,16 @@ export default function PunderousGame() {
       const result = await submitFeedback(email, comment)
 
       if (result.success) {
+        trackEvent('email_submitted');
         setEmailSubmitted(true)
         setEmail('')
         setComment('')
       } else {
+        trackEvent('email_error');
         setSubmitError(result.error || 'An error occurred while submitting your email.')
       }
     } catch (error) {
+      trackEvent('email_error');
       console.error('Error submitting email:', error)
       setSubmitError('An error occurred while submitting your email. Please try again.')
     }
@@ -337,6 +351,9 @@ export default function PunderousGame() {
           }))
         }
 
+        // Track vote
+        trackEvent('pun_vote', { vote_type: voteType });
+
         // Move to the next question after voting
         getNextPun()
       } else {
@@ -352,6 +369,7 @@ export default function PunderousGame() {
     difficulty === 3 ? "Hard (3 points)" : "Unknown";
 
   const handleDonation = useCallback((platform: 'paypal' | 'venmo') => {
+    trackEvent('donation_click', { platform });
     const paypalUrl = 'https://www.paypal.com/ncp/payment/RJJZ7Z78PTDUW'
     const venmoUrl = 'https://venmo.com/u/punderousgame'
 
@@ -525,12 +543,15 @@ export default function PunderousGame() {
                     url: shareUrl,
                   }).then(() => {
                     console.log('Successfully shared');
+                    trackEvent('share_success');
                   }).catch((error) => {
                     console.error('Error sharing:', error);
+                    trackEvent('share_error');
                   });
                 } else {
                   const fallbackShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
                   window.open(fallbackShareUrl, '_blank');
+                  trackEvent('share_fallback');
                 }
               }}
               className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-sm py-2"
