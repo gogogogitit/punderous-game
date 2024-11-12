@@ -503,10 +503,26 @@ export default function PunderousGame() {
             </div>
             <Button
               onClick={() => {
-                // Implement share functionality here
-                alert("Share functionality coming soon!");
+                const shareUrl = "https://punderous.com"; 
+                const shareText = `I'm playing Punderous™! Can you guess this pun? "${gameState.currentPun.question}"`;
+                
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'Punderous™',
+                    text: shareText,
+                    url: shareUrl,
+                  }).then(() => {
+                    console.log('Successfully shared');
+                  }).catch((error) => {
+                    console.error('Error sharing:', error);
+                  });
+                } else {
+                  const fallbackShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+                  window.open(fallbackShareUrl, '_blank');
+                }
               }}
               className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-sm py-2"
+              aria-label="Share Punderous game"
             >
               <Share2 className="w-4 h-4 mr-2" />
               Share Punderous™
