@@ -1,16 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        zlib: false,
-      };
-    }
-    return config;
+  images: {
+    domains: ['hebbkx1anhila5yf.public.blob.vercel-storage.com'],
   },
-};
+}
 
-export default nextConfig;
+module.exports = nextConfig
