@@ -10,6 +10,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
 import { submitFeedback, votePun } from './actions'
+import { track } from '@vercel/analytics';
 
 interface Pun {
   question: string;
@@ -155,6 +156,7 @@ export default function PunderousGame() {
         guessedAnswers: [...prev.guessedAnswers, userGuess],
         revealedLetters: newRevealedLetters,
       }));
+      track('Correct Answer', { difficulty: gameState.currentPun.difficulty });
     } else {
       setGameState(prev => ({
         ...prev,
@@ -167,6 +169,7 @@ export default function PunderousGame() {
         correctAnswerDisplay: prev.attempts - 1 === 0 ? correctAnswer : '',
         revealedLetters: newRevealedLetters,
       }));
+      track('Incorrect Answer', { attemptsLeft: gameState.attempts - 1 });
     }
   }, [gameState, compareAnswers]);
 
@@ -189,6 +192,7 @@ export default function PunderousGame() {
         usedPunIds: new Set([newPun.question.length]),
         revealedLetters: [],
       }))
+      track('New Game Started');
     } else {
       const randomPun = getRandomPun(unusedPuns)
       setGameState(prev => ({
@@ -203,6 +207,7 @@ export default function PunderousGame() {
         usedPunIds: new Set([...prev.usedPunIds, randomPun.question.length]),
         revealedLetters: [],
       }))
+      track('Next Pun');
     }
   }, [gameState.usedPunIds, puns])
 
@@ -217,6 +222,7 @@ export default function PunderousGame() {
         setEmailSubmitted(true)
         setEmail('')
         setComment('')
+        track('Email Submitted');
       } else {
         setSubmitError(result.error || 'An error occurred while submitting your email.')
       }
@@ -252,6 +258,7 @@ export default function PunderousGame() {
         }
 
         getNextPun()
+        track('Vote Submitted', { voteType, punQuestion: pun.question });
       } else {
         console.error('Error submitting vote:', result.error)
       }
@@ -270,6 +277,7 @@ export default function PunderousGame() {
     const venmoUrl = 'https://venmo.com/u/punderousgame'
 
     window.open(platform === 'paypal' ? paypalUrl : venmoUrl, '_blank', 'noopener,noreferrer')
+    track('Donation Link Clicked', { platform });
   }, [])
 
   return (
@@ -449,6 +457,7 @@ export default function PunderousGame() {
                   const fallbackShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
                   window.open(fallbackShareUrl, '_blank');
                 }
+                track('Share Button Clicked');
               }}
               className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-[13px] py-1 h-9 mt-0.5"
               aria-label="Share Punderous game"
