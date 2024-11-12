@@ -275,9 +275,9 @@ export default function PunderousGame() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#00B4D8] p-1">
       <Card className="w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-sm">
-        <CardHeader className="text-center border-b border-gray-200 py-1">
+        <CardHeader className="text-center border-b border-gray-200 py-1.5">
           <div className="flex flex-col items-center justify-center">
-            <div className="relative w-[220px] h-[220px] mb-3">
+            <div className="relative w-[230px] h-[230px] mb-3">
               <Image
                 src="/punderous-logo.png"
                 alt="Punderous™ Logo"
@@ -287,7 +287,7 @@ export default function PunderousGame() {
                 priority
               />
             </div>
-            <p className="text-sm text-gray-600 mb-2">
+            <p className="text-sm text-gray-600 mb-2.5">
               A pun-filled word game where we ask the questions and you guess the puns!
             </p>
             <CardDescription className="text-lg font-medium text-[#00B4D8]">
@@ -296,7 +296,7 @@ export default function PunderousGame() {
           </div>
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-2.5 p-1.5">
-          <div className="flex justify-center gap-1 text-[11px] mb-3">
+          <div className="flex justify-center gap-1 text-[11px] mb-2"> {/* Updated: mb-2 */}
             <div className="px-1 py-0.5 bg-[#FFD151] text-gray-800 rounded-full flex items-center">
               <Trophy className="w-2 h-2 mr-0.5" />
               <span>Score: {gameState.score}</span>
