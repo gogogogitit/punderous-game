@@ -483,21 +483,33 @@ export default function PunderousGame() {
               disabled={gameState.gameOver || gameState.isCorrect}
             />
           </div>
-          <div className="flex justify-between w-full space-x-2">
+          <div className="flex flex-col w-full space-y-2">
+            <div className="flex justify-between w-full space-x-2">
+              <Button
+                onClick={handleAnswerSubmit}
+                className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-sm py-2"
+                disabled={gameState.gameOver || gameState.isCorrect}
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Submit
+              </Button>
+              <Button
+                onClick={getNextPun}
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm py-2"
+                disabled={gameState.isCorrect || gameState.gameOver}
+              >
+                Skip
+              </Button>
+            </div>
             <Button
-              onClick={handleAnswerSubmit}
-              className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-sm py-2"
-              disabled={gameState.gameOver || gameState.isCorrect}
+              onClick={() => {
+                // Implement share functionality here
+                alert("Share functionality coming soon!");
+              }}
+              className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-sm py-2"
             >
-              <Send className="w-4 h-4 mr-2" />
-              Submit
-            </Button>
-            <Button
-              onClick={getNextPun}
-              className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-sm py-2"
-              disabled={gameState.isCorrect || gameState.gameOver}
-            >
-              Skip
+              <Share2 className="w-4 h-4 mr-2" />
+              Share Punderous™
             </Button>
           </div>
         </CardContent>
