@@ -5,7 +5,7 @@ const path = require('path');
 const top500Words = [
   'I', 'a', 'of', 'to', 'in', 'it', 'is', 'be', 'as', 'at', 'so', 'we', 'he', 'by', 'or', 'on', 'do', 'if', 'me', 'my', 'up', 'an', 'go', 'no', 'us', 'am',
   'the', 'and', 'that', 'have', 'for', 'not', 'with', 'you', 'this', 'but', 'his', 'from', 'they', 'say', 'her', 'she', 'will', 'one', 'all', 'would', 'there', 'their', 'what', 'out', 'about', 'who', 'get', 'which', 'when', 'make', 'can', 'like', 'time', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'yours', 'years', 'ours', 'day', 'most', 'us',
-  "can't", "don't", "won't", "isn't", "aren't", "can't" 
+  "can't", "don't", "won't", "isn't", "aren't"
   // ... (add the rest of the words here)
 ];
 
@@ -13,7 +13,7 @@ const top500Words = [
 const punWords = [
   "rabbit", "positive", "future", "outlook", "hoptimist",
   "fake", "noodle", "impasta",
-  "can", "opener", "doesn't", "work", "can't",
+  "opener", "doesn't", "work",
   "scientists", "trust", "atoms", "make", "up", "everything",
   "bear", "teeth", "gummy",
   "scarecrow", "win", "award", "outstanding", "field",
@@ -99,16 +99,43 @@ const punWords = [
   "snake", "building", "house", "boa", "constructor",
   "bear", "never", "wants", "grow", "peter", "panda",
   "cow", "legs", "ground", "beef"
+
 ];
 
-// Combine top words and pun words
-const allWords = new Set([...top500Words, ...punWords]);
+const contractions = [
+    "cannot", "didn't",
+    "don't", "do not",
+    "won't", "will not",
+    "isn't", "is not",
+    "aren't", "are not",
+    "it's", "it is",
+    "I'm", "I am",
+    "you're", "you are",
+    "they are",
+    "we're", "we are",
+    "he's", "he is",
+    "she's", "she is",
+    "that's", "that is",
+    "who's", "who is",
+    "what's", "what is",
+    "where's", "where is",
+    "when's", "when is",
+    "why's", "why is",
+    "how's", "how is"
+  ];
 
-// Convert Set to sorted array
-const compressedDictionary = Array.from(allWords).sort();
-
-// Save the compressed dictionary
-const outputPath = path.join(__dirname, '..', 'public', 'compressed-dictionary.json');
-fs.writeFileSync(outputPath, JSON.stringify(compressedDictionary));
-
-console.log('Compressed dictionary with top words and pun words created successfully in public folder.');
+// Combine all words, convert to lowercase, and remove duplicates
+const allWords = new Set([
+    ...top500Words, 
+    ...punWords, 
+    ...contractions
+  ].map(word => word.toLowerCase()));
+  
+  // Convert Set to sorted array
+  const compressedDictionary = Array.from(allWords).sort();
+  
+  // Save the compressed dictionary
+  const outputPath = path.join(__dirname, '..', 'public', 'compressed-dictionary.json');
+  fs.writeFileSync(outputPath, JSON.stringify(compressedDictionary));
+  
+  console.log('Compressed dictionary with top words, pun words, and contractions created successfully in public folder.');

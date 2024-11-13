@@ -619,39 +619,39 @@ export default function PunderousGame() {
           <PreviousAnswers answers={gameState.guessedAnswers} />
           
           <div className="w-full">
-            <Input
-              type="text"
-              placeholder="Enter your answer"
-              value={gameState.userAnswer}
-              onChange={(e) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAnswerSubmit();
-                }
-              }}
-              className="w-full text-[13.2px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-10"
-              disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
-            />
-          </div>
-          <div className="flex flex-col w-full space-y-2.5">
-            <div className="flex justify-between w-full space-x-2">
-              <Button
-                onClick={handleAnswerSubmit}
-                className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-[13px] py-1 h-9"
-                disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
-              >
-                <Send className="w-3 h-3 mr-1" />
-                Submit
-              </Button>
-              <Button
-                onClick={getNextPun}
-                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
-                disabled={gameState.isCorrect || gameState.gameOver || gameState.showNonEnglishCard}
-              >
-                Skip
-              </Button>
-            </div>
+  <Input
+    type="text"
+    placeholder="Enter your answer"
+    value={gameState.userAnswer}
+    onChange={(e) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
+    onKeyPress={(e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAnswerSubmit();
+      }
+    }}
+    className="w-full text-[13.2px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-10"
+    disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
+  />
+</div>
+<div className="flex flex-col w-full space-y-2.5">
+  <div className="flex justify-between w-full space-x-2">
+    <Button
+      onClick={handleAnswerSubmit}
+      className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-[13px] py-1 h-9"
+      disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
+    >
+      <Send className="w-3 h-3 mr-1" />
+      Submit
+    </Button>
+    <Button
+      onClick={getNextPun}
+      className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
+      disabled={gameState.isCorrect || gameState.gameOver || gameState.showNonEnglishCard}
+    >
+      Skip
+    </Button>
+  </div>
             <Button
               onClick={() => {
                 const shareUrl = "https://punderous.com"; 
