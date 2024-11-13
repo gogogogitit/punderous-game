@@ -87,8 +87,17 @@ const confettiConfig = {
 
 const API_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
 
-// Basic English word list for fallback
-const basicEnglishWords = new Set(['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us']);
+// Updated basic English word list including contractions
+const basicEnglishWords = new Set([
+  'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you',
+  'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one',
+  'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when',
+  'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some',
+  'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back',
+  'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these',
+  'give', 'day', 'most', 'us', "can't", "don't", "won't", "isn't", "aren't", "it's", "I'm", "you're", "they're", "we're",
+  "he's", "she's", "that's", "who's", "what's", "where's", "when's", "why's", "how's"
+]);
 
 const LetterHint: React.FC<{ answer: string; revealedLetters: string[] }> = ({ answer, revealedLetters }) => {
   const words = answer.split(' ');
@@ -176,7 +185,7 @@ export default function PunderousGame() {
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [comment, setComment] = useState('');
   const [submitError, setSubmitError] = useState('');
-  const [dictionary, setDictionary] = useState<Set<string>>(new Set());
+  const [dictionary, setDictionary] = useState<Set<string>>(new Set(basicEnglishWords));
 
   const loadDictionaryAndPuns = async () => {
     try {
@@ -191,7 +200,7 @@ export default function PunderousGame() {
       // Initialize dictionary with words from pun answers and basic English words
       const dictionaryWords = new Set(basicEnglishWords);
       punsData.forEach(pun => {
-        pun.answer.toLowerCase().split(' ').forEach(word => dictionaryWords.add(word));
+        pun.answer.toLowerCase().split(/\s+/).forEach(word => dictionaryWords.add(word.replace(/[.,!?]/g, '')));
       });
       setDictionary(dictionaryWords);
 
@@ -234,9 +243,9 @@ export default function PunderousGame() {
   }, []);
 
   const isValidWord = useCallback(async (word: string): Promise<boolean> => {
-    const lowercaseWord = word.toLowerCase().trim();
+    const lowercaseWord = word.toLowerCase().trim().replace(/[.,!?]/g, '');
     
-    // Check if the word is in the pun answers or our local dictionary
+    // Check if the word is in our local dictionary
     if (dictionary.has(lowercaseWord)) {
       return true;
     }
@@ -261,7 +270,7 @@ export default function PunderousGame() {
     const correctAnswer = gameState.currentPun.answer;
     const userGuess = gameState.userAnswer.trim();
 
-    const words = userGuess.split(' ');
+    const words = userGuess.split(/\s+/);
     const allWordsValid = await Promise.all(words.map(isValidWord));
 
     if (!allWordsValid.every(Boolean)) {
@@ -440,14 +449,14 @@ export default function PunderousGame() {
         <CardHeader className="text-center border-b border-gray-200 py-1.5">
           <div className="flex flex-col items-center justify-center">
             <div className="relative w-[230px] h-[230px] mb-3">
-            <Image
-  src="/punderous-logo.png"
-  alt="Punderous™ Logo"
-  width={220}
-  height={220}
-  className="object-contain drop-shadow-lg"
-  priority
-/>
+              <Image
+                src="/punderous-logo.png"
+                alt="Punderous™ Logo"
+                width={220}
+                height={220}
+                className="object-contain drop-shadow-lg"
+                priority
+              />
             </div>
             <p className="text-sm text-gray-600 mb-2.5">
               A pun-filled word game where we ask the questions and you guess the puns!
