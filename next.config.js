@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+  env: {
+    DATABASE_URL: process.env.DATABASE_URL,
+  },
   images: {
     remotePatterns: [
       {
@@ -9,10 +13,8 @@ const nextConfig = {
         pathname: '/placeholder.svg/**',
       },
     ],
+    domains: ['hebbkx1anhila5yf.public.blob.vercel-storage.com'],
   },
-}
-
-module.exports = {
   async headers() {
     return [
       {
@@ -26,4 +28,6 @@ module.exports = {
       },
     ];
   },
-};
+}
+
+module.exports = nextConfig

@@ -7,13 +7,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model EmailSubmission {
-  id        Int      @id @default(autoincrement())
-  email     String
-  comment   String?
-  createdAt DateTime @default(now())
-}
-
 model Pun {
   id        Int      @id @default(autoincrement())
   question  String
@@ -21,4 +14,19 @@ model Pun {
   difficulty Int
   upVotes   Int      @default(0)
   downVotes Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model EmailSubmission {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  comment   String?
+  createdAt DateTime @default(now())
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  email     String
+  comment   String
+  createdAt DateTime @default(now())
 }

@@ -1,29 +1,50 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { PrismaClient } from '@prisma/client';
 
-export async function POST(request: NextRequest) {
+const prisma = new PrismaClient();
+
+export async function POST(request: Request) {
+  console.log('Feedback API called');
   try {
-    const body = await request.json();
-    const { email, comment } = body;
-
-    if (!email || !comment) {
-      return NextResponse.json({ success: false, message: 'Email and comment are required' }, { status: 400 });
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL is not set');
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Database configuration error' 
+      }, { status: 500 });
     }
 
-    // Save feedback to PostgreSQL database
-    await sql`
-      INSERT INTO feedback (email, comment)
-      VALUES (${email}, ${comment})
-    `;
+    const { email, comment } = await request.json();
+    console.log('Received feedback:', { email, comment });
 
-    return NextResponse.json({ success: true, message: 'Feedback submitted successfully' });
+    // Validate input
+    if (!email || !comment) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Email and comment are required' 
+      }, { status: 400 });
+    }
+
+    const feedback = await prisma.feedback.create({
+      data: {
+        email,
+        comment
+      }
+    });
+
+    console.log('Feedback saved:', feedback);
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Feedback submitted successfully' 
+    });
   } catch (error) {
-    console.error('Error processing feedback:', error);
-    return NextResponse.json({ success: false, message: 'Error submitting feedback' }, { status: 500 });
+    console.error('Error in feedback API:', error);
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Failed to submit feedback' 
+    }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
-}
-
-export async function GET(request: NextRequest) {
-  return NextResponse.json({ message: 'Feedback API is working' });
 }
