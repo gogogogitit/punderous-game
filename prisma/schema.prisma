@@ -8,10 +8,10 @@ generator client {
 }
 
 model Pun {
-  id         Int      @id @default(autoincrement())
-  question   String
-  answer     String
+  id        Int      @id @default(autoincrement())
+  question  String
+  answer    String
   difficulty Int
-  upVotes    Int      @default(0)
-  downVotes  Int      @default(0)
+  upVotes   Int      @default(0)
+  downVotes Int      @default(0)
 }

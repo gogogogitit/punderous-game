@@ -9,11 +9,43 @@ import { Textarea } from "@/components/ui/textarea"
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
-import { submitFeedback, votePun } from './actions'
-import { track } from '@vercel/analytics'
 import Confetti from 'react-dom-confetti'
 
+// Define return types for mock functions
+type FeedbackResponse = {
+  success: boolean;
+  message?: string;
+}
+
+type VoteResponse = {
+  success: boolean;
+  message?: string;
+  data?: {
+    upVotes: number;
+    downVotes: number;
+  };
+}
+
+// Mock functions with proper return types
+const submitFeedback = async (email: string, comment: string): Promise<FeedbackResponse> => {
+  console.log('Feedback submitted:', { email, comment });
+  return { success: true };
+};
+
+const votePun = async (question: string, voteType: 'up' | 'down'): Promise<VoteResponse> => {
+  console.log('Vote submitted:', { question, voteType });
+  return { 
+    success: true, 
+    data: { upVotes: 1, downVotes: 0 } 
+  };
+};
+
+const track = (event: string, properties?: any) => {
+  console.log('Event tracked:', event, properties);
+};
+
 interface Pun {
+  id: number;
   question: string;
   answer: string;
   difficulty: number;
@@ -22,7 +54,7 @@ interface Pun {
 }
 
 interface GameState {
-  currentPun: Pun;
+  currentPun: Pun | null;
   userAnswer: string;
   guessedAnswers: string[];
   attempts: number;
@@ -37,99 +69,8 @@ interface GameState {
   partialMatch: string;
   revealedLetters: string[];
   showAnswerCard: boolean;
+  showNonEnglishCard: boolean;
 }
-
-const initialPuns: Pun[] = [
-  { question: "What do you call a rabbit with a positive future outlook?", answer: "A hoptimist", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a can opener that doesn't work?", answer: "A can't opener", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a bear with no teeth?", answer: "A gummy bear", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why did the scarecrow win an award?", answer: "They were outstanding in their field", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a pig that does karate?", answer: "A pork chop", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why don't eggs tell jokes?", answer: "They would crack up", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a sleeping bull?", answer: "A bulldozer", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why did the math book look so sad?", answer: "It had too many problems", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the golfer bring two pairs of pants?", answer: "In case they got a hole in one", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a parade of rabbits hopping backwards?", answer: "A receding hare line", difficulty: 3, upVotes: 0, downVotes: 0 },
-  { question: "Why don't skeletons fight each other?", answer: "They don't have the guts", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a fake stone in Ireland?", answer: "A sham rock", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "How do you organize a space party?", answer: "You planet", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a fish wearing a bowtie?", answer: "Sofishticated", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a dinosaur that crashes their car?", answer: "Tyrannosaurus wrecks", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why don't oysters donate to charity?", answer: "They're shellfish", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the gym get smaller and close down?", answer: "It didn't work out", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the cookie go to the doctor?", answer: "Because it was feeling crumbly", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a snowman with a six-pack?", answer: "An abdominal snowman", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What did the grape do when it got stepped on?", answer: "Let out a little wine", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the banker switch careers?", answer: "They lost interest", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the stadium get so hot?", answer: "All the fans left", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a dinosaur with an extensive vocabulary?", answer: "A thesaurus", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a bee that can't make up its mind?", answer: "A maybee", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why do cows wear bells?", answer: "Their horns don't work", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the frog take the bus?", answer: "Their car got toad", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the barber win a race?", answer: "They took a shortcut", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What did the janitor say when they jumped out of the closet?", answer: "Supplies!", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the coffee file a police report?", answer: "It got mugged", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why couldn't the bicycle find its way?", answer: "It lost its bearings", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What did the buffalo say to their son when he left for college?", answer: "Bison", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call an alligator detective?", answer: "An investigator", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you get if you cross a vampire with a snowman?", answer: "Frostbite", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why don't seagulls fly over the bay?", answer: "Then they'd be bagels", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What's a vampire's least favorite room in the house?", answer: "The living room", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "How do mountains stay warm in winter?", answer: "They wear snow caps", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why can't you hear a pterodactyl use the bathroom?", answer: "The 'P' is silent", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the orange stop?", answer: "It ran out of juice", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "How did the big flower greet the smaller flower?", answer: "Hey little bud!", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What's the best way to watch a fly-fishing tournament?", answer: "Live stream it", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a gigantic pile of cats?", answer: "A meowtain", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What kind of car does an egg drive?", answer: "A Yolkswagen", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What does a nosy pepper do?", answer: "Gets jalapeño business", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the person name their dogs Rolex and Timex?", answer: "They were watch dogs", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the blanket go to jail?", answer: "It was covering up", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why are elevator jokes so good?", answer: "They work on many levels", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the pony get detention?", answer: "It kept horsing around", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call an apology written in dots and dashes?", answer: "Remorse code", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the bicycle fall over?", answer: "It was two-tired", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "How did the cell phone propose?", answer: "With a ringtone", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What is a grape's favorite dance move?", answer: "Raisin the roof", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What did the clock do when it was hungry?", answer: "Went back four seconds", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a broken pencil?", answer: "Pointless", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why did the banana go to the doctor?", answer: "It wasn't peeling well", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do chickens do after school?", answer: "Eggstracurricular activities", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What's a ghost's favorite dessert?", answer: "I scream", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why do cows never have any money?", answer: "Farmers milk them dry", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a possessed chicken?", answer: "A poultrygeist", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What's a vampire's least favorite food?", answer: "Steak", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why did the sun go to school?", answer: "To get a little brighter", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why do bees have sticky hair?", answer: "They use honeycombs", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What kind of pants do ghosts wear?", answer: "Boo jeans", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why was the belt arrested?", answer: "For holding up a pair of pants", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What's a plumber's least favorite vegetable?", answer: "Leeks", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What kind of bird works at a construction site?", answer: "A crane", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why did the cookie visit the therapist?", answer: "It was feeling crumby", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "Why did the hipster burn their mouth?", answer: "They drank coffee before it was cool", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a fairy that doesn't take a bath?", answer: "Stinkerbell", difficulty: 2, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a swimming melon?", answer: "A watermelon", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why was the calendar sad?", answer: "Its days were numbered", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why are frogs so happy?", answer: "They eat whatever bugs them", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What noise does a nut make when it sneezes?", answer: "Cashew!", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a clever duck?", answer: "A wise quacker", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a bagel that flies?", answer: "A plane bagel", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why did the computer go to the doctor?", answer: "It had a virus", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a bear that's stuck in the rain?", answer: "A drizzly bear", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "Why did the opera singer need a ladder?", answer: "To reach the high notes", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a kangaroo who watches TV all day?", answer: "A pouch potato", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a cow that plays an instrument?", answer: "A moosician", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a pony with a cough?", answer: "A little hoarse", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a factory that makes okay products?", answer: "A satisfactory", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a cow with two legs?", answer: "Lean beef", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "How do trees access the internet?", answer: "They log on", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a snake building a house?", answer: "A boa constructor", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a bear that never wants to grow up?", answer: "Peter Panda", difficulty: 1, upVotes: 0, downVotes: 0 },
-  { question: "What do you call a cow with no legs?", answer: "Ground beef", difficulty: 1, upVotes: 0, downVotes: 0 },
-]
 
 const confettiConfig = {
   angle: 90,
@@ -143,6 +84,11 @@ const confettiConfig = {
   height: "10px",
   colors: ["#FF6B35", "#A06CD5", "#00B4D8", "#247BA0", "#FFFFFF"]
 }
+
+const API_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
+
+// Basic English word list for fallback
+const basicEnglishWords = new Set(['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us']);
 
 const LetterHint: React.FC<{ answer: string; revealedLetters: string[] }> = ({ answer, revealedLetters }) => {
   const words = answer.split(' ');
@@ -175,7 +121,7 @@ const LetterHint: React.FC<{ answer: string; revealedLetters: string[] }> = ({ a
 
 const PreviousAnswers: React.FC<{ answers: string[] }> = ({ answers }) => {
   if (answers.length === 0) return null;
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -200,41 +146,71 @@ const PreviousAnswers: React.FC<{ answers: string[] }> = ({ answers }) => {
   );
 };
 
-const getRandomPun = (puns: Pun[]): Pun => {
-  return puns[Math.floor(Math.random() * puns.length)];
+const getRandomPun = (puns: Pun[], usedPunIds: Set<number>): Pun | null => {
+  const availablePuns = puns.filter(pun => !usedPunIds.has(pun.id));
+  if (availablePuns.length === 0) return null;
+  return availablePuns[Math.floor(Math.random() * availablePuns.length)];
 };
 
 export default function PunderousGame() {
+  const [puns, setPuns] = useState<Pun[]>([]);
   const [gameState, setGameState] = useState<GameState>(() => ({
-    currentPun: initialPuns[0],
+    currentPun: null,
     userAnswer: '',
     guessedAnswers: [],
     attempts: 5,
     score: 0,
     gameOver: false,
-    playerSkillLevel: 1,
+    playerSkillLevel: 0,
     feedback: '',
     isCorrect: false,
     showCorrectAnswer: false,
     correctAnswerDisplay: '',
-    usedPunIds: new Set([initialPuns[0].question.length]),
+    usedPunIds: new Set(),
     partialMatch: '',
     revealedLetters: [],
     showAnswerCard: false,
+    showNonEnglishCard: false,
   }));
-  const [puns, setPuns] = useState<Pun[]>(initialPuns)
-  const [email, setEmail] = useState('')
-  const [emailSubmitted, setEmailSubmitted] = useState(false)
-  const [comment, setComment] = useState('')
-  const [submitError, setSubmitError] = useState('')
+  const [email, setEmail] = useState('');
+  const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [comment, setComment] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [dictionary, setDictionary] = useState<Set<string>>(new Set());
+
+  const loadDictionaryAndPuns = async () => {
+    try {
+      // Simulating puns loading for v0 preview
+      const punsData = [
+        { id: 1, question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, upVotes: 0, downVotes: 0 },
+        { id: 2, question: "What do you call a can opener that doesn't work?", answer: "A can't opener", difficulty: 2, upVotes: 0, downVotes: 0 },
+        { id: 3, question: "Why don't scientists trust atoms?", answer: "Because they make up everything", difficulty: 3, upVotes: 0, downVotes: 0 },
+      ];
+      setPuns(punsData);
+
+      // Initialize dictionary with words from pun answers and basic English words
+      const dictionaryWords = new Set(basicEnglishWords);
+      punsData.forEach(pun => {
+        pun.answer.toLowerCase().split(' ').forEach(word => dictionaryWords.add(word));
+      });
+      setDictionary(dictionaryWords);
+
+      // Set initial pun
+      const initialPun = getRandomPun(punsData, new Set());
+      if (initialPun) {
+        setGameState(prev => ({
+          ...prev,
+          currentPun: initialPun,
+          usedPunIds: new Set([initialPun.id])
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading dictionary and puns:', error);
+    }
+  };
 
   useEffect(() => {
-    const randomPun = getRandomPun(initialPuns);
-    setGameState(prev => ({
-      ...prev,
-      currentPun: randomPun,
-      usedPunIds: new Set([randomPun.question.length])
-    }));
+    loadDictionaryAndPuns();
   }, []);
 
   const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
@@ -255,12 +231,46 @@ export default function PunderousGame() {
     const matchPercentage = correctWords.filter(word => userWords.includes(word)).length / correctWords.length;
 
     return allWordsPresent || matchPercentage >= 0.6;
-  }, [])
+  }, []);
 
-  const handleAnswerSubmit = useCallback(() => {
-    if (gameState.userAnswer.trim() === '' || gameState.gameOver) return;
+  const isValidWord = useCallback(async (word: string): Promise<boolean> => {
+    const lowercaseWord = word.toLowerCase().trim();
+    
+    // Check if the word is in the pun answers or our local dictionary
+    if (dictionary.has(lowercaseWord)) {
+      return true;
+    }
+
+    // If not found locally, check the API
+    try {
+      const response = await fetch(`${API_URL}${lowercaseWord}`);
+      if (response.ok) {
+        // Word exists in the dictionary
+        setDictionary(prev => new Set(prev).add(lowercaseWord));
+        return true;
+      }
+    } catch (error) {
+      console.error('Error checking word in API:', error);
+    }
+
+    return false;
+  }, [dictionary]);
+
+  const handleAnswerSubmit = useCallback(async () => {
+    if (gameState.userAnswer.trim() === '' || gameState.gameOver || !gameState.currentPun) return;
     const correctAnswer = gameState.currentPun.answer;
     const userGuess = gameState.userAnswer.trim();
+
+    const words = userGuess.split(' ');
+    const allWordsValid = await Promise.all(words.map(isValidWord));
+
+    if (!allWordsValid.every(Boolean)) {
+      setGameState(prev => ({
+        ...prev,
+        showNonEnglishCard: true,
+      }));
+      return;
+    }
 
     const newRevealedLetters = [...gameState.revealedLetters];
     userGuess.toLowerCase().split('').forEach(letter => {
@@ -269,7 +279,6 @@ export default function PunderousGame() {
       }
     });
 
-    // Check if all letters are revealed
     const allLettersRevealed = correctAnswer.toLowerCase().split('').every(letter => 
       letter === ' ' || newRevealedLetters.includes(letter)
     );
@@ -302,18 +311,15 @@ export default function PunderousGame() {
         correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
         revealedLetters: newRevealedLetters,
         showAnswerCard: newAttempts === 0,
+        playerSkillLevel: 0,
       }));
       track('Incorrect Answer', { attemptsLeft: newAttempts });
     }
-  }, [gameState, compareAnswers]);
+  }, [gameState, compareAnswers, isValidWord]);
 
   const getNextPun = useCallback(() => {
-    const unusedPuns = puns.filter(pun => !gameState.usedPunIds.has(pun.question.length))
-    
-    if (unusedPuns.length === 0) {
-      const shuffledPuns = [...puns].sort(() => Math.random() - 0.5)
-      setPuns(shuffledPuns)
-      const newPun = getRandomPun(shuffledPuns)
+    const newPun = getRandomPun(puns, gameState.usedPunIds);
+    if (newPun) {
       setGameState(prev => ({
         ...prev,
         currentPun: newPun,
@@ -323,87 +329,93 @@ export default function PunderousGame() {
         isCorrect: false,
         feedback: '',
         userAnswer: '',
-        usedPunIds: new Set([newPun.question.length]),
+        usedPunIds: new Set([...prev.usedPunIds, newPun.id]),
         revealedLetters: [],
         showAnswerCard: false,
         gameOver: false,
-      }))
-      track('New Game Started');
-    } else {
-      const randomPun = getRandomPun(unusedPuns)
-      setGameState(prev => ({
-        ...prev,
-        currentPun: randomPun,
-        attempts: 5,
-        guessedAnswers: [],
-        showCorrectAnswer: false,
-        isCorrect: false,
-        feedback: '',
-        userAnswer: '',
-        usedPunIds: new Set([...prev.usedPunIds, randomPun.question.length]),
-        revealedLetters: [],
-        showAnswerCard: false,
-        gameOver: false,
-      }))
+        playerSkillLevel: 0,
+        showNonEnglishCard: false,
+      }));
       track('Next Pun');
+    } else {
+      // If all puns have been used, reset the usedPunIds and get a new pun
+      const resetPun = getRandomPun(puns, new Set());
+      if (resetPun) {
+        setGameState(prev => ({
+          ...prev,
+          currentPun: resetPun,
+          attempts: 5,
+          guessedAnswers: [],
+          showCorrectAnswer: false,
+          isCorrect: false,
+          feedback: '',
+          userAnswer: '',
+          usedPunIds: new Set([resetPun.id]),
+          revealedLetters: [],
+          showAnswerCard: false,
+          gameOver: false,
+          playerSkillLevel: 0,
+          showNonEnglishCard: false,
+        }));
+        track('New Game Started');
+      }
     }
-  }, [gameState.usedPunIds, puns])
+  }, [gameState.usedPunIds, puns]);
 
   const handleEmailSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setSubmitError('')
+    e.preventDefault();
+    setSubmitError('');
 
     try {
-      const result = await submitFeedback(email, comment)
+      const result = await submitFeedback(email, comment);
 
       if (result.success) {
-        setEmailSubmitted(true)
-        setEmail('')
-        setComment('')
+        setEmailSubmitted(true);
+        setEmail('');
+        setComment('');
         track('Email Submitted');
       } else {
-        setSubmitError(result.error || 'An error occurred while submitting your email.')
+        setSubmitError(result.message || 'An error occurred while submitting your email.');
       }
     } catch (error) {
-      console.error('Error submitting email:', error)
-      setSubmitError('An error occurred while submitting your email. Please try again.')
+      console.error('Error submitting email:', error);
+      setSubmitError('An error occurred while submitting your email. Please try again.');
     }
-  }, [email, comment])
+  }, [email, comment]);
 
   const handleVote = useCallback(async (pun: Pun, voteType: 'up' | 'down') => {
     try {
-      const result = await votePun(pun.question, voteType)
+      const result = await votePun(pun.question, voteType);
 
       if (result.success && result.data) {
-        const updatedPun = result.data
         setPuns(prevPuns => prevPuns.map(p => 
-          p.question === pun.question ? { 
+          p.id === pun.id ? { 
             ...p, 
-            upVotes: updatedPun?.upVotes ?? p.upVotes, 
-            downVotes: updatedPun?.downVotes ?? p.downVotes 
+            upVotes: result.data!.upVotes,
+            downVotes: result.data!.downVotes 
           } : p
-        ))
+        ));
 
-        if (gameState.currentPun.question === pun.question) {
+        if (gameState.currentPun && gameState.currentPun.id === pun.id) {
           setGameState(prevState => ({
             ...prevState,
             currentPun: {
-              ...prevState.currentPun,
-              upVotes: updatedPun?.upVotes ?? prevState.currentPun.upVotes,
-              downVotes: updatedPun?.downVotes ?? prevState.currentPun.downVotes
+              ...prevState.currentPun!,
+              upVotes: result.data!.upVotes,
+              downVotes: result.data!.downVotes
             }
-          }))
+          }));
         }
 
-        getNextPun()
+        getNextPun();
         track('Vote Submitted', { voteType, punQuestion: pun.question });
       } else {
-        console.error('Error submitting vote:', result.error)
+        console.error('Error submitting vote:', result.message);
       }
     } catch (error) {
-      console.error('Error submitting vote:', error)
+      console.error('Error submitting vote:', error);
     }
-  }, [gameState.currentPun, getNextPun])
+  }, [gameState.currentPun, getNextPun]);
 
   const getDifficultyText = (difficulty: number): string => 
     difficulty === 1 ? "Easy (1 pt)" :
@@ -411,12 +423,16 @@ export default function PunderousGame() {
     difficulty === 3 ? "Hard (3 pts)" : "Unknown";
 
   const handleDonation = useCallback((platform: 'paypal' | 'venmo') => {
-    const paypalUrl = 'https://www.paypal.com/ncp/payment/RJJZ7Z78PTDUW'
-    const venmoUrl = 'https://venmo.com/u/punderousgame'
+    const paypalUrl = 'https://www.paypal.com/ncp/payment/RJJZ7Z78PTDUW';
+    const venmoUrl = 'https://venmo.com/u/punderousgame';
 
-    window.open(platform === 'paypal' ? paypalUrl : venmoUrl, '_blank', 'noopener,noreferrer')
+    window.open(platform === 'paypal' ? paypalUrl : venmoUrl, '_blank', 'noopener,noreferrer');
     track('Donation Link Clicked', { platform });
-  }, [])
+  }, []);
+
+  if (!gameState.currentPun) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#00B4D8] p-1">
@@ -424,14 +440,14 @@ export default function PunderousGame() {
         <CardHeader className="text-center border-b border-gray-200 py-1.5">
           <div className="flex flex-col items-center justify-center">
             <div className="relative w-[230px] h-[230px] mb-3">
-              <Image
-                src="/punderous-logo.png"
-                alt="Punderous™ Logo"
-                width={220}
-                height={220}
-                className="object-contain drop-shadow-lg"
-                priority
-              />
+            <Image
+  src="/punderous-logo.png"
+  alt="Punderous™ Logo"
+  width={220}
+  height={220}
+  className="object-contain drop-shadow-lg"
+  priority
+/>
             </div>
             <p className="text-sm text-gray-600 mb-2.5">
               A pun-filled word game where we ask the questions and you guess the puns!
@@ -459,20 +475,61 @@ export default function PunderousGame() {
             </div>
           </div>
           <AnimatePresence mode="wait">
-            {(gameState.isCorrect && gameState.showCorrectAnswer) || gameState.showAnswerCard ? (
+            {gameState.showNonEnglishCard ? (
+              <motion.div
+                key="non-english-card"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.5 }}
+                className="w-full rounded-lg border-2 border-[#A06CD5] p-2 bg-[#A06CD5]/10 text-center"
+              >
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="text-[22.5px] font-medium text-center text-[#A06CD5]"
+                >
+                  <span className="mr-2">⚠️</span>
+                  Nice try!
+                  <span className="ml-2">⚠️</span>
+                </motion.p>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                  className="text-[16.875px] font-medium text-gray-800 mt-1 text-center"
+                >
+                  Give it another shot.
+                </motion.p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  className="flex justify-center mt-3"
+                >
+                  <Button
+                    onClick={() => setGameState(prev => ({ ...prev, showNonEnglishCard: false }))}
+                    className="bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-[13px] py-1 h-9"
+                  >
+                    Try Again
+                  </Button>
+                </motion.div>
+              </motion.div>
+            ) : (gameState.isCorrect && gameState.showCorrectAnswer) || gameState.showAnswerCard ? (
               <motion.div
                 key="correct-answer"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.5 }}
-                className={`w-full rounded-lg border-2 p-2 ${gameState.isCorrect ? 'border-[#00B4D8] bg-[#00B4D8]/10' : 'border-[#FF6B35] bg-[#FF6B35]/10'}`}
+                className={`w-full rounded-lg border-2 p-2 ${gameState.isCorrect ? 'border-[#FFD151] bg-[#FFD151]/10' : 'border-[#FF6B35] bg-[#FF6B35]/10'}`}
               >
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className={`text-[22.5px] font-medium text-center ${gameState.isCorrect ? 'text-[#00B4D8]' : 'text-[#FF6B35]'}`}
+                  className={`text-[22.5px] font-medium text-center ${gameState.isCorrect ? 'text-[#FFD151]' : 'text-[#FF6B35]'}`}
                 >
                   {gameState.isCorrect ? (
                     <span>
@@ -505,7 +562,7 @@ export default function PunderousGame() {
                   <p className="text-[12.5px] text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
                   <div className="flex justify-center space-x-2">
                     <Button
-                      onClick={() => handleVote(gameState.currentPun, 'up')}
+                      onClick={() => handleVote(gameState.currentPun!, 'up')}
                       variant="outline"
                       size="sm"
                       className="h-9 w-[72px] text-[13.75px] border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
@@ -514,7 +571,7 @@ export default function PunderousGame() {
                       Good
                     </Button>
                     <Button
-                      onClick={() => handleVote(gameState.currentPun, 'down')}
+                      onClick={() => handleVote(gameState.currentPun!, 'down')}
                       variant="outline"
                       size="sm"
                       className="h-9 w-[72px] text-[13.75px] border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
@@ -574,7 +631,7 @@ export default function PunderousGame() {
                 }
               }}
               className="w-full text-[13.2px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-10"
-              disabled={gameState.gameOver || gameState.isCorrect}
+              disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
             />
           </div>
           <div className="flex flex-col w-full space-y-2.5">
@@ -582,7 +639,7 @@ export default function PunderousGame() {
               <Button
                 onClick={handleAnswerSubmit}
                 className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-[13px] py-1 h-9"
-                disabled={gameState.gameOver || gameState.isCorrect}
+                disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
               >
                 <Send className="w-3 h-3 mr-1" />
                 Submit
@@ -590,7 +647,7 @@ export default function PunderousGame() {
               <Button
                 onClick={getNextPun}
                 className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
-                disabled={gameState.isCorrect || gameState.gameOver}
+                disabled={gameState.isCorrect || gameState.gameOver || gameState.showNonEnglishCard}
               >
                 Skip
               </Button>
@@ -598,7 +655,7 @@ export default function PunderousGame() {
             <Button
               onClick={() => {
                 const shareUrl = "https://punderous.com"; 
-                const shareText = `I'm playing Punderous™! Can you guess this pun? "${gameState.currentPun.question}"`;
+                const shareText = `I'm playing Punderous™! Can you guess this pun? "${gameState.currentPun!.question}"`;
                 
                 if (navigator.share) {
                   navigator.share({
@@ -706,5 +763,5 @@ export default function PunderousGame() {
         <Confetti active={gameState.isCorrect} config={confettiConfig} />
       </div>
     </div>
-  )
+  );
 }
