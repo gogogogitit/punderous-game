@@ -54,6 +54,9 @@ const votePun = async (punId: number, voteType: 'up' | 'down'): Promise<VoteResp
       },
       body: JSON.stringify({ punId, voteType }),
     });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const data = await response.json();
     return { success: true, data: { upVotes: data.upVotes, downVotes: data.downVotes } };
   } catch (error) {
@@ -255,12 +258,11 @@ export default function PunderousGame() {
         { id: 34, question: "What did the buffalo say to their son when he left for college?", answer: "Bison", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 35, question: "What do you call an alligator detective?", answer: "An investigator", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 36, question: "What do you get if you cross a vampire with a snowman?", answer: "Frostbite", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 37, question: "Why don't seagulls fly over the bay?", answer: "Then they'd be bagels", difficulty: 2, upVotes: 0, downVotes: 0 },
+        { id: 37, question: "Why don't seagulls fly over the bay?", answer: "Then they would be bagels", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 38, question: "What's a vampire's least favorite room in the house?", answer: "The living room", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 39, question: "How do mountains stay warm in winter?", answer: "They wear snow caps", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 40, question: "Why can't you hear a pterodactyl use the bathroom?", answer: "The P is silent", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 41, question: "Why did the orange stop?", answer: "It ran out of juice", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 42, question: "How did the big flower greet the smaller flower?", answer: "Hey little bud", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 43, question: "What's the best way to watch a fly-fishing tournament?", answer: "Live stream it", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 44, question: "What do you call a gigantic pile of cats?", answer: "A meowtain", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 45, question: "What kind of car does an egg drive?", answer: "A Yolkswagen", difficulty: 2, upVotes: 0, downVotes: 0 },
@@ -535,7 +537,7 @@ export default function PunderousGame() {
   const handleVote = useCallback(async (pun: Pun, voteType: 'up' | 'down') => {
     try {
       const result = await votePun(pun.id, voteType);
-
+  
       if (result.success && result.data) {
         setPuns(prevPuns => prevPuns.map(p => 
           p.id === pun.id ? { 
@@ -544,7 +546,7 @@ export default function PunderousGame() {
             downVotes: result.data!.downVotes 
           } : p
         ));
-
+  
         if (gameState.currentPun && gameState.currentPun.id === pun.id) {
           setGameState(prevState => ({
             ...prevState,
@@ -555,7 +557,8 @@ export default function PunderousGame() {
             }
           }));
         }
-
+  
+        console.log('Vote submitted successfully:', result.data);
         getNextPun();
         track('Vote Submitted', { voteType, punQuestion: pun.question });
       } else {

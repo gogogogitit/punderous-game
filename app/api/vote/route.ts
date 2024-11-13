@@ -7,6 +7,13 @@ export async function POST(request: Request) {
   try {
     const { punId, voteType } = await request.json();
 
+    if (typeof punId !== 'number' || !['up', 'down'].includes(voteType)) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid input data.' },
+        { status: 400 }
+      );
+    }
+
     const updatedPun = await prisma.pun.update({
       where: { id: punId },
       data: {
@@ -27,5 +34,7 @@ export async function POST(request: Request) {
       { success: false, message: 'An error occurred while processing your vote.' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
