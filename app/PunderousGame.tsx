@@ -189,11 +189,18 @@ export default function PunderousGame() {
 
   const loadDictionaryAndPuns = async () => {
     try {
-      // Simulating puns loading for v0 preview
+      // Extended list of puns
       const punsData = [
         { id: 1, question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 2, question: "What do you call a can opener that doesn't work?", answer: "A can't opener", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 3, question: "Why don't scientists trust atoms?", answer: "Because they make up everything", difficulty: 3, upVotes: 0, downVotes: 0 },
+        { id: 4, question: "What do you call a bear with no teeth?", answer: "A gummy bear", difficulty: 1, upVotes: 0, downVotes: 0 },
+        { id: 5, question: "What do you call a boomerang that doesn't come back?", answer: "A stick", difficulty: 2, upVotes: 0, downVotes: 0 },
+        { id: 6, question: "What do you call a parade of rabbits hopping backwards?", answer: "A receding hare-line", difficulty: 3, upVotes: 0, downVotes: 0 },
+        { id: 7, question: "What do you call a fake stone in Ireland?", answer: "A sham rock", difficulty: 2, upVotes: 0, downVotes: 0 },
+        { id: 8, question: "What do you call a sleeping bull?", answer: "A bulldozer", difficulty: 1, upVotes: 0, downVotes: 0 },
+        { id: 9, question: "What do you call a fish wearing a bowtie?", answer: "So-fish-ticated", difficulty: 3, upVotes: 0, downVotes: 0 },
+        { id: 10, question: "What do you call a dog magician?", answer: "A labracadabrador", difficulty: 2, upVotes: 0, downVotes: 0 },
       ];
       setPuns(punsData);
 
@@ -220,6 +227,7 @@ export default function PunderousGame() {
 
   useEffect(() => {
     loadDictionaryAndPuns();
+    console.log('PunderousGame component mounted');
   }, []);
 
   const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
@@ -517,12 +525,16 @@ export default function PunderousGame() {
                   transition={{ delay: 0.6, duration: 0.5 }}
                   className="flex justify-center mt-3"
                 >
-                  <Button
-                    onClick={() => setGameState(prev => ({ ...prev, showNonEnglishCard: false }))}
-                    className="bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-[13px] py-1 h-9"
-                  >
-                    Try Again
-                  </Button>
+<Button
+  onClick={() => setGameState(prev => ({ 
+    ...prev, 
+    showNonEnglishCard: false,
+    userAnswer: '' // This line clears the text entry field
+  }))}
+  className="bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-[13px] py-1 h-9"
+>
+  Try Again
+</Button>
                 </motion.div>
               </motion.div>
             ) : (gameState.isCorrect && gameState.showCorrectAnswer) || gameState.showAnswerCard ? (
@@ -628,39 +640,39 @@ export default function PunderousGame() {
           <PreviousAnswers answers={gameState.guessedAnswers} />
           
           <div className="w-full">
-  <Input
-    type="text"
-    placeholder="Enter your answer"
-    value={gameState.userAnswer}
-    onChange={(e) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
-    onKeyPress={(e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleAnswerSubmit();
-      }
-    }}
-    className="w-full text-[13.2px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-10"
-    disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
-  />
-</div>
-<div className="flex flex-col w-full space-y-2.5">
-  <div className="flex justify-between w-full space-x-2">
-    <Button
-      onClick={handleAnswerSubmit}
-      className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-[13px] py-1 h-9"
-      disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
-    >
-      <Send className="w-3 h-3 mr-1" />
-      Submit
-    </Button>
-    <Button
-      onClick={getNextPun}
-      className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
-      disabled={gameState.isCorrect || gameState.gameOver || gameState.showNonEnglishCard}
-    >
-      Skip
-    </Button>
-  </div>
+            <Input
+              type="text"
+              placeholder="Enter your answer"
+              value={gameState.userAnswer}
+              onChange={(e) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAnswerSubmit();
+                }
+              }}
+              className="w-full text-[13.2px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-10"
+              disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
+            />
+          </div>
+          <div className="flex flex-col w-full space-y-2.5">
+            <div className="flex justify-between w-full space-x-2">
+              <Button
+                onClick={handleAnswerSubmit}
+                className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-[13px] py-1 h-9"
+                disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
+              >
+                <Send className="w-3 h-3 mr-1" />
+                Submit
+              </Button>
+              <Button
+                onClick={getNextPun}
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
+                disabled={gameState.isCorrect || gameState.gameOver || gameState.showNonEnglishCard}
+              >
+                Skip
+              </Button>
+            </div>
             <Button
               onClick={() => {
                 const shareUrl = "https://punderous.com"; 
