@@ -1,40 +1,31 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import prisma from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
 
-export const runtime = 'edge';
+const prisma = new PrismaClient();
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const { punId, voteType } = await request.json();
-
-    if (!punId || !voteType) {
-      return NextResponse.json({ error: 'Missing punId or voteType' }, { status: 400 });
-    }
-
-    const pun = await prisma.pun.findUnique({
-      where: { id: punId }
-    });
-
-    if (!pun) {
-      return NextResponse.json({ error: 'Pun not found' }, { status: 404 });
-    }
 
     const updatedPun = await prisma.pun.update({
       where: { id: punId },
       data: {
-        upVotes: voteType === 'up' ? { increment: 1 } : undefined,
-        downVotes: voteType === 'down' ? { increment: 1 } : undefined,
+        [voteType === 'up' ? 'upVotes' : 'downVotes']: {
+          increment: 1
+        }
       }
     });
 
-    return NextResponse.json(updatedPun);
+    return NextResponse.json({ 
+      success: true, 
+      upVotes: updatedPun.upVotes, 
+      downVotes: updatedPun.downVotes 
+    });
   } catch (error) {
-    console.error('Error updating pun votes:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Error in vote API:', error);
+    return NextResponse.json(
+      { success: false, message: 'An error occurred while processing your vote.' },
+      { status: 500 }
+    );
   }
-}
-
-export async function GET() {
-  return NextResponse.json({ message: 'Vote API is working' });
 }

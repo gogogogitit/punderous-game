@@ -10,9 +10,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
 import Confetti from 'react-dom-confetti'
-import { useDictionary } from '../hooks/useDictionary';
+import { useDictionary } from '@/hooks/useDictionary'
 
-// Define return types for mock functions
+// Define return types for API functions
 type FeedbackResponse = {
   success: boolean;
   message?: string;
@@ -27,21 +27,60 @@ type VoteResponse = {
   };
 }
 
-// Mock functions with proper return types
+// API functions
 const submitFeedback = async (email: string, comment: string): Promise<FeedbackResponse> => {
-  console.log('Feedback submitted:', { email, comment });
-  return { success: true };
+  try {
+    const response = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, comment }),
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    return { success: false, message: 'An error occurred while submitting feedback.' };
+  }
 };
 
-const votePun = async (question: string, voteType: 'up' | 'down'): Promise<VoteResponse> => {
-  console.log('Vote submitted:', { question, voteType });
-  return { 
-    success: true, 
-    data: { upVotes: 1, downVotes: 0 } 
-  };
+const votePun = async (punId: number, voteType: 'up' | 'down'): Promise<VoteResponse> => {
+  try {
+    const response = await fetch('/api/vote', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ punId, voteType }),
+    });
+    const data = await response.json();
+    return { success: true, data: { upVotes: data.upVotes, downVotes: data.downVotes } };
+  } catch (error) {
+    console.error('Error submitting vote:', error);
+    return { success: false, message: 'An error occurred while submitting vote.' };
+  }
+};
+
+const submitEmail = async (email: string, comment: string): Promise<FeedbackResponse> => {
+  try {
+    const response = await fetch('/api/submit-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, comment }),
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error submitting email:', error);
+    return { success: false, message: 'An error occurred while submitting email.' };
+  }
 };
 
 const track = (event: string, properties?: any) => {
+  // Implement your tracking logic here
   console.log('Event tracked:', event, properties);
 };
 
@@ -195,6 +234,7 @@ export default function PunderousGame() {
         { id: 13, question: "Why don't skeletons fight each other?", answer: "They don't have the guts", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 14, question: "What do you call a fake stone in Ireland?", answer: "A sham rock", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 15, question: "How do you organize a space party?", answer: "You planet", difficulty: 2, upVotes: 0, downVotes: 0 },
+        { id: 16, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 17, question: "What do you call a fish wearing a bowtie?", answer: "Sofishticated", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 18, question: "What do you call a dinosaur that crashes their car?", answer: "Tyrannosaurus wrecks", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 19, question: "Why don't oysters donate to charity?", answer: "They're shellfish", difficulty: 2, upVotes: 0, downVotes: 0 },
@@ -290,6 +330,10 @@ export default function PunderousGame() {
     console.log('PunderousGame component mounted');
   }, []);
 
+  useEffect(() => {
+    console.log('Dictionary contents:', Array.from(dictionary));
+  }, [dictionary]);
+
   const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
     const cleanAnswer = (answer: string) => 
       answer.toLowerCase()
@@ -332,28 +376,24 @@ export default function PunderousGame() {
       // Check if the part is in our dictionary
       if (dictionary.has(part)) {
         console.log('Part found in dictionary'); // Debugging log
-        continue;
+        return true; // Consider the word valid if any part is found in the dictionary
       }
-
-      // If not found locally, check the API
-      try {
-        const response = await fetch(`${API_URL}${part}`);
-        if (response.ok) {
-          console.log('Part found in API'); // Debugging log
-          return true; // Consider the word valid if any part is found in the API
-        }
-      } catch (error) {
-        console.error('Error checking word in API:', error);
-      }
-
-      // If we reach here, the part is not valid
-      console.log('Part not found:', part); // Debugging log
-      return false;
     }
 
-    // If all parts are valid, the word is valid
-    console.log('All parts valid, word is valid'); // Debugging log
-    return true;
+    // If not found locally, check the API
+    try {
+      const response = await fetch(`${API_URL}${cleanWord}`);
+      if (response.ok) {
+        console.log('Word found in API'); // Debugging log
+        return true;
+      }
+    } catch (error) {
+      console.error('Error checking word in API:', error);
+    }
+
+    // If we reach here, the word is not valid
+    console.log('Word not found:', cleanWord); // Debugging log
+    return false;
   }, [dictionary]);
 
   const handleAnswerSubmit = useCallback(async () => {
@@ -364,11 +404,16 @@ export default function PunderousGame() {
     console.log('User guess:', userGuess); // Debugging log
 
     const words = userGuess.split(/\s+/);
-    const allWordsValid = await Promise.all(words.map(isValidWord));
+    const wordValidityPromises = words.map(async word => {
+      const isValid = await isValidWord(word);
+      console.log(`Word "${word}" is ${isValid ? 'valid' : 'invalid'}`);
+      return isValid;
+    });
+    const allWordsValid = (await Promise.all(wordValidityPromises)).every(Boolean);
 
     console.log('All words valid:', allWordsValid); // Debugging log
 
-    if (!allWordsValid.every(Boolean)) {
+    if (!allWordsValid) {
       setGameState(prev => ({
         ...prev,
         showNonEnglishCard: true,
@@ -471,7 +516,7 @@ export default function PunderousGame() {
     setSubmitError('');
 
     try {
-      const result = await submitFeedback(email, comment);
+      const result = await submitEmail(email, comment);
 
       if (result.success) {
         setEmailSubmitted(true);
@@ -489,7 +534,7 @@ export default function PunderousGame() {
 
   const handleVote = useCallback(async (pun: Pun, voteType: 'up' | 'down') => {
     try {
-      const result = await votePun(pun.question, voteType);
+      const result = await votePun(pun.id, voteType);
 
       if (result.success && result.data) {
         setPuns(prevPuns => prevPuns.map(p => 

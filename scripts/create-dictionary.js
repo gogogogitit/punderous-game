@@ -97,7 +97,7 @@ const punWords = [
   "trees", "access", "internet", "log",
   "snake", "building", "house", "boa", "constructor",
   "bear", "never", "wants", "grow", "peter", "panda",
-  "cow", "legs", "ground", "beef"
+  "cow", "legs", "ground", "beef", "was"
 ];
 
 // Extended list of contractions
