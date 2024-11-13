@@ -516,15 +516,27 @@ export default function PunderousGame() {
   const handleEmailSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitError('');
-
+  
     try {
-      const result = await submitEmail(email, comment);
-
+      const response = await fetch('/api/submit-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, comment }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const result = await response.json();
+  
       if (result.success) {
         setEmailSubmitted(true);
         setEmail('');
         setComment('');
-        track('Email Submitted');
+        console.log('Email Submitted');
       } else {
         setSubmitError(result.message || 'An error occurred while submitting your email.');
       }
@@ -535,15 +547,31 @@ export default function PunderousGame() {
   }, [email, comment]);
 
   const handleVote = useCallback(async (pun: Pun, voteType: 'up' | 'down') => {
+    console.log('handleVote called with:', { punId: pun.id, voteType });
     try {
-      const result = await votePun(pun.id, voteType);
+      const response = await fetch('/api/vote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ punId: pun.id, voteType }),
+      });
   
-      if (result.success && result.data) {
+      console.log('API response status:', response.status);
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const result = await response.json();
+      console.log('API response data:', result);
+  
+      if (result.success) {
         setPuns(prevPuns => prevPuns.map(p => 
           p.id === pun.id ? { 
             ...p, 
-            upVotes: result.data!.upVotes,
-            downVotes: result.data!.downVotes 
+            upVotes: result.upVotes,
+            downVotes: result.downVotes 
           } : p
         ));
   
@@ -552,21 +580,21 @@ export default function PunderousGame() {
             ...prevState,
             currentPun: {
               ...prevState.currentPun!,
-              upVotes: result.data!.upVotes,
-              downVotes: result.data!.downVotes
+              upVotes: result.upVotes,
+              downVotes: result.downVotes
             }
           }));
         }
   
-        console.log('Vote submitted successfully:', result.data);
-        getNextPun();
-        track('Vote Submitted', { voteType, punQuestion: pun.question });
+        console.log('Local state updated successfully');
       } else {
         console.error('Error submitting vote:', result.message);
       }
     } catch (error) {
-      console.error('Error submitting vote:', error);
+      console.error('Error in handleVote:', error);
     }
+    
+    getNextPun();
   }, [gameState.currentPun, getNextPun]);
 
   const getDifficultyText = (difficulty: number): string => 
