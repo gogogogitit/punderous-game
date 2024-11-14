@@ -14,9 +14,9 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://punderous.com'),
-  title: 'Punderous™ - A Pun-Filled Word Game',
-  description: 'Play Punderous, a fun word game where we ask the questions and you guess the puns!',
-  keywords: ['pun', 'word game', 'puzzle', 'brain teaser', 'Punderous'],
+  title: 'Punderous™ - A Pun-Filled Word Game!',
+  description: 'Play Punderous™, a pun-filled word game where we ask the questions and you guess the puns!',
+  keywords: ['pun', 'word game', 'puzzle', 'brain teaser', 'wordle', 'nytgames', 'Punderous'],
   authors: [{ name: 'MJKUltra' }],
   creator: 'MJKUltra',
   publisher: 'MJKUltra',
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: 'Punderous™ - A Pun-Filled Word Game',
+    title: 'Punderous™ - A Pun-Filled Word Game!',
     description: 'Play Punderous™, a pun-filled word game where we ask the questions and you guess the puns!',
     url: 'https://punderous.com',
     siteName: 'Punderous',
