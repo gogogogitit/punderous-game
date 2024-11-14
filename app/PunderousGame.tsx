@@ -796,7 +796,7 @@ export default function PunderousGame() {
               </motion.div>
             )}
           </AnimatePresence>
-          
+
           <PreviousAnswers answers={gameState.guessedAnswers} />
           
           <div className="w-full">
@@ -826,7 +826,14 @@ export default function PunderousGame() {
                 Submit
               </Button>
               <Button
-                onClick={handleSkip}
+                onClick={() => {
+                  setGameState(prev => ({
+                    ...prev,
+                    playerLevel: 0, // Reset player level to 0 when skipping
+                    score: 0, // Reset score to 0 when skipping
+                  }));
+                  getNextPun();
+                }}
                 className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
                 disabled={gameState.isCorrect || gameState.gameOver || gameState.showNonEnglishCard}
               >
