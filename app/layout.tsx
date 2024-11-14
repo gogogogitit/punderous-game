@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Punderous™ - A Pun-Filled Word Game',
-    description: 'Play Punderous, a fun word game where we ask the questions and you guess the puns!',
+    description: 'Play Punderous™, a pun-filled word game where we ask the questions and you guess the puns!',
     url: 'https://punderous.com',
     siteName: 'Punderous',
     images: [
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
         url: 'https://punderous.com/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Punderous™ - A Pun-Filled Word Game',
+        alt: 'Punderous™ - A Pun-Filled Word Game!',
       },
     ],
     locale: 'en_US',
@@ -43,8 +43,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Punderous™ - A Pun-Filled Word Game',
-    description: 'Play Punderous, a fun word game where we ask the questions and you guess the puns!',
+    title: 'Punderous™ - A Pun-Filled Word Game!',
+    description: 'Play Punderous™, a pun-filled word game where we ask the questions and you guess the puns!',
     creator: '@PunderousGame',
     images: ['https://punderous.com/twitter-image.png'],
   },
@@ -104,6 +104,7 @@ export default function RootLayout({
             `,
           }}
         />
+
       </body>
     </html>
   )
