@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
 import Confetti from 'react-dom-confetti'
 import { useDictionary } from '@/hooks/useDictionary'
+import { trackEvent } from '@/lib/analytics'
 
 type FeedbackResponse = {
   success: boolean;
@@ -78,10 +79,6 @@ const submitEmail = async (email: string, comment: string): Promise<FeedbackResp
     console.error('Error submitting email:', error);
     return { success: false, message: 'An error occurred while submitting email.' };
   }
-};
-
-const track = (event: string, properties?: any) => {
-  console.log('Event tracked:', event, properties);
 };
 
 interface Pun {
@@ -237,7 +234,7 @@ export default function PunderousGame() {
         { id: 17, question: "What do you call a fish wearing a bowtie?", answer: "Sofishticated", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 18, question: "What do you call a dinosaur that crashes their car?", answer: "Tyrannosaurus wrecks", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 19, question: "Why don't oysters donate to charity?", answer: "They are shellfish", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 20, question: "Why did the gym get smaller and close down?", answer: "It didn not work out", difficulty: 2, upVotes: 0, downVotes: 0 },
+        { id: 20, question: "Why did the gym get smaller and close down?", answer: "It did not work out", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 21, question: "Why did the cookie go to the doctor?", answer: "Because it felt crumby", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 22, question: "What do you call a snowman with a six-pack?", answer: "An abdominal snowman", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 23, question: "What did the grape do when it got stepped on?", answer: "Let out a little wine", difficulty: 2, upVotes: 0, downVotes: 0 },
@@ -245,7 +242,7 @@ export default function PunderousGame() {
         { id: 25, question: "Why did the stadium get so hot?", answer: "All the fans left", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 26, question: "What do you call a dinosaur with an extensive vocabulary?", answer: "A thesaurus", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 27, question: "What do you call a bee that can't make up its mind?", answer: "A maybee", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 28, question: "Why do cows wear bells?", answer: "Their horns are quiet", difficulty: 2, upVotes: 0, downVotes: 0 },
+        { id: 28, question: "Why do cows wear bells?", answer: "Their horns don't work", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 29, question: "Why did the frog take the bus?", answer: "Their car got toad", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 30, question: "Why did the barber win a race?", answer: "They took a shortcut", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 31, question: "What did the janitor say when they jumped out of the closet?", answer: "Supplies!", difficulty: 2, upVotes: 0, downVotes: 0 },
@@ -317,6 +314,7 @@ export default function PunderousGame() {
           usedPunIds: new Set([initialPun.id])
         }));
       }
+      trackEvent('Game Started');
     } catch (error) {
       console.error('Error loading dictionary and puns:', error);
     }
@@ -324,7 +322,6 @@ export default function PunderousGame() {
 
   useEffect(() => {
     loadDictionaryAndPuns();
-    console.log('PunderousGame component mounted');
   }, []);
 
   useEffect(() => {
@@ -407,6 +404,7 @@ export default function PunderousGame() {
         ...prev,
         showNonEnglishCard: true,
       }));
+      trackEvent('Invalid Word Submitted', { word: userGuess });
       return;
     }
 
@@ -435,7 +433,7 @@ export default function PunderousGame() {
         guessedAnswers: [...prev.guessedAnswers, userGuess],
         revealedLetters: newRevealedLetters,
       }));
-      track('Correct Answer', { difficulty: gameState.currentPun.difficulty, playerLevel: gameState.playerLevel + 1 });
+      trackEvent('Correct Answer', { difficulty: gameState.currentPun.difficulty, playerLevel: gameState.playerLevel + 1, score: gameState.score + pointsEarned });
     } else {
       const newAttempts = gameState.attempts - 1;
       setGameState(prev => ({
@@ -449,9 +447,9 @@ export default function PunderousGame() {
         correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
         revealedLetters: newRevealedLetters,
         showAnswerCard: newAttempts === 0,
-        playerLevel: newAttempts === 0 ? 0 : prev.playerLevel, // Only reset to 0 if all attempts are used
+        playerLevel: newAttempts === 0 ? 0 : prev.playerLevel,
       }));
-      track('Incorrect Answer', { attemptsLeft: newAttempts, playerLevel: newAttempts === 0 ? 0 : gameState.playerLevel });
+      trackEvent('Incorrect Answer', { attemptsLeft: newAttempts, playerLevel: newAttempts === 0 ? 0 : gameState.playerLevel, score: gameState.score });
     }
   }, [gameState, compareAnswers, isValidWord]);
 
@@ -472,9 +470,8 @@ export default function PunderousGame() {
         showAnswerCard: false,
         gameOver: false,
         showNonEnglishCard: false,
-        // Maintain the current player level
       }));
-      track('Next Pun', { playerLevel: gameState.playerLevel });
+      trackEvent('Next Pun', { playerLevel: gameState.playerLevel, score: gameState.score });
     } else {
       // All puns have been used, start a new game
       const resetPun = getRandomPun(puns, new Set());
@@ -493,22 +490,22 @@ export default function PunderousGame() {
           showAnswerCard: false,
           gameOver: false,
           showNonEnglishCard: false,
-          playerLevel: 0, // Reset to 0 only when starting a new game
-          score: 0, // Reset score when starting a new game
+          playerLevel: 0,
+          score: 0,
         }));
-        track('New Game Started', { playerLevel: 0 });
+        trackEvent('New Game Started', { playerLevel: 0, score: 0 });
       }
     }
-  }, [gameState.usedPunIds, puns, gameState.playerLevel]);
+  }, [gameState.usedPunIds, puns, gameState.playerLevel, gameState.score]);
 
   const handleSkip = useCallback(() => {
     setGameState(prev => ({
       ...prev,
-      playerLevel: 0, // Reset player level to 0 when skipping
+      playerLevel: 0,
     }));
     getNextPun();
-    track('Skipped Pun', { playerLevel: 0 });
-  }, [getNextPun]);
+    trackEvent('Skipped Pun', { playerLevel: 0, score: gameState.score });
+  }, [getNextPun, gameState.score]);
 
   const handleEmailSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -533,13 +530,15 @@ export default function PunderousGame() {
         setEmailSubmitted(true);
         setEmail('');
         setComment('');
-        console.log('Email Submitted');
+        trackEvent('Email Submitted', { success: true });
       } else {
         setSubmitError(result.message || 'An error occurred while submitting your email.');
+        trackEvent('Email Submission Failed', { error: result.message });
       }
     } catch (error) {
       console.error('Error submitting email:', error);
       setSubmitError('An error occurred while submitting your email. Please try again.');
+      trackEvent('Email Submission Error', { error: 'Network error' });
     }
   }, [email, comment]);
 
@@ -584,11 +583,14 @@ export default function PunderousGame() {
         }
   
         console.log('Local state updated successfully');
+        trackEvent('Pun Voted', { punId: pun.id, voteType, success: true });
       } else {
         console.error('Error submitting vote:', result.message);
+        trackEvent('Pun Vote Failed', { punId: pun.id, voteType, error: result.message });
       }
     } catch (error) {
       console.error('Error in handleVote:', error);
+      trackEvent('Pun Vote Error', { punId: pun.id, voteType, error: 'Network error' });
     }
     
     getNextPun();
@@ -604,7 +606,7 @@ export default function PunderousGame() {
     const venmoUrl = 'https://venmo.com/u/punderousgame';
 
     window.open(platform === 'paypal' ? paypalUrl : venmoUrl, '_blank', 'noopener,noreferrer');
-    track('Donation Link Clicked', { platform });
+    trackEvent('Donation Link Clicked', { platform });
   }, []);
 
   if (!gameState.currentPun) {
@@ -829,8 +831,8 @@ export default function PunderousGame() {
                 onClick={() => {
                   setGameState(prev => ({
                     ...prev,
-                    playerLevel: 0, // Reset player level to 0 when skipping
-                    score: 0, // Reset score to 0 when skipping
+                    playerLevel: 0,
+                    score: 0,
                   }));
                   getNextPun();
                 }}
@@ -852,14 +854,16 @@ export default function PunderousGame() {
                     url: shareUrl,
                   }).then(() => {
                     console.log('Successfully shared');
+                    trackEvent('Game Shared', { method: 'Web Share API' });
                   }).catch((error) => {
                     console.error('Error sharing:', error);
+                    trackEvent('Share Error', { method: 'Web Share API', error: error.message });
                   });
                 } else {
                   const fallbackShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
                   window.open(fallbackShareUrl, '_blank');
+                  trackEvent('Game Shared', { method: 'Twitter Fallback' });
                 }
-                track('Share Button Clicked');
               }}
               className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-[13px] py-1 h-9 mt-0.5"
               aria-label="Share Punderous game"

@@ -1,12 +1,14 @@
 import Link from 'next/link'
 
+export const runtime = 'nodejs' // Mark as a server component
+
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-[#00B4D8] flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl w-full">
         <h1 className="text-3xl font-bold mb-6 text-[#00B4D8]">Privacy Policy</h1>
         <div className="space-y-4 text-gray-700">
-          <p className="text-sm text-gray-500">Last updated: November 10, 2024</p>
+          <p className="text-sm text-gray-500">Last updated: November 14, 2024</p>
           
           <p>
             Welcome to Punderous™! At Punderous™, we value and respect your privacy. This Privacy Policy
@@ -119,7 +121,7 @@ export default function PrivacyPolicy() {
             If you have any questions about this Privacy Policy, your rights, or our data practices, please contact
             us at:
           </p>
-          <p>Email: punderousgame@gmail.com</p>
+          <p>Email: playpunderous@gmail.com</p>
 
           <p className="mt-4">
             Thank you for being a part of Punderous™. We appreciate your trust and are committed to

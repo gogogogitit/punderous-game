@@ -1,9 +1,10 @@
+import { Suspense } from 'react'
 import PunderousGame from './PunderousGame'
 
 export default function Home() {
   return (
-    <main>
+    <Suspense fallback={<div>Loading...</div>}>
       <PunderousGame />
-    </main>
+    </Suspense>
   )
 }

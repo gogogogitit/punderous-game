@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  swcMinify: true,
   env: {
     DATABASE_URL: process.env.DATABASE_URL,
   },
@@ -28,6 +29,8 @@ const nextConfig = {
       },
     ];
   },
+  // Add this to potentially help with static generation
+  output: 'standalone',
 }
 
 module.exports = nextConfig
