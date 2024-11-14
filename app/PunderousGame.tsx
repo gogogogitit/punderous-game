@@ -12,7 +12,6 @@ import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, Cir
 import Confetti from 'react-dom-confetti'
 import { useDictionary } from '@/hooks/useDictionary'
 
-// Define return types for API functions
 type FeedbackResponse = {
   success: boolean;
   message?: string;
@@ -27,7 +26,6 @@ type VoteResponse = {
   };
 }
 
-// API functions
 const submitFeedback = async (email: string, comment: string): Promise<FeedbackResponse> => {
   try {
     const response = await fetch('/api/feedback', {
@@ -83,7 +81,6 @@ const submitEmail = async (email: string, comment: string): Promise<FeedbackResp
 };
 
 const track = (event: string, properties?: any) => {
-  // Implement your tracking logic here
   console.log('Event tracked:', event, properties);
 };
 
@@ -103,7 +100,7 @@ interface GameState {
   attempts: number;
   score: number;
   gameOver: boolean;
-  playerSkillLevel: number;
+  playerLevel: number;
   feedback: string;
   isCorrect: boolean;
   showCorrectAnswer: boolean;
@@ -201,7 +198,7 @@ export default function PunderousGame() {
     attempts: 5,
     score: 0,
     gameOver: false,
-    playerSkillLevel: 0,
+    playerLevel: 0,
     feedback: '',
     isCorrect: false,
     showCorrectAnswer: false,
@@ -220,7 +217,6 @@ export default function PunderousGame() {
 
   const loadDictionaryAndPuns = async () => {
     try {
-      // Extended list of puns
       const punsData = [
         { id: 1, question: "What do you call a rabbit with a positive future outlook?", answer: "A hoptimist", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 2, question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, upVotes: 0, downVotes: 0 },
@@ -249,7 +245,7 @@ export default function PunderousGame() {
         { id: 25, question: "Why did the stadium get so hot?", answer: "All the fans left", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 26, question: "What do you call a dinosaur with an extensive vocabulary?", answer: "A thesaurus", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 27, question: "What do you call a bee that can't make up its mind?", answer: "A maybee", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 28, question: "Why do cows wear bells?", answer: "Their horns don't work", difficulty: 2, upVotes: 0, downVotes: 0 },
+        { id: 28, question: "Why do cows wear bells?", answer: "Their horns are quiet", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 29, question: "Why did the frog take the bus?", answer: "Their car got toad", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 30, question: "Why did the barber win a race?", answer: "They took a shortcut", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 31, question: "What did the janitor say when they jumped out of the closet?", answer: "Supplies!", difficulty: 2, upVotes: 0, downVotes: 0 },
@@ -272,7 +268,7 @@ export default function PunderousGame() {
         { id: 49, question: "Why are elevator jokes so good?", answer: "They work on many levels", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 50, question: "Why did the pony get detention?", answer: "It kept horsing around", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 51, question: "What do you call an apology written in dots and dashes?", answer: "Remorse code", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 52, question: "Why did the bicycle fall over?", answer: "It was two-tired", difficulty: 1, upVotes: 0, downVotes: 0 },
+        { id: 52, question: "Why did the bicycle fall over?", answer: "It was two tired", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 53, question: "How did the cell phone propose?", answer: "With a ringtone", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 54, question: "What is a grape's favorite dance move?", answer: "Raisin the roof", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 55, question: "What did the clock do when it was hungry?", answer: "Went back four seconds", difficulty: 2, upVotes: 0, downVotes: 0 },
@@ -313,7 +309,6 @@ export default function PunderousGame() {
       ];
       setPuns(punsData);
 
-      // Set initial pun
       const initialPun = getRandomPun(punsData, new Set());
       if (initialPun) {
         setGameState(prev => ({
@@ -359,64 +354,53 @@ export default function PunderousGame() {
   const isValidWord = useCallback(async (word: string): Promise<boolean> => {
     const cleanWord = word.toLowerCase().trim().replace(/[.,!?]/g, '');
     
-    console.log('Checking word:', cleanWord);
-    console.log('Dictionary size:', dictionary.size);
-    console.log('Is "was" in dictionary:', dictionary.has('was'));
+    // First check if word appears in any question or answer
+    const wordInPuns = puns.some(pun => 
+      pun.question.toLowerCase().includes(cleanWord) || 
+      pun.answer.toLowerCase().includes(cleanWord)
+    );
+    if (wordInPuns) {
+      return true;
+    }
     
-    // Check if the word (including apostrophes) is in our dictionary
+    // Then check dictionary
     if (dictionary.has(cleanWord)) {
-      console.log('Word found in dictionary');
       return true;
     }
 
-    // Split the word by apostrophes and check each part
+    // Check word parts
     const wordParts = cleanWord.split("'");
-    
     for (const part of wordParts) {
-      if (part === '') continue;
-      
-      console.log('Checking part:', part);
-      console.log('Is part in dictionary:', dictionary.has(part));
-      
-      // Check if the part is in our dictionary
+      if (part === '' || part === 'a' || part === 'an') continue;
       if (dictionary.has(part)) {
-        console.log('Part found in dictionary');
         return true;
       }
     }
 
-    // If not found locally, check the API
+    // Finally check API
     try {
-      console.log('Checking API for word:', cleanWord);
       const response = await fetch(`${API_URL}${cleanWord}`);
       if (response.ok) {
-        console.log('Word found in API');
         return true;
       }
     } catch (error) {
       console.error('Error checking word in API:', error);
     }
 
-    console.log('Word not found:', cleanWord);
     return false;
-  }, [dictionary]);
+  }, [dictionary, puns]);
 
   const handleAnswerSubmit = useCallback(async () => {
     if (gameState.userAnswer.trim() === '' || gameState.gameOver || !gameState.currentPun) return;
     const correctAnswer = gameState.currentPun.answer;
     const userGuess = gameState.userAnswer.trim();
 
-    console.log('User guess:', userGuess);
-
     const words = userGuess.split(/\s+/);
     const wordValidityPromises = words.map(async word => {
       const isValid = await isValidWord(word);
-      console.log(`Word "${word}" is ${isValid ? 'valid' : 'invalid'}`);
       return isValid;
     });
     const allWordsValid = (await Promise.all(wordValidityPromises)).every(Boolean);
-
-    console.log('All words valid:', allWordsValid);
 
     if (!allWordsValid) {
       setGameState(prev => ({
@@ -442,16 +426,16 @@ export default function PunderousGame() {
       setGameState(prev => ({
         ...prev,
         score: prev.score + pointsEarned,
-        playerSkillLevel: prev.playerSkillLevel + 1,
+        playerLevel: prev.playerLevel + 1,
         isCorrect: true,
         showCorrectAnswer: true,
         correctAnswerDisplay: correctAnswer,
         userAnswer: '',
-        feedback: `Correct! You earned ${pointsEarned} point${pointsEarned > 1 ? 's' : ''}.`,
+        feedback: `Correct! You earned ${pointsEarned} point${pointsEarned > 1 ? 's' : ''}. Your level is now ${prev.playerLevel + 1}.`,
         guessedAnswers: [...prev.guessedAnswers, userGuess],
         revealedLetters: newRevealedLetters,
       }));
-      track('Correct Answer', { difficulty: gameState.currentPun.difficulty });
+      track('Correct Answer', { difficulty: gameState.currentPun.difficulty, playerLevel: gameState.playerLevel + 1 });
     } else {
       const newAttempts = gameState.attempts - 1;
       setGameState(prev => ({
@@ -465,9 +449,9 @@ export default function PunderousGame() {
         correctAnswerDisplay: newAttempts === 0 ? correctAnswer : '',
         revealedLetters: newRevealedLetters,
         showAnswerCard: newAttempts === 0,
-        playerSkillLevel: 0,
+        playerLevel: newAttempts === 0 ? 0 : prev.playerLevel, // Only reset to 0 if all attempts are used
       }));
-      track('Incorrect Answer', { attemptsLeft: newAttempts });
+      track('Incorrect Answer', { attemptsLeft: newAttempts, playerLevel: newAttempts === 0 ? 0 : gameState.playerLevel });
     }
   }, [gameState, compareAnswers, isValidWord]);
 
@@ -487,12 +471,12 @@ export default function PunderousGame() {
         revealedLetters: [],
         showAnswerCard: false,
         gameOver: false,
-        playerSkillLevel: 0,
         showNonEnglishCard: false,
+        // Maintain the current player level
       }));
-      track('Next Pun');
+      track('Next Pun', { playerLevel: gameState.playerLevel });
     } else {
-      // If all puns have been used, reset the usedPunIds and get a new pun
+      // All puns have been used, start a new game
       const resetPun = getRandomPun(puns, new Set());
       if (resetPun) {
         setGameState(prev => ({
@@ -508,13 +492,23 @@ export default function PunderousGame() {
           revealedLetters: [],
           showAnswerCard: false,
           gameOver: false,
-          playerSkillLevel: 0,
           showNonEnglishCard: false,
+          playerLevel: 0, // Reset to 0 only when starting a new game
+          score: 0, // Reset score when starting a new game
         }));
-        track('New Game Started');
+        track('New Game Started', { playerLevel: 0 });
       }
     }
-  }, [gameState.usedPunIds, puns]);
+  }, [gameState.usedPunIds, puns, gameState.playerLevel]);
+
+  const handleSkip = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      playerLevel: 0, // Reset player level to 0 when skipping
+    }));
+    getNextPun();
+    track('Skipped Pun', { playerLevel: 0 });
+  }, [getNextPun]);
 
   const handleEmailSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -654,7 +648,7 @@ export default function PunderousGame() {
             </div>
             <div className="px-1 py-0.5 bg-[#A06CD5] text-white rounded-full flex items-center">
               <Star className="w-2 h-2 mr-0.5" />
-              <span>Level: {gameState.playerSkillLevel}</span>
+              <span>Level: {gameState.playerLevel}</span>
             </div>
           </div>
           <AnimatePresence mode="wait">
@@ -752,7 +746,7 @@ export default function PunderousGame() {
                       onClick={() => handleVote(gameState.currentPun!, 'up')}
                       variant="outline"
                       size="sm"
-                      className="h-9 w-[72px] text-[13.75px] border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
+                      className="h-9 w-[80px] text-[13.75px] border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
                     >
                       <ThumbsUp className="w-4 h-4 mr-1.5" />
                       Good
@@ -761,7 +755,7 @@ export default function PunderousGame() {
                       onClick={() => handleVote(gameState.currentPun!, 'down')}
                       variant="outline"
                       size="sm"
-                      className="h-9 w-[72px] text-[13.75px] border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
+                      className="h-9 w-[80px] text-[13.75px] border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
                     >
                       <ThumbsDown className="w-4 h-4 mr-1.5" />
                       Bad
@@ -770,10 +764,10 @@ export default function PunderousGame() {
                       onClick={getNextPun}
                       variant="outline"
                       size="sm"
-                      className="h-9 w-[72px] text-[13.75px] border-[#00B4D8] text-[#00B4D8] hover:bg-[#00B4D8] hover:text-white"
+                      className="h-9 w-[120px] text-[13.75px] border-[#00B4D8] text-[#00B4D8] hover:bg-[#00B4D8] hover:text-white"
                     >
                       <ArrowRight className="w-4 h-4 mr-1.5" />
-                      <span>Next</span>
+                      <span>{gameState.isCorrect ? 'Next' : 'Play Again'}</span>
                     </Button>
                   </div>
                 </motion.div>
@@ -832,7 +826,7 @@ export default function PunderousGame() {
                 Submit
               </Button>
               <Button
-                onClick={getNextPun}
+                onClick={handleSkip}
                 className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
                 disabled={gameState.isCorrect || gameState.gameOver || gameState.showNonEnglishCard}
               >
