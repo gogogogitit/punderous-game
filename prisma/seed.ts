@@ -113,7 +113,7 @@ const prisma = new PrismaClient()
         { id: 109, question: "What did the duck say when it was time to pay for lunch?", answer: "Put it on my bill", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 110, question: "What kind of music do mummies listen to?", answer: "Wrap music", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 111, question: "Why can't your nose be 12 inches long?", answer: "It would be a foot", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 112, question: "What did the scarf say to the hat?", answer: "You go on ahead, I'll hang around", difficulty: 3, upVotes: 0, downVotes: 0 },
+        { id: 112, question: "What did the scarf say to the hat?", answer: "You go on ahead, I will hang around", difficulty: 3, upVotes: 0, downVotes: 0 },
         { id: 113, question: "Why did the golfer bring an umbrella?", answer: "They saw the forecast", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 114, question: "What kind of button can't you unbutton?", answer: "A belly button", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 115, question: "What noise does a sleeping brontosaurus make?", answer: "A dinosnore", difficulty: 2, upVotes: 0, downVotes: 0 },
