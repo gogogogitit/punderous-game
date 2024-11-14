@@ -15,9 +15,18 @@ export async function GET() {
     }
 
     const puns = await prisma.pun.findMany({
+      select: {
+        id: true,
+        question: true,
+        answer: true,
+        difficulty: true,
+        upVotes: true,
+        downVotes: true,
+      },
       orderBy: {
         id: 'asc'
-      }
+      },
+      take: 100 // Limit to 100 puns, adjust as needed
     });
 
     console.log(`Retrieved ${puns.length} puns from the database`);

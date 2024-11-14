@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-async function main() {
     const puns = [
         { id: 1, question: "What do you call a rabbit with a positive future outlook?", answer: "A hoptimist", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 2, question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, upVotes: 0, downVotes: 0 },
@@ -94,20 +93,27 @@ async function main() {
         { id: 89, question: "What do you call a cow with no legs?", answer: "Ground beef", difficulty: 1, upVotes: 0, downVotes: 0 },
       ];
 
-  for (const pun of puns) {
-    await prisma.pun.create({
-      data: pun
-    })
-  }
-
-  console.log('Seed data inserted successfully')
-}
-
-main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+      async function main() {
+        console.log('Start seeding ...')
+        
+        // Clear existing puns
+        await prisma.pun.deleteMany()
+        
+        for (const pun of puns) {
+          const createdPun = await prisma.pun.create({
+            data: pun
+          })
+          console.log(`Created pun with id: ${createdPun.id}`)
+        }
+        console.log('Seeding finished.')
+      }
+      
+      main()
+        .then(async () => {
+          await prisma.$disconnect()
+        })
+        .catch(async (e) => {
+          console.error(e)
+          await prisma.$disconnect()
+          process.exit(1)
+        })

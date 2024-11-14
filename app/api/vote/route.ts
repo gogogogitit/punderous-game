@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
-// Initialize PrismaClient
 const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   console.log('Vote API called');
   try {
-    // Check if DATABASE_URL is set
     if (!process.env.DATABASE_URL) {
       console.error('DATABASE_URL is not set');
-      return NextResponse.json({ success: false, message: 'Database configuration error' }, { status: 500 });
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Database configuration error' 
+      }, { status: 500 });
     }
 
-    // Parse the request body
     const { punId, voteType } = await request.json();
     console.log('Received vote:', { punId, voteType });
 
@@ -51,12 +51,6 @@ export async function POST(request: Request) {
     // Check if it's a Prisma error
     if (error instanceof Error && 'code' in error) {
       const prismaError = error as { code: string; meta?: { target: string[] } };
-      if (prismaError.code === 'P2002') {
-        return NextResponse.json(
-          { success: false, message: 'A vote for this pun already exists.' },
-          { status: 409 }
-        );
-      }
       if (prismaError.code === 'P2025') {
         return NextResponse.json(
           { success: false, message: 'Pun not found.' },
