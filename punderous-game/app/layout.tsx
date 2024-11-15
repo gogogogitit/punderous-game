@@ -15,8 +15,8 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://punderous.com'),
-  title: 'Punderous™ - A Pun-Filled Word Game',
-  description: 'Play Punderous™, a pun-filled word game where we ask the questions and you guess the puns!',
+  title: 'Punderous™ - A Pun-Filled Word Game!',
+  description: 'Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!',
   keywords: ['pun', 'word game', 'puzzle', 'brain teaser', 'Punderous'],
   authors: [{ name: 'MJKUltra' }],
   creator: 'MJKUltra',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Punderous™ - A Pun-Filled Word Game!',
-    description: 'Play Punderous™, a fun word game where we ask the questions and you guess the puns!',
+    description: 'Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!',
     url: 'https://punderous.com',
     siteName: 'Punderous',
     images: [
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Punderous™ - A Pun-Filled Word Game!',
-    description: 'Play Punderous, a pun-filled word game where we ask the questions and you guess the puns!',
+    description: 'Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!',
     creator: '@PunderousGame',
     images: ['https://punderous.com/twitter-image.png'],
   },
@@ -61,7 +61,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48', type: 'image/x-icon' },
+    ],
     shortcut: '/favicon-16x16.png',
     apple: '/apple-touch-icon.png',
   },
