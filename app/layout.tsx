@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Analytics } from '@vercel/analytics/react';
 import Script from 'next/script';
+import { GA_TRACKING_ID } from '@/lib/analytics';
 import dynamic from 'next/dynamic'
 
 const GoogleAnalytics = dynamic(() => import('@/components/GoogleAnalytics'), { 
@@ -15,8 +16,8 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   metadataBase: new URL('https://punderous.com'),
   title: 'Punderous™ - A Pun-Filled Word Game!',
-  description: 'Play Punderous™, a pun-filled word game where we ask the questions and you guess the puns!',
-  keywords: ['pun', 'word game', 'puzzle', 'brain teaser', 'wordle', 'nytgames', 'Punderous'],
+  description: 'Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!',
+  keywords: ['pun', 'word game', 'puzzle', 'brain teaser', 'Punderous'],
   authors: [{ name: 'MJKUltra' }],
   creator: 'MJKUltra',
   publisher: 'MJKUltra',
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Punderous™ - A Pun-Filled Word Game!',
-    description: 'Play Punderous™, a pun-filled word game where we ask the questions and you guess the puns!',
+    description: 'Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!',
     url: 'https://punderous.com',
     siteName: 'Punderous',
     images: [
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Punderous™ - A Pun-Filled Word Game!',
-    description: 'Play Punderous™, a pun-filled word game where we ask the questions and you guess the puns!',
+    description: 'Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!',
     creator: '@PunderousGame',
     images: ['https://punderous.com/twitter-image.png'],
   },
@@ -60,7 +61,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32', type: 'image/x-icon' },
+    ],
     shortcut: '/favicon-16x16.png',
     apple: '/apple-touch-icon.png',
   },
@@ -76,8 +79,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID
-
   return (
     <html lang="en">
       <body className={inter.className}>
@@ -104,7 +105,6 @@ export default function RootLayout({
             `,
           }}
         />
-
       </body>
     </html>
   )

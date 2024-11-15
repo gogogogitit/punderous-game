@@ -668,28 +668,28 @@ export default function PunderousGame() {
             <p className="text-sm text-gray-600 mb-2.5">
               A pun-filled word game where we ask the questions and you guess the puns!
             </p>
-            <CardDescription className="text-lg font-medium text-[#00B4D8] flex items-center justify-center">
-              <span className="mr-2">⚡</span>
-              Let the Brainstorm Begin!
-              <span className="ml-2">⚡</span>
-            </CardDescription>
-          </div>
+            <CardDescription className="text-xl font-medium text-[#00B4D8] flex items-center justify-center">
+            <span className="mr-2 text-2xl">⚡</span>
+            Let the Brainstorm Begin!
+            <span className="ml-2 text-2xl">⚡</span>
+          </CardDescription>
+        </div>
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-2.5 p-1.5">
-          <div className="flex justify-center gap-1 text-[11px] mb-2">
-            <div className="px-1 py-0.5 bg-[#FFD151] text-gray-800 rounded-full flex items-center">
-              <Trophy className="w-2 h-2 mr-0.5" />
-              <span>Score: {gameState.score}</span>
-            </div>
-            <div className="px-1 py-0.5 bg-[#FF6B35] text-white rounded-full flex items-center">
-              <ChevronRight className="w-2 h-2 mr-0.5" />
-              <span>Attempts: {gameState.attempts}</span>
-            </div>
-            <div className="px-1 py-0.5 bg-[#A06CD5] text-white rounded-full flex items-center">
-              <Star className="w-2 h-2 mr-0.5" />
-              <span>Level: {gameState.playerLevel}</span>
-            </div>
+        <div className="flex justify-center gap-1.5 text-[13px] mb-2">
+          <div className="px-1.5 py-0.75 bg-[#FFD151] text-gray-800 rounded-full flex items-center">
+            <Trophy className="w-3 h-3 mr-0.75" />
+            <span>Score: {gameState.score}</span>
           </div>
+          <div className="px-1.5 py-0.75 bg-[#FF6B35] text-white rounded-full flex items-center">
+            <ChevronRight className="w-3 h-3 mr-0.75" />
+            <span>Attempts: {gameState.attempts}</span>
+          </div>
+          <div className="px-1.5 py-0.75 bg-[#A06CD5] text-white rounded-full flex items-center">
+            <Star className="w-3 h-3 mr-0.75" />
+            <span>Level: {gameState.playerLevel}</span>
+          </div>
+        </div>
           <AnimatePresence mode="wait">
             {gameState.showNonEnglishCard ? (
               <motion.div
