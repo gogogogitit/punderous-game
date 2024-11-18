@@ -878,7 +878,7 @@ export default function Component() {
             const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
             const punOfTheDayIndex = daysSinceStart % puns.length;
             const punOfTheDay = puns[punOfTheDayIndex];
-            const shareText = `I just played Punderous™! Can you guess today's pun? "${punOfTheDay.question}"`;
+            const shareText = `I just played Punderous™! Can you guess today's pun?`;
             
             if (navigator.share) {
               navigator.share({
@@ -1094,7 +1094,7 @@ export default function Component() {
       const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const punOfTheDayIndex = daysSinceStart % puns.length;
       const punOfTheDay = puns[punOfTheDayIndex];
-      const shareText = `I'm playing Punderous™! Can you guess today's pun? "${punOfTheDay.question}"`;
+      const shareText = `I'm playing Punderous™! Can you guess today's pun?`;
       
       if (navigator.share) {
         navigator.share({
