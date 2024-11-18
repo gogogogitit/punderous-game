@@ -222,7 +222,6 @@ export default function Component() {
     try {
       const punsData = [
         { id: 1, question: "What do you call a rabbit with a positive future outlook?", answer: "A hoptimist", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 2, question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 3, question: "Why did the shrimp blush?", answer: "It saw the bottom of the ocean", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 4, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 5, question: "What do you call a bear with no shoes or socks?", answer: "Bearfoot", difficulty: 1, upVotes: 0, downVotes: 0 },
