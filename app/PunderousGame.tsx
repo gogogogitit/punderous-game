@@ -223,10 +223,10 @@ export default function Component() {
       const punsData = [
         { id: 1, question: "What do you call a rabbit with a positive future outlook?", answer: "A hoptimist", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 2, question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 3, question: "What do you call a can opener that doesn't work?", answer: "A cannot opener", difficulty: 1, upVotes: 0, downVotes: 0 },
+        { id: 3, question: "Why did the shrimp blush?", answer: "It saw the bottom of the ocean", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 4, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 5, question: "What do you call a bear with no teeth?", answer: "A gummy bear", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 6, question: "Why did the scarecrow win an award?", answer: "They were outstanding in their field", difficulty: 2, upVotes: 0, downVotes: 0 },
+        { id: 5, question: "What do you call a bear with no shoes or socks?", answer: "Bearfoot", difficulty: 1, upVotes: 0, downVotes: 0 },
+        { id: 6, question: "Why did the scarecrow win an award?", answer: "They were outstanding in their field", difficulty: 3, upVotes: 0, downVotes: 0 },
         { id: 7, question: "What do you call a pig that does karate?", answer: "A pork chop", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 8, question: "Why don't eggs tell jokes?", answer: "They would crack up", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 9, question: "What do you call a sleeping bull?", answer: "A bulldozer", difficulty: 1, upVotes: 0, downVotes: 0 },
@@ -345,7 +345,7 @@ export default function Component() {
         { id: 123, question: "Why did the clock get in trouble at school?", answer: "It kept tocking back", difficulty: 3, upVotes: 0, downVotes: 0 },
         { id: 124, question: "Why did the police hire the book?", answer: "It could go under cover", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 125, question: "What kind of room has no doors or windows?", answer: "A mushroom", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 126, question: "Why did the shrimp blush?", answer: "It saw the bottom of the ocean", difficulty: 1, upVotes: 0, downVotes: 0 },
+        { id: 126, question: "What do you call a group of musical killer whales?", answer: "An Orcastra", difficulty: 1, upVotes: 0, downVotes: 0 },
       ];
       setPuns(punsData);
 
