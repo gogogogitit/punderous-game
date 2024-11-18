@@ -14,6 +14,7 @@ import { useDictionary } from '@/hooks/useDictionary'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { trackEvent as analyticsTrackEvent } from '../lib/analytics';
 
+
 const trackEvent = (eventName: string, eventParams?: Record<string, any>) => {
   analyticsTrackEvent(eventName, eventParams);
 };
@@ -356,7 +357,7 @@ export default function Component() {
         { id: 123, question: "Why did the clock get in trouble at school?", answer: "It kept tocking back", difficulty: 3, upVotes: 0, downVotes: 0 },
         { id: 124, question: "Why did the police hire the book?", answer: "It could go under cover", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 125, question: "What kind of room has no doors or windows?", answer: "A mushroom", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 126, question: "Why did the shrimp blush?", answer: "It saw the bottom of the ocean", difficulty: 1, upVotes: 0, downVotes: 0 },     
+        { id: 126, question: "Why did the shrimp blush?", answer: "It saw the bottom of the ocean", difficulty: 1, upVotes: 0, downVotes: 0 },
       ];
       setPuns(punsData);
 
@@ -395,6 +396,48 @@ export default function Component() {
     localStorage.setItem('score', gameState.score.toString());
     localStorage.setItem('playerLevel', gameState.playerLevel.toString());
   }, [gameState.score, gameState.playerLevel]);
+
+  useEffect(() => {
+    // Handle refresh behavior
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (gameState.gameOver || gameState.isCorrect || gameState.showAnswerCard) {
+        // Save state to indicate we're coming from a refresh
+        localStorage.setItem('refreshRedirect', 'true');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [gameState.gameOver, gameState.isCorrect, gameState.showAnswerCard]);
+
+  useEffect(() => {
+    // Check if we're coming from a refresh
+    const refreshRedirect = localStorage.getItem('refreshRedirect');
+    if (refreshRedirect === 'true') {
+      // Clear the flag
+      localStorage.removeItem('refreshRedirect');
+      // Show thank you card
+      setGameState(prev => ({
+        ...prev,
+        showVoteCard: true,
+        gameOver: true
+      }));
+    }
+
+    // Initialize game state with current day's pun
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date('2024-01-01'); // Set your game start date
+    const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const currentPunIndex = daysSinceStart % puns.length;
+
+    setGameState(prev => ({
+      ...prev,
+      currentPunIndex,
+      currentPun: puns[currentPunIndex],
+      lastPlayedDate: today.toDateString()
+    }));
+  }, [puns]);
 
   const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
     const cleanAnswer = (answer: string) => 
@@ -474,11 +517,11 @@ export default function Component() {
     const answerWordCount = correctAnswer.split(/\s+/).length;
     const userGuessWordCount = userGuess.split(/\s+/).length;
 
-    if (userGuessWordCount === answerWordCount + 1) {
+    if (userGuessWordCount > answerWordCount) {
       setGameState(prev => ({
         ...prev,
         showNonEnglishCard: true,
-        feedback: "Nice try! Your answer has one too many words.",
+        feedback: "Nice try!",
       }));
       return;
     }
@@ -761,8 +804,8 @@ export default function Component() {
                   priority
                 />
               </div>
-              <p className="text-sm text-gray-600 mb-2.5">
-                A pun-a-day word game where we ask the questions and you guess the puns!
+              <p className="text-sm text-gray-600 mb-4">
+                The pun-a-day word game where you guess the puns!
               </p>
               <CardDescription className="text-xl font-medium text-[#00B4D8] flex items-center justify-center">
               <span className="mr-2 text-2xl">⚡</span>
@@ -791,288 +834,300 @@ export default function Component() {
               <span>Level: {gameState.playerLevel}</span>
             </div>
           </div>
-            <AnimatePresence mode="wait">
-              {gameState.showVoteCard ? (
-                <motion.div
-                  key="vote-card"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-full rounded-lg border-2 border-[#00B4D8] p-2 bg-[#00B4D8]/10 text-center"
-                >
-                  <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className="text-[22.5px] font-medium text-center text-[#00B4D8]"
-                  >
-                    🙏 Thanks for playing! 🙏
-                    <br />
-                    Pun back tomorrow for a new Punderous™ challenge! 😃
-                  </motion.p>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.5 }}
-                    className="mt-4"
-                  >
-                    <Button
-                      onClick={() => {
-                        const shareUrl = "https://punderous.com"; 
-                        const shareText = `I just played Punderous™! Can you guess this pun? "${gameState.currentPun!.question}"`;
-                        
-                        if (navigator.share) {
-                          navigator.share({
-                            title: 'Punderous™',
-                            text: shareText,
-                            url: shareUrl,
-                          }).then(() => {
-                            console.log('Successfully shared');
-                            trackEvent('game_shared', {
-                              event_category: 'Game',
-                              event_label: 'Game Shared',
-                              value: 1,
-                            });
-                          }).catch((error) => {
-                            console.error('Error sharing:', error);
-                            trackEvent('share_error', {
-                              event_category: 'Game',
-                              event_label: 'Share Error',
-                              value: 0,
-                            });
-                          });
-                        } else {
-                          const fallbackShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-                          window.open(fallbackShareUrl, '_blank');
-                          trackEvent('game_shared', {
-                            event_category: 'Game',
-                            event_label: 'Game Shared (Twitter Fallback)',
-                            value: 1,
-                          });
-                        }
-                      }}
-                      className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-[13px] py-1 h-9"
-                      aria-label="Share Punderous game"
-                    >
-                      <Share2 className="w-3 h-3 mr-1" />
-                      Share Punderous™ with a friend!
-                    </Button>
-                  </motion.div>
-                </motion.div>
-              ) : gameState.showNonEnglishCard ? (
-                <motion.div
-                  key="non-english-card"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-full rounded-lg border-2 border-[#A06CD5] p-2 bg-[#A06CD5]/10 text-center"
-                >
-                  <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className="text-[22.5px] font-medium text-center text-[#A06CD5]"
-                  >
-                    <span className="mr-2">⚠️</span>
-                    Nice try!
-                    <span className="ml-2">⚠️</span>
-                  </motion.p>
-                  <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.5 }}
-                    className="text-[16.875px] font-medium text-gray-800 mt-1 text-center"
-                  >
-                    Give it another shot.
-                  </motion.p>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 0.5 }}
-                    className="flex justify-center mt-3"
-                  >
-                    <Button
-                      onClick={() => setGameState(prev => ({ 
-                        ...prev, 
-                        showNonEnglishCard: false,
-                        userAnswer: ''
-                      }))}
-                      className="bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-[13px] py-1 h-9"
-                    >
-                      Try Again
-                    </Button>
-                  </motion.div>
-                </motion.div>
-              ) : (gameState.isCorrect && gameState.showCorrectAnswer) || gameState.showAnswerCard ? (
-                <motion.div
-                  key="correct-answer"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.5 }}
-                  className={`w-full rounded-lg border-2 p-2 ${gameState.isCorrect ? 'border-[#FFD151] bg-[#FFD151]/10' : 'border-[#FF6B35] bg-[#FF6B35]/10'}`}
-                >
-                  <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className={`text-[22.5px] font-medium text-center ${gameState.isCorrect ? 'text-[#FFD151]' : 'text-[#FF6B35]'}`}
-                  >
-                    {gameState.isCorrect ? (
-                      <span>
-                        <span className="mr-2">⚡</span>
-                        Correct!
-                        <span className="ml-2">⚡</span>
-                      </span>
-                    ) : (
-                      <span>
-                        <span className="mr-2">☁️</span>
-                        Game Over!
-                        <span className="ml-2">☁️</span>
-                      </span>
-                    )}
-                  </motion.p>
-                  <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.5 }}
-                    className="text-[16.875px] font-medium text-gray-800 mt-1 text-center"
-                  >
-                    {gameState.isCorrect ? '' : 'The answer is: '}{gameState.correctAnswerDisplay}
-                  </motion.p>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 0.5 }}
-                    className="flex flex-col items-center space-y-2 mt-3"
-                  >
-                    <p className="text-[12.5px] text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
-                    <div className="flex justify-center space-x-2">
-                      <Button
-                        onClick={() => handleVote(gameState.currentPun!, 'up')}
-                        variant="outline"
-                        size="sm"
-                        className="h-9 w-[80px] text-[13.75px] border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
-                      >
-                        <ThumbsUp className="w-4 h-4 mr-1.5" />
-                        Good
-                      </Button>
-                      <Button
-                        onClick={() => handleVote(gameState.currentPun!, 'down')}
-                        variant="outline"
-                        size="sm"
-                        className="h-9 w-[80px] text-[13.75px] border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
-                      >
-                        <ThumbsDown className="w-4 h-4 mr-1.5" />
-                        Bad
-                      </Button>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="question"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-full rounded-lg border-2 border-[#00B4D8] p-2 bg-[#00B4D8]/10 text-center"
-                >
-                  <p className="text-base font-medium text-gray-800 mb-1">
-                    {gameState.currentPun.question}
-                  </p>
-                  <p className="text-[11px] text-gray-600">
-                    {getDifficultyText(gameState.currentPun.difficulty)}
-                  </p>
-                  {gameState.feedback && (
-                    <p className="text-[12.5px] text-center text-gray-700 mt-1">
-                      {gameState.feedback}
-                    </p>
-                  )}
-                  <LetterHint answer={gameState.currentPun.answer} revealedLetters={gameState.revealedLetters} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <PreviousAnswers answers={gameState.guessedAnswers} />
+          <AnimatePresence mode="wait">
+  {gameState.showVoteCard ? (
+    <motion.div
+      key="vote-card"
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ duration: 0.5 }}
+      className="w-full rounded-lg border-2 border-[#00B4D8] p-2 bg-[#00B4D8]/10 text-center"
+    >
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="text-[22.5px] font-medium text-center text-[#00B4D8]"
+      >
+        🙏 Thanks for playing! 🙏
+        <br />
+        Pun back tomorrow for a new Punderous™ challenge! 😃
+      </motion.p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="mt-4"
+      >
+        <Button
+          onClick={() => {
+            const shareUrl = "https://punderous.com"; 
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const startDate = new Date('2024-01-01');
+            const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            const punOfTheDayIndex = daysSinceStart % puns.length;
+            const punOfTheDay = puns[punOfTheDayIndex];
+            const shareText = `I just played Punderous™! Can you guess today's pun? "${punOfTheDay.question}"`;
             
-            <div className="w-full">
-              <Input
-                type="text"
-                placeholder="Enter your answer"
-                value={gameState.userAnswer}
-                onChange={(e) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAnswerSubmit();
-                  }
-                }}
-                className="w-full text-[13.2px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-10"
-                disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
-              />
-            </div>
-            <div className="flex flex-col w-full space-y-2.5">
-              <div className="flex justify-between w-full space-x-2">
-                <Button
-                  onClick={handleAnswerSubmit}
-                  className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-[13px] py-1 h-9"
-                  disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
-                >
-                  <Send className="w-3 h-3 mr-1" />
-                  Submit
-                </Button>
-                <Button
-                  className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
-                  disabled={true}
-                >
-                  Hints coming soon!
-                </Button>
-              </div>
-              <Button
-                onClick={() => {
-                  const shareUrl = "https://punderous.com"; 
-                  const shareText = `I'm playing Punderous™! Can you guess this pun? "${gameState.currentPun!.question}"`;
-                  
-                  if (navigator.share) {
-                    navigator.share({
-                      title: 'Punderous™',
-                      text: shareText,
-                      url: shareUrl,
-                    }).then(() => {
-                      console.log('Successfully shared');
-                      trackEvent('game_shared', {
-                        event_category: 'Game',
-                        event_label: 'Game Shared',
-                        value: 1,
-                      });
-                    }).catch((error) => {
-                      console.error('Error sharing:', error);
-                      trackEvent('share_error', {
-                        event_category: 'Game',
-                        event_label: 'Share Error',
-                        value: 0,
-                      });
-                    });
-                  } else {
-                    const fallbackShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-                    window.open(fallbackShareUrl, '_blank');
-                    trackEvent('game_shared', {
-                      event_category: 'Game',
-                      event_label: 'Game Shared (Twitter Fallback)',
-                      value: 1,
-                    });
-                  }
-                }}
-                className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-[13px] py-1 h-9 mt-0.5"
-                aria-label="Share Punderous game"
-              >
-                <Share2 className="w-3 h-3 mr-1" />
-                Share Punderous™ with a friend!
-              </Button>
-            </div>
+            if (navigator.share) {
+              navigator.share({
+                title: 'Punderous™',
+                text: shareText,
+                url: shareUrl,
+              }).then(() => {
+                console.log('Successfully shared');
+                trackEvent('game_shared', {
+                  event_category: 'Game',
+                  event_label: 'Game Shared',
+                  value: 1,
+                });
+              }).catch((error) => {
+                console.error('Error sharing:', error);
+                trackEvent('share_error', {
+                  event_category: 'Game',
+                  event_label: 'Share Error',
+                  value: 0,
+                });
+              });
+            } else {
+              const fallbackShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+              window.open(fallbackShareUrl, '_blank');
+              trackEvent('game_shared', {
+                event_category: 'Game',
+                event_label: 'Game Shared (Twitter Fallback)',
+                value: 1,
+              });
+            }
+          }}
+          className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-[13px] py-1 h-9"
+          aria-label="Share Punderous game"
+        >
+          <Share2 className="w-3 h-3 mr-1" />
+          Share Punderous™ with a friend!
+        </Button>
+      </motion.div>
+    </motion.div>
+  ) : gameState.showNonEnglishCard ? (
+    <motion.div
+      key="non-english-card"
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ duration: 0.5 }}
+      className="w-full rounded-lg border-2 border-[#A06CD5] p-2 bg-[#A06CD5]/10 text-center"
+    >
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="text-[22.5px] font-medium text-center text-[#A06CD5]"
+      >
+        <span className="mr-2">⚠️</span>
+        Nice try!
+        <span className="ml-2">⚠️</span>
+      </motion.p>
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="text-[16.875px] font-medium text-gray-800 mt-1 text-center"
+      >
+        Give it another shot.
+      </motion.p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+        className="flex justify-center mt-3"
+      >
+        <Button
+          onClick={() => setGameState(prev => ({ 
+            ...prev, 
+            showNonEnglishCard: false,
+            userAnswer: ''
+          }))}
+          className="bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-[13px] py-1 h-9"
+        >
+          Try Again
+        </Button>
+      </motion.div>
+    </motion.div>
+  ) : (gameState.isCorrect && gameState.showCorrectAnswer) || gameState.showAnswerCard ? (
+    <motion.div
+      key="correct-answer"
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ duration: 0.5 }}
+      className={`w-full rounded-lg border-2 p-2 ${gameState.isCorrect ? 'border-[#FFD151] bg-[#FFD151]/10' : 'border-[#FF6B35] bg-[#FF6B35]/10'}`}
+    >
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className={`text-[22.5px] font-medium text-center ${gameState.isCorrect ? 'text-[#FFD151]' : 'text-[#FF6B35]'}`}
+      >
+        {gameState.isCorrect ? (
+          <span>
+            <span className="mr-2">⚡</span>
+            Correct!
+            <span className="ml-2">⚡</span>
+          </span>
+        ) : (
+          <span>
+            <span className="mr-2">☁️</span>
+            Game Over!
+            <span className="ml-2">☁️</span>
+          </span>
+        )}
+      </motion.p>
+      <motion.p
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="text-[16.875px] font-medium text-gray-800 mt-1 text-center"
+      >
+        {gameState.isCorrect ? '' : 'The answer is: '}{gameState.correctAnswerDisplay}
+      </motion.p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+        className="flex flex-col items-center space-y-2 mt-3"
+      >
+        <p className="text-[12.5px] text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
+        <div className="flex justify-center space-x-2">
+          <Button
+            onClick={() => handleVote(gameState.currentPun!, 'up')}
+            variant="outline"
+            size="sm"
+            className="h-9 w-[80px] text-[13.75px] border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
+          >
+            <ThumbsUp className="w-4 h-4 mr-1.5" />
+            Good
+          </Button>
+          <Button
+            onClick={() => handleVote(gameState.currentPun!, 'down')}
+            variant="outline"
+            size="sm"
+            className="h-9 w-[80px] text-[13.75px] border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
+          >
+            <ThumbsDown className="w-4 h-4 mr-1.5" />
+            Bad
+          </Button>
+        </div>
+      </motion.div>
+    </motion.div>
+  ) : (
+    <motion.div
+      key="question"
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ duration: 0.5 }}
+      className="w-full rounded-lg border-2 border-[#00B4D8] p-2 bg-[#00B4D8]/10 text-center"
+    >
+      <p className="text-base font-medium text-gray-800 mb-1">
+        {gameState.currentPun.question}
+      </p>
+      <p className="text-[11px] text-gray-600">
+        {getDifficultyText(gameState.currentPun.difficulty)}
+      </p>
+      {gameState.feedback && (
+        <p className="text-[12.5px] text-center text-gray-700 mt-1">
+          {gameState.feedback}
+        </p>
+      )}
+      <LetterHint answer={gameState.currentPun.answer} revealedLetters={gameState.revealedLetters} />
+    </motion.div>
+  )}
+</AnimatePresence>
+
+<PreviousAnswers answers={gameState.guessedAnswers} />
+
+<div className="w-full">
+  <Input
+    type="text"
+    placeholder="Enter your answer"
+    value={gameState.userAnswer}
+    onChange={(e) => setGameState(prev => ({ ...prev, userAnswer: e.target.value }))}
+    onKeyPress={(e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAnswerSubmit();
+      }
+    }}
+    className="w-full text-[13.2px] border border-gray-300 focus:border-[#00B4D8] focus:ring-[#00B4D8] h-10"
+    disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
+  />
+</div>
+<div className="flex flex-col w-full space-y-2.5">
+  <div className="flex justify-between w-full space-x-2">
+    <Button
+      onClick={handleAnswerSubmit}
+      className="flex-1 bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-[13px] py-1 h-9"
+      disabled={gameState.gameOver || gameState.isCorrect || gameState.showNonEnglishCard}
+    >
+      <Send className="w-3 h-3 mr-1" />
+      Submit
+    </Button>
+    <Button
+      className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
+      disabled={true}
+    >
+      Hints coming soon!
+    </Button>
+  </div>
+  <Button
+    onClick={() => {
+      const shareUrl = "https://punderous.com"; 
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startDate = new Date('2024-01-01');
+      const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const punOfTheDayIndex = daysSinceStart % puns.length;
+      const punOfTheDay = puns[punOfTheDayIndex];
+      const shareText = `I'm playing Punderous™! Can you guess today's pun? "${punOfTheDay.question}"`;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: 'Punderous™',
+          text: shareText,
+          url: shareUrl,
+        }).then(() => {
+          console.log('Successfully shared');
+          trackEvent('game_shared', {
+            event_category: 'Game',
+            event_label: 'Game Shared',
+            value: 1,
+          });
+        }).catch((error) => {
+          console.error('Error sharing:', error);
+          trackEvent('share_error', {
+            event_category: 'Game',
+            event_label: 'Share Error',
+            value: 0,
+          });
+        });
+      } else {
+        const fallbackShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+        window.open(fallbackShareUrl, '_blank');
+        trackEvent('game_shared', {
+          event_category: 'Game',
+          event_label: 'Game Shared (Twitter Fallback)',
+          value: 1,
+        });
+      }
+    }}
+    className="w-full bg-[#0070BA] text-white hover:bg-[#003087] text-[13px] py-1 h-9 mt-0.5"
+    aria-label="Share Punderous game"
+  >
+    <Share2 className="w-3 h-3 mr-1" />
+    Share Punderous™ with a friend!
+  </Button>
+</div>
           </CardContent>
           <CardFooter className="flex flex-col items-center space-y-3 border-t border-gray-200 p-2">
             <div className="text-center space-y-1">

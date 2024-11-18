@@ -31,6 +31,6 @@ const nextConfig = {
   },
   // Add this to potentially help with static generation
   output: 'standalone',
-}
+};
 
-module.exports = nextConfig
+export default nextConfig;
