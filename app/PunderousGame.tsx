@@ -8,12 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, ArrowRight, CircleDollarSign, Share2 } from 'lucide-react'
+import { ChevronRight, Star, Trophy, Send, ThumbsUp, ThumbsDown, CircleDollarSign, Share2 } from 'lucide-react'
 import Confetti from 'react-dom-confetti'
 import { useDictionary } from '@/hooks/useDictionary'
 import { GoogleAnalytics } from '@next/third-parties/google'
-import { trackEvent as analyticsTrackEvent } from '../lib/analytics';
-
+import { trackEvent as analyticsTrackEvent } from '../lib/analytics'
 
 const trackEvent = (eventName: string, eventParams?: Record<string, any>) => {
   analyticsTrackEvent(eventName, eventParams);
@@ -219,17 +218,6 @@ export default function Component() {
   const dictionary = useDictionary();
   const [cheatModeActive, setCheatModeActive] = useState(false);
 
-  useEffect(() => {
-    // Initialize state from localStorage on the client side
-    setGameState(prevState => ({
-      ...prevState,
-      score: parseInt(localStorage.getItem('score') || '0'),
-      playerLevel: parseInt(localStorage.getItem('playerLevel') || '0'),
-      lastPlayedDate: localStorage.getItem('lastPlayedDate'),
-      currentPunIndex: parseInt(localStorage.getItem('currentPunIndex') || '0'),
-    }));
-  }, []);
-
   const loadDictionaryAndPuns = useCallback(async () => {
     try {
       const punsData = [
@@ -238,126 +226,6 @@ export default function Component() {
         { id: 3, question: "What do you call a can opener that doesn't work?", answer: "A cannot opener", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 4, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 5, question: "What do you call a bear with no teeth?", answer: "A gummy bear", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 6, question: "Why did the scarecrow win an award?", answer: "They were outstanding in their field", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 7, question: "What do you call a pig that does karate?", answer: "A pork chop", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 8, question: "Why don't eggs tell jokes?", answer: "They would crack up", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 9, question: "What do you call a sleeping bull?", answer: "A bulldozer", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 10, question: "Why did the math book look so sad?", answer: "It had too many problems", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 11, question: "Why did the golfer bring two pairs of pants?", answer: "In case they got a hole in one", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 12, question: "What do you call a parade of rabbits hopping backwards?", answer: "A receding hare line", difficulty: 3, upVotes: 0, downVotes: 0 },
-        { id: 13, question: "Why don't skeletons fight each other?", answer: "They have no guts", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 14, question: "What do you call a fake stone in Ireland?", answer: "A sham rock", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 15, question: "How do you organize a space party?", answer: "You planet", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 16, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 17, question: "What do you call a fish wearing a bowtie?", answer: "Sofishticated", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 18, question: "What do you call a dinosaur that crashes their car?", answer: "Tyrannosaurus wrecks", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 19, question: "Why don't oysters donate to charity?", answer: "They are shellfish", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 20, question: "Why did the gym get smaller and close down?", answer: "It didn not work out", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 21, question: "Why did the cookie go to the doctor?", answer: "Because it felt crumby", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 22, question: "What do you call a snowman with a six-pack?", answer: "An abdominal snowman", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 23, question: "What did the grape do when it got stepped on?", answer: "Let out a little wine", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 24, question: "Why did the banker switch careers?", answer: "They lost interest", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 25, question: "Why did the stadium get so hot?", answer: "All the fans left", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 26, question: "What do you call a dinosaur with an extensive vocabulary?", answer: "A thesaurus", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 27, question: "What do you call a bee that can't make up its mind?", answer: "A maybee", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 28, question: "Why do cows wear bells?", answer: "Their horns don't work", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 29, question: "Why did the frog take the bus?", answer: "Their car got toad", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 30, question: "Why did the barber win a race?", answer: "They took a shortcut", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 31, question: "What did the janitor say when they jumped out of the closet?", answer: "Supplies!", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 32, question: "Why did the coffee file a police report?", answer: "It got mugged", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 33, question: "Why couldn't the bicycle find its way?", answer: "It lost its bearings", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 34, question: "What did the buffalo say to their son when he left for college?", answer: "Bison", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 35, question: "What do you call an alligator detective?", answer: "An investigator", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 36, question: "What do you get if you cross a vampire with a snowman?", answer: "Frostbite", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 37, question: "Why don't seagulls fly over the bay?", answer: "Then they would be bagels", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 38, question: "What's a vampire's least favorite room in the house?", answer: "The living room", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 39, question: "How do mountains stay warm in winter?", answer: "They wear snow caps", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 40, question: "Why can't you hear a pterodactyl use the bathroom?", answer: "The P is silent", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 41, question: "Why did the orange stop?", answer: "It ran out of juice", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 43, question: "What's the best way to watch a fly-fishing tournament?", answer: "Live stream it", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 44, question: "What do you call a gigantic pile of cats?", answer: "A meowtain", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 45, question: "What kind of car does an egg drive?", answer: "A Yolkswagen", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 46, question: "What does a nosy pepper do?", answer: "Gets jalapeno business", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 47, question: "Why did the person name their dogs Rolex and Timex?", answer: "They were watch dogs", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 48, question: "Why did the blanket go to jail?", answer: "It was covering up", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 49, question: "Why are elevator jokes so good?", answer: "They work on many levels", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 50, question: "Why did the pony get detention?", answer: "It kept horsing around", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 51, question: "What do you call an apology written in dots and dashes?", answer: "Remorse code", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 52, question: "Why did the bicycle fall over?", answer: "It was two-tired", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 53, question: "How did the cell phone propose?", answer: "With a ringtone", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 54, question: "What is a grape's favorite dance move?", answer: "Raisin the roof", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 55, question: "What did the clock do when it was hungry?", answer: "Went back four seconds", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 56, question: "What do you call a broken pencil?", answer: "Pointless", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 57, question: "Why did the banana go to the doctor?", answer: "It was not peeling well", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 58, question: "What do chickens do after school?", answer: "Eggstracurricular activities", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 59, question: "What's a ghost's favorite dessert?", answer: "I scream", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 60, question: "Why do cows never have any money?", answer: "Farmers milk them dry", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 61, question: "What do you call a possessed chicken?", answer: "A poultrygeist", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 62, question: "What's a vampire's least favorite food?", answer: "Steak", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 63, question: "Why did the sun go to school?", answer: "To get a little brighter", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 64, question: "Why do bees have sticky hair?", answer: "They use honeycombs", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 65, question: "What kind of pants do ghosts wear?", answer: "Boo jeans", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 66, question: "Why was the belt arrested?", answer: "For holding up a pair of pants", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 67, question: "What's a plumber's least favorite vegetable?", answer: "Leeks", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 68, question: "What kind of bird works at a construction site?", answer: "A crane", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 69, question: "Why did the cookie visit the therapist?", answer: "It was feeling crumby", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 70, question: "Why did the hipster burn their mouth?", answer: "They drank coffee before it was cool", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 71, question: "What do you call a fairy that doesn't take a bath?", answer: "Stinkerbell", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 72, question: "What do you call a swimming melon?", answer: "A watermelon", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 73, question: "Why was the calendar sad?", answer: "Its days were numbered", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 74, question: "Why are frogs so happy?", answer: "They eat whatever bugs them", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 75, question: "What noise does a nut make when it sneezes?", answer: "Cashew!", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 76, question: "What do you call a clever duck?", answer: "A wise quacker", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 77, question: "What do you call a bagel that flies?", answer: "A plane bagel", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 78, question: "Why did the computer go to the doctor?", answer: "It had a virus", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 79, question: "What do you call a bear that's stuck in the rain?", answer: "A drizzly bear", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 80, question: "Why did the opera singer need a ladder?", answer: "To reach the high notes", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 81, question: "What do you call a kangaroo who watches TV all day?", answer: "A pouch potato", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 82, question: "What do you call a cow that plays an instrument?", answer: "A moosician", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 83, question: "What do you call a pony with a cough?", answer: "A little hoarse", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 84, question: "What do you call a factory that makes okay products?", answer: "A satisfactory", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 85, question: "What do you call a cow with two legs?", answer: "Lean beef", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 86, question: "How do trees access the internet?", answer: "They log on", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 87, question: "What do you call a snake building a house?", answer: "A boa constructor", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 88, question: "What do you call a black and white bear that never wants to grow up?", answer: "Peter Panda", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 89, question: "What do you call a cow with no legs?", answer: "Ground beef", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 90, question: "What do you call a musician with problems?", answer: "A trebled artist", difficulty: 3, upVotes: 0, downVotes: 0 },
-        { id: 91, question: "What's a terrier's favorite city?", answer: "New Yorkie", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 92, question: "Why did the music teacher get locked out?", answer: "Because their keys were on the piano", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 93, question: "How do you get an astronaut's baby to stop crying?", answer: "You rocket", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 94, question: "What kind of lights did Noah use on the ark?", answer: "Flood lights", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 95, question: "What's the difference between a poorly dressed man on a tricycle and a well-dressed man on a bicycle?", answer: "Attire", difficulty: 3, upVotes: 0, downVotes: 0 },
-        { id: 96, question: "Why don't skeletons play music in churches?", answer: "Because they have no organs", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 97, question: "Why was the fish so smart?", answer: "It went to school", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 98, question: "Why was Cinderella bad at soccer?", answer: "She ran away from the ball", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 99, question: "What's orange and sounds like a parrot?", answer: "A carrot", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 100, question: "What kind of shorts do storm clouds wear?", answer: "Thunderwear", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 101, question: "What's a cat's favorite color?", answer: "Purrrple", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 102, question: "What kind of tree fits in your hand?", answer: "A palm tree", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 103, question: "Why was the computer cold?", answer: "It left its Windows open", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 104, question: "What kind of fish goes great with peanut butter?", answer: "A jellyfish", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 105, question: "What kind of key opens a banana?", answer: "A monkey", difficulty: 1, upVotes: 0, downVotes: 0 },        
-        { id: 106, question: "Where does a tree withdraw money?", answer: "A bank branch", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 107, question: "How do cows stay up to date?", answer: "They read the moospaper", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 108, question: "Why did the mushroom get invited to all the parties?", answer: "He was a fungi", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 109, question: "What did the duck say when it was time to pay for lunch?", answer: "Put it on my bill", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 110, question: "What kind of music do mummies listen to?", answer: "Wrap music", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 111, question: "Why can't your nose be 12 inches long?", answer: "It would be a foot", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 112, question: "What did the scarf say to the hat?", answer: "You go on ahead, I will hang around", difficulty: 3, upVotes: 0, downVotes: 0 },
-        { id: 113, question: "Why did the golfer bring an umbrella?", answer: "They saw the forecast", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 114, question: "What kind of button can't you unbutton?", answer: "A belly button", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 115, question: "What noise does a sleeping brontosaurus make?", answer: "A dinosnore", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 116, question: "What did the left eye say to the right eye?", answer: "Between us something smells!", difficulty: 3, upVotes: 0, downVotes: 0 },
-        { id: 117, question: "Why was the egg hiding?", answer: "It was a little chicken", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 118, question: "What kind of ball doesn't bounce?", answer: "An eyeball", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 119, question: "Why did the canned cucumber call 911?", answer: "It was getting in a pickle", difficulty: 3, upVotes: 0, downVotes: 0 },
-        { id: 120, question: "How do you make a lemon drop?", answer: "Let go of it", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 121, question: "What kind of bug is good at math?", answer: "An account ant", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 122, question: "What did the spider make on the computer?", answer: "A website", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 123, question: "Why did the clock get in trouble at school?", answer: "It kept tocking back", difficulty: 3, upVotes: 0, downVotes: 0 },
-        { id: 124, question: "Why did the police hire the book?", answer: "It could go under cover", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 125, question: "What kind of room has no doors or windows?", answer: "A mushroom", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 126, question: "Why did the shrimp blush?", answer: "It saw the bottom of the ocean", difficulty: 1, upVotes: 0, downVotes: 0 },
       ];
       setPuns(punsData);
 
@@ -371,13 +239,29 @@ export default function Component() {
         localStorage.setItem('currentPunIndex', currentPunIndex.toString());
       }
 
-      setGameState(prev => ({
-        ...prev,
-        lastPlayedDate: today,
-        currentPunIndex,
-        currentPun: punsData[currentPunIndex],
-        usedPunIds: new Set([punsData[currentPunIndex].id])
-      }));
+      const refreshRedirect = localStorage.getItem('refreshRedirect');
+
+      setGameState(prev => {
+        const newState = {
+          ...prev,
+          lastPlayedDate: today,
+          currentPunIndex,
+          currentPun: punsData[currentPunIndex],
+          usedPunIds: new Set([punsData[currentPunIndex].id])
+        };
+
+        if (refreshRedirect === 'true') {
+          localStorage.removeItem('refreshRedirect');
+          return {
+            ...newState,
+            showVoteCard: true,
+            gameOver: true
+          };
+        }
+
+        return newState;
+      });
+
       trackEvent('game_started', {
         event_category: 'Game',
         event_label: 'Game Started',
@@ -389,6 +273,15 @@ export default function Component() {
   }, [gameState.playerLevel]);
 
   useEffect(() => {
+    // Initialize state from localStorage on the client side
+    setGameState(prevState => ({
+      ...prevState,
+      score: parseInt(localStorage.getItem('score') || '0'),
+      playerLevel: parseInt(localStorage.getItem('playerLevel') || '0'),
+      lastPlayedDate: localStorage.getItem('lastPlayedDate'),
+      currentPunIndex: parseInt(localStorage.getItem('currentPunIndex') || '0'),
+    }));
+
     loadDictionaryAndPuns();
   }, [loadDictionaryAndPuns]);
 
@@ -409,35 +302,6 @@ export default function Component() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState.gameOver, gameState.isCorrect, gameState.showAnswerCard]);
-
-  useEffect(() => {
-    // Check if we're coming from a refresh
-    const refreshRedirect = localStorage.getItem('refreshRedirect');
-    if (refreshRedirect === 'true') {
-      // Clear the flag
-      localStorage.removeItem('refreshRedirect');
-      // Show thank you card
-      setGameState(prev => ({
-        ...prev,
-        showVoteCard: true,
-        gameOver: true
-      }));
-    }
-
-    // Initialize game state with current day's pun
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const startDate = new Date('2024-01-01'); // Set your game start date
-    const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const currentPunIndex = daysSinceStart % puns.length;
-
-    setGameState(prev => ({
-      ...prev,
-      currentPunIndex,
-      currentPun: puns[currentPunIndex],
-      lastPlayedDate: today.toDateString()
-    }));
-  }, [puns]);
 
   const compareAnswers = useCallback((userAnswer: string, correctAnswer: string): boolean => {
     const cleanAnswer = (answer: string) => 
@@ -781,6 +645,25 @@ export default function Component() {
     });
   }, []);
 
+  const handleTryAgain = useCallback(() => {
+    setGameState(prev => ({ 
+      ...prev, 
+      showNonEnglishCard: false,
+      userAnswer: ''
+    }));
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && gameState.showNonEnglishCard) {
+        handleTryAgain();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState.showNonEnglishCard, handleTryAgain]);
+
   if (!gameState.currentPun) {
     return <div>Loading...</div>;
   }
@@ -804,12 +687,12 @@ export default function Component() {
                   priority
                 />
               </div>
-              <p className="text-sm text-gray-600 mb-4">
-                The pun-a-day word game where you guess the puns!
+              <p className="text-sm text-gray-600 mb-5">
+                The pun-a-day word game.
               </p>
               <CardDescription className="text-xl font-medium text-[#00B4D8] flex items-center justify-center">
               <span className="mr-2 text-2xl">⚡</span>
-              Let the Brainstorm Begin!
+              Let Your Brainstorm Begin!
               <span className="ml-2 text-2xl">⚡</span>
             </CardDescription>
             {cheatModeActive && (
@@ -943,11 +826,7 @@ export default function Component() {
         className="flex justify-center mt-3"
       >
         <Button
-          onClick={() => setGameState(prev => ({ 
-            ...prev, 
-            showNonEnglishCard: false,
-            userAnswer: ''
-          }))}
+          onClick={handleTryAgain}
           className="bg-[#A06CD5] text-white hover:bg-[#A06CD5]/90 text-[13px] py-1 h-9"
         >
           Try Again
@@ -1074,10 +953,10 @@ export default function Component() {
       Submit
     </Button>
     <Button
+      onClick={handleSkip}
       className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
-      disabled={true}
     >
-      Hints coming soon!
+      Skip
     </Button>
   </div>
   <Button
@@ -1179,7 +1058,7 @@ export default function Component() {
             </div>
             <div className="w-full space-y-1 mt-2">
               <h3 className="text-[1.08rem] font-semibold text-gray-800 text-center">Support Punderous™ Development</h3>
-              <p className="text-[14px] text-gray-600 text-center mb-1">Your puntribution helps bring the full version to life! Donate below:</p>
+              <p className="text-[14px] text-gray-600 text-center mb-1">Your puntribution helps bring the full game to life! Donate below:</p>
               <div className="flex flex-col sm:flex-row justify-center gap-2 mt-2">
                 <Button
                   onClick={() => handleDonation('venmo')}
@@ -1194,7 +1073,7 @@ export default function Component() {
               </p>
             </div>
             <div className="text-[8px] text-gray-500 mt-2">
-              © 2024 MJKUltra. All rights reserved.
+              © 2024 Punderous™. All rights reserved.
               <Link href="/privacy-policy" className="ml-1 text-[#00B4D8] hover:underline">
                 Privacy Policy
               </Link>
