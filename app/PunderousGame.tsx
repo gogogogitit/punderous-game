@@ -226,7 +226,7 @@ export default function Component() {
         { id: 3, question: "Why did the shrimp blush?", answer: "It saw the bottom of the ocean", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 4, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 5, question: "What do you call a bear with no shoes or socks?", answer: "Bearfoot", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 6, question: "Why did the scarecrow win an award?", answer: "They were outstanding in their field", difficulty: 3, upVotes: 0, downVotes: 0 },
+        { id: 6, question: "Why did the scarecrow win an award?", answer: "They were outstanding in their field", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 7, question: "What do you call a pig that does karate?", answer: "A pork chop", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 8, question: "Why don't eggs tell jokes?", answer: "They would crack up", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 9, question: "What do you call a sleeping bull?", answer: "A bulldozer", difficulty: 1, upVotes: 0, downVotes: 0 },
@@ -345,42 +345,44 @@ export default function Component() {
         { id: 123, question: "Why did the clock get in trouble at school?", answer: "It kept tocking back", difficulty: 3, upVotes: 0, downVotes: 0 },
         { id: 124, question: "Why did the police hire the book?", answer: "It could go under cover", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 125, question: "What kind of room has no doors or windows?", answer: "A mushroom", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 126, question: "What do you call a group of musical killer whales?", answer: "An Orcastra", difficulty: 1, upVotes: 0, downVotes: 0 },
+        { id: 126, question: "What do you call a cute potato who works out?", answer: "A spud muffin", difficulty: 1, upVotes: 0, downVotes: 0 },
       ];
       setPuns(punsData);
 
-      const today = new Date().toDateString();
-      const lastPlayedDate = localStorage.getItem('lastPlayedDate');
-      let currentPunIndex = parseInt(localStorage.getItem('currentPunIndex') || '0');
+      if (typeof window !== 'undefined') {
+        const today = new Date().toDateString();
+        const lastPlayedDate = localStorage.getItem('lastPlayedDate');
+        let currentPunIndex = parseInt(localStorage.getItem('currentPunIndex') || '0');
 
-      if (lastPlayedDate !== today) {
-        currentPunIndex = (currentPunIndex + 1) % punsData.length;
-        localStorage.setItem('lastPlayedDate', today);
-        localStorage.setItem('currentPunIndex', currentPunIndex.toString());
-      }
-
-      const refreshRedirect = localStorage.getItem('refreshRedirect');
-
-      setGameState(prev => {
-        const newState = {
-          ...prev,
-          lastPlayedDate: today,
-          currentPunIndex,
-          currentPun: punsData[currentPunIndex],
-          usedPunIds: new Set([punsData[currentPunIndex].id])
-        };
-
-        if (refreshRedirect === 'true') {
-          localStorage.removeItem('refreshRedirect');
-          return {
-            ...newState,
-            showVoteCard: true,
-            gameOver: true
-          };
+        if (lastPlayedDate !== today) {
+          currentPunIndex = (currentPunIndex + 1) % punsData.length;
+          localStorage.setItem('lastPlayedDate', today);
+          localStorage.setItem('currentPunIndex', currentPunIndex.toString());
         }
 
-        return newState;
-      });
+        const refreshRedirect = localStorage.getItem('refreshRedirect');
+
+        setGameState(prev => {
+          const newState = {
+            ...prev,
+            lastPlayedDate: today,
+            currentPunIndex,
+            currentPun: punsData[currentPunIndex],
+            usedPunIds: new Set([punsData[currentPunIndex].id])
+          };
+
+          if (refreshRedirect === 'true') {
+            localStorage.removeItem('refreshRedirect');
+            return {
+              ...newState,
+              showVoteCard: true,
+              gameOver: true
+            };
+          }
+
+          return newState;
+        });
+      }
 
       trackEvent('game_started', {
         event_category: 'Game',
@@ -393,29 +395,32 @@ export default function Component() {
   }, [gameState.playerLevel]);
 
   useEffect(() => {
-    // Initialize state from localStorage on the client side
-    setGameState(prevState => ({
-      ...prevState,
-      score: parseInt(localStorage.getItem('score') || '0'),
-      playerLevel: parseInt(localStorage.getItem('playerLevel') || '0'),
-      lastPlayedDate: localStorage.getItem('lastPlayedDate'),
-      currentPunIndex: parseInt(localStorage.getItem('currentPunIndex') || '0'),
-    }));
+    if (typeof window !== 'undefined') {
+      setGameState(prevState => ({
+        ...prevState,
+        score: parseInt(localStorage.getItem('score') || '0'),
+        playerLevel: parseInt(localStorage.getItem('playerLevel') || '0'),
+        lastPlayedDate: localStorage.getItem('lastPlayedDate'),
+        currentPunIndex: parseInt(localStorage.getItem('currentPunIndex') || '0'),
+      }));
+    }
 
     loadDictionaryAndPuns();
   }, [loadDictionaryAndPuns]);
 
   useEffect(() => {
-    localStorage.setItem('score', gameState.score.toString());
-    localStorage.setItem('playerLevel', gameState.playerLevel.toString());
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('score', gameState.score.toString());
+      localStorage.setItem('playerLevel', gameState.playerLevel.toString());
+    }
   }, [gameState.score, gameState.playerLevel]);
 
   useEffect(() => {
-    // Handle refresh behavior
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (gameState.gameOver || gameState.isCorrect || gameState.showAnswerCard) {
-        // Save state to indicate we're coming from a refresh
-        localStorage.setItem('refreshRedirect', 'true');
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('refreshRedirect', 'true');
+        }
       }
     };
 
@@ -446,7 +451,6 @@ export default function Component() {
   const isValidWord = useCallback(async (word: string): Promise<boolean> => {
      const cleanWord = word.toLowerCase().trim().replace(/[.,!?]/g, '');
      
-     // Check if word appears in any question or answer
      const wordInPuns = puns.some(pun => 
        pun.question.toLowerCase().includes(cleanWord) || 
        pun.answer.toLowerCase().includes(cleanWord)
@@ -455,7 +459,6 @@ export default function Component() {
        return true;
      }
      
-     // Check API
      try {
        const response = await fetch(`${API_URL}${cleanWord}`);
        if (response.ok) {
@@ -474,8 +477,10 @@ export default function Component() {
       score: 0,
       playerLevel: 0
     }));
-    localStorage.setItem('score', '0');
-    localStorage.setItem('playerLevel', '0');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('score', '0');
+      localStorage.setItem('playerLevel', '0');
+    }
   }, []);
 
   const handleAnswerSubmit = useCallback(async () => {
@@ -497,7 +502,6 @@ export default function Component() {
     const correctAnswer = gameState.currentPun.answer;
     const userGuess = gameState.userAnswer.trim();
 
-    // New logic to check word count
     const answerWordCount = correctAnswer.split(/\s+/).length;
     const userGuessWordCount = userGuess.split(/\s+/).length;
 
@@ -601,42 +605,44 @@ export default function Component() {
   }, [gameState, compareAnswers, isValidWord, resetScoreAndLevel]);
 
   const getNextPun = useCallback(() => {
-    const today = new Date().toDateString();
-    if (cheatModeActive || gameState.lastPlayedDate !== today) {
-      const newPunIndex = (gameState.currentPunIndex + 1) % puns.length;
-      const newPun = puns[newPunIndex];
-      if (newPun) {
+    if (typeof window !== 'undefined') {
+      const today = new Date().toDateString();
+      if (cheatModeActive || gameState.lastPlayedDate !== today) {
+        const newPunIndex = (gameState.currentPunIndex + 1) % puns.length;
+        const newPun = puns[newPunIndex];
+        if (newPun) {
+          setGameState(prev => ({
+            ...prev,
+            currentPun: newPun,
+            currentPunIndex: newPunIndex,
+            attempts: 5,
+            guessedAnswers: [],
+            showCorrectAnswer: false,
+            isCorrect: false,
+            feedback: '',
+            userAnswer: '',
+            usedPunIds: new Set([newPun.id]),
+            revealedLetters: [],
+            showAnswerCard: false,
+            gameOver: false,
+            showNonEnglishCard: false,
+            lastPlayedDate: cheatModeActive ? prev.lastPlayedDate : today,
+            showVoteCard: false, 
+          }));
+          if (!cheatModeActive) {
+            localStorage.setItem('lastPlayedDate', today);
+            localStorage.setItem('currentPunIndex', newPunIndex.toString());
+          }
+        }
+      } else {
         setGameState(prev => ({
           ...prev,
-          currentPun: newPun,
-          currentPunIndex: newPunIndex,
-          attempts: 5,
-          guessedAnswers: [],
-          showCorrectAnswer: false,
-          isCorrect: false,
-          feedback: '',
-          userAnswer: '',
-          usedPunIds: new Set([newPun.id]),
-          revealedLetters: [],
-          showAnswerCard: false,
-          gameOver: false,
-          showNonEnglishCard: false,
-          lastPlayedDate: cheatModeActive ? prev.lastPlayedDate : today,
+          gameOver: true,
+          feedback: "You've played today's pun. Come back tomorrow for a new one!",
+          showAnswerCard: true,
           showVoteCard: false, 
         }));
-        if (!cheatModeActive) {
-          localStorage.setItem('lastPlayedDate', today);
-          localStorage.setItem('currentPunIndex', newPunIndex.toString());
-        }
       }
-    } else {
-      setGameState(prev => ({
-        ...prev,
-        gameOver: true,
-        feedback: "You've played today's pun. Come back tomorrow for a new one!",
-        showAnswerCard: true,
-        showVoteCard: false, 
-      }));
     }
     trackEvent('next_pun', {
       event_category: 'Game',
