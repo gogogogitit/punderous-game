@@ -13,8 +13,13 @@ const nextConfig = {
         port: '',
         pathname: '/placeholder.svg/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
-    domains: ['hebbkx1anhila5yf.public.blob.vercel-storage.com'],
   },
   async headers() {
     return [
