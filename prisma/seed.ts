@@ -4,7 +4,6 @@ const prisma = new PrismaClient()
 
     const puns = [
       { id: 1, question: "What do you call a rabbit with a positive future outlook?", answer: "A hoptimist", difficulty: 2, upVotes: 0, downVotes: 0 },
-      { id: 2, question: "What do you call a fake noodle?", answer: "An impasta", difficulty: 1, upVotes: 0, downVotes: 0 },
       { id: 3, question: "Why did the shrimp blush?", answer: "It saw the bottom of the ocean", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 4, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 5, question: "What do you call a bear with no shoes or socks?", answer: "Bearfoot", difficulty: 1, upVotes: 0, downVotes: 0 },
@@ -18,11 +17,10 @@ const prisma = new PrismaClient()
       { id: 13, question: "Why don't skeletons fight each other?", answer: "They have no guts", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 14, question: "What do you call a fake stone in Ireland?", answer: "A sham rock", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 15, question: "How do you organize a space party?", answer: "You planet", difficulty: 2, upVotes: 0, downVotes: 0 },
-      { id: 16, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 17, question: "What do you call a fish wearing a bowtie?", answer: "Sofishticated", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 18, question: "What do you call a dinosaur that crashes their car?", answer: "Tyrannosaurus wrecks", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 19, question: "Why don't oysters donate to charity?", answer: "They are shellfish", difficulty: 2, upVotes: 0, downVotes: 0 },
-      { id: 20, question: "Why did the gym get smaller and close down?", answer: "It didn not work out", difficulty: 2, upVotes: 0, downVotes: 0 },
+      { id: 20, question: "Why did the gym get smaller and close down?", answer: "It did not work out", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 21, question: "Why did the cookie go to the doctor?", answer: "Because it felt crumby", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 22, question: "What do you call a snowman with a six-pack?", answer: "An abdominal snowman", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 23, question: "What did the grape do when it got stepped on?", answer: "Let out a little wine", difficulty: 2, upVotes: 0, downVotes: 0 },
@@ -30,7 +28,7 @@ const prisma = new PrismaClient()
       { id: 25, question: "Why did the stadium get so hot?", answer: "All the fans left", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 26, question: "What do you call a dinosaur with an extensive vocabulary?", answer: "A thesaurus", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 27, question: "What do you call a bee that can't make up its mind?", answer: "A maybee", difficulty: 1, upVotes: 0, downVotes: 0 },
-      { id: 28, question: "Why do cows wear bells?", answer: "Their horns don't work", difficulty: 2, upVotes: 0, downVotes: 0 },
+      { id: 28, question: "Why do cows wear bells?", answer: "Their horns are silent", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 29, question: "Why did the frog take the bus?", answer: "Their car got toad", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 30, question: "Why did the barber win a race?", answer: "They took a shortcut", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 31, question: "What did the janitor say when they jumped out of the closet?", answer: "Supplies!", difficulty: 2, upVotes: 0, downVotes: 0 },
@@ -53,7 +51,7 @@ const prisma = new PrismaClient()
       { id: 49, question: "Why are elevator jokes so good?", answer: "They work on many levels", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 50, question: "Why did the pony get detention?", answer: "It kept horsing around", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 51, question: "What do you call an apology written in dots and dashes?", answer: "Remorse code", difficulty: 2, upVotes: 0, downVotes: 0 },
-      { id: 52, question: "Why did the bicycle fall over?", answer: "It was two-tired", difficulty: 1, upVotes: 0, downVotes: 0 },
+      { id: 52, question: "Why did the bicycle fall over?", answer: "It was two tired", difficulty: 1, upVotes: 0, downVotes: 0 },
       { id: 53, question: "How did the cell phone propose?", answer: "With a ringtone", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 54, question: "What is a grape's favorite dance move?", answer: "Raisin the roof", difficulty: 2, upVotes: 0, downVotes: 0 },
       { id: 55, question: "What did the clock do when it was hungry?", answer: "Went back four seconds", difficulty: 2, upVotes: 0, downVotes: 0 },
@@ -130,26 +128,48 @@ const prisma = new PrismaClient()
       { id: 126, question: "What do you call a cute potato who works out?", answer: "A spud muffin", difficulty: 1, upVotes: 0, downVotes: 0 },                
       ];
 
-      async function main() {
-        console.log('Start seeding ...')
-        
-        // Clear existing puns
-        await prisma.pun.deleteMany()
-        
-        for (const pun of puns) {
-          const createdPun = await prisma.pun.create({
-            data: pun
-          })
-          console.log(`Created pun with id: ${createdPun.id}`)
-        }
-        console.log('Seeding finished.')
-      }
-      
-      main()
-        .catch((e) => {
-          console.error(e)
-          process.exit(1)
-        })
-        .finally(async () => {
-          await prisma.$disconnect()
-        })
+      const forceReseed = process.argv.includes('--force')
+
+async function main() {
+  console.log('Checking database status...')
+
+  try {
+    const existingPunsCount = await prisma.pun.count()
+
+    if (existingPunsCount > 0 && !forceReseed) {
+      console.log(`Database already contains ${existingPunsCount} puns. Use --force to reseed.`)
+      return
+    }
+
+    console.log('Start seeding ...')
+
+    // Clear existing puns
+    if (existingPunsCount > 0) {
+      console.log('Clearing existing puns...')
+      await prisma.pun.deleteMany()
+    }
+
+    for (const pun of puns) {
+      const createdPun = await prisma.pun.create({
+        data: pun
+      })
+      console.log(`Created pun with id: ${createdPun.id}`)
+    }
+
+    const finalPunsCount = await prisma.pun.count()
+    console.log(`Seeding finished. Database now contains ${finalPunsCount} puns.`)
+
+  } catch (error) {
+    console.error('An error occurred during seeding:', error)
+    throw error
+  }
+}
+
+main()
+  .catch((e) => {
+    console.error('Seeding failed:', e)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
