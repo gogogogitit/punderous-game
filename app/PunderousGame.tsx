@@ -1075,11 +1075,11 @@ export default function Component() {
       Submit
     </Button>
     <Button
-      onClick={handleSkip}
-      className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 text-[13px] py-1 h-9"
-    >
-      Skip
-    </Button>
+  disabled={true}
+  className="flex-1 bg-gray-200 text-gray-400 hover:bg-gray-200 text-[13px] py-1 h-9 cursor-not-allowed"
+>
+  Hints coming soon!
+</Button>
   </div>
   <Button
     onClick={() => {
