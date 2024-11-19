@@ -223,9 +223,7 @@ export default function Component() {
       const punsData = [
         { id: 1, question: "What do you call a rabbit with a positive future outlook?", answer: "A hoptimist", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 3, question: "Why did the shrimp blush?", answer: "It saw the bottom of the ocean", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 4, question: "Why don't scientists trust atoms?", answer: "They make up everything", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 5, question: "What do you call a bear with no shoes or socks?", answer: "Bearfoot", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 6, question: "Why did the scarecrow win an award?", answer: "They were outstanding in their field", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 7, question: "What do you call a pig that does karate?", answer: "A pork chop", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 8, question: "Why don't eggs tell jokes?", answer: "They would crack up", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 9, question: "What do you call a sleeping bull?", answer: "A bulldozer", difficulty: 1, upVotes: 0, downVotes: 0 },
