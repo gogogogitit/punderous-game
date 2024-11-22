@@ -8,17 +8,25 @@ class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
+          {/* Caching Tags */} 
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/jpeg" />
+
           {/* Standard Meta Tags */}
           <meta charSet="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
-          <meta name="description" content="Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!" />
+          <meta name="description" content="Play Punderous™ - the pun-a-day word game!" />
           <meta name="keywords" content="pun game, word game, puzzle game, brain teaser, Punderous" />
           <meta name="author" content="MJKUltra" />
           
           {/* Open Graph Tags */}
           <meta property="fb:app_id" content="462159136491139" />
           <meta property="og:title" content="Punderous™ - A Pun-Filled Word Game!" />
-          <meta property="og:description" content="Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!" />
+          <meta property="og:description" content="Play Punderous™ - the pun-a-day word game!" />
           <meta property="og:url" content={domain} />
           <meta property="og:site_name" content="Punderous™" />
           <meta property="og:locale" content="en_US" />
@@ -33,7 +41,7 @@ class MyDocument extends Document {
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:creator" content="@PunderousGame" />
           <meta name="twitter:title" content="Punderous™ - A Pun-Filled Word Game!" />
-          <meta name="twitter:description" content="Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!" />
+          <meta name="twitter:description" content="Play Punderous™ - the pun-a-day word game!" />
           <meta property="twitter:image" content="https://punderous.com/images/twitter-image.jpg" />
           {/* JSON-LD Structured Data */}
           <script
@@ -43,7 +51,7 @@ class MyDocument extends Document {
                 "@context": "https://schema.org",
                 "@type": ["WebApplication", "Game"],
                 "name": "Punderous™",
-                "description": "Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!",
+                "description": "Play Punderous™ - the pun-a-day word game!",
                 "url": domain,
                 "image": `${domain}/images/og-image.jpg`,
                 "screenshot": `${domain}/images/og-image.jpg`,

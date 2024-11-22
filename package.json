@@ -2,18 +2,18 @@
   "name": "punderful-game",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-"scripts": {
-  "dev": "next dev",
-  "build": "prisma generate && node scripts/create-dictionary.js && next build",
-  "start": "next start",
-  "lint": "next lint",
-  "postinstall": "prisma generate",
-  "check-metadata": "node scripts/check-metadata.js",
-  "type-check": "tsc --noEmit",
-  "validate": "npm run check-metadata && npm run dev"
-},
 
+
+  "scripts": {
+    "start": "cross-env NODE_ENV=production node server.js",
+    "dev": "next dev",
+    "build": "next build && cp -r public .next/standalone/",
+    "postinstall": "prisma generate",
+    "check-metadata": "node scripts/check-metadata.js",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run check-metadata && npm run dev",
+    "postbuild": "cp -r public/images .next/standalone/public/"
+  },
   "dependencies": {
     "@next/third-parties": "^15.0.3",
     "@prisma/client": "^5.22.0",
@@ -48,6 +48,7 @@
     "@types/pako": "^2.0.3",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
+    "cross-env": "^7.0.3",
     "eslint": "^8.54.0",
     "eslint-config-next": "^14.0.3",
     "prisma": "^5.22.0",
