@@ -3,7 +3,7 @@
   "domain": "punderous.com",
   "localFiles": [
     {
-      "path": "/og-image.png",
+      "path": "/og-image.jpg",
       "exists": true,
       "size": "69.85 KB",
       "type": "OpenGraph Image",
@@ -101,7 +101,7 @@
   ],
   "remoteFiles": [
     {
-      "path": "/og-image.png",
+      "path": "/og-image.jpg",
       "type": "OpenGraph Image",
       "requiredSize": {
         "width": 1200,

@@ -1,43 +1,25 @@
+// scripts/check-metadata.js
 import https from 'https';
 import { join } from 'path';
 import { promises as fs } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import chalk from 'chalk';
 
 const DOMAIN = 'punderous.com';
 
 const IMAGE_FILES = [
   {
-    path: '/og-image.png',
+    path: '/og-image.jpg',
     type: 'OpenGraph Image',
     requiredSize: { width: 1200, height: 630 }
   },
   {
-    path: '/og-image.jpg',
-    type: 'OpenGraph Image (JPG)',
-    requiredSize: { width: 1200, height: 630 }
-  },
-  {
-    path: '/twitter-image.png',
-    type: 'Twitter Image',
-    requiredSize: { width: 1200, height: 600 }
-  },
-  {
     path: '/twitter-image.jpg',
-    type: 'Twitter Image (JPG)',
+    type: 'Twitter Image',
     requiredSize: { width: 1200, height: 600 }
   },
   {
     path: '/opengraph-image.jpg',
     type: 'OpenGraph Image (Next.js)',
-    requiredSize: { width: 1200, height: 630 }
-  },
-  {
-    path: '/opengraph-image.png',
-    type: 'OpenGraph Image (Next.js PNG)',
     requiredSize: { width: 1200, height: 630 }
   },
   {
@@ -62,17 +44,8 @@ const IMAGE_FILES = [
   }
 ];
 
-// Utility for consistent logging
-const log = {
-  success: (msg) => console.log(`✅ ${msg}`),
-  error: (msg) => console.log(`❌ ${msg}`),
-  info: (msg) => console.log(`ℹ️ ${msg}`),
-  header: (msg) => console.log(`\n${msg}`),
-  data: (msg) => console.log(`   ${msg}`)
-};
-
 async function checkLocalFiles() {
-  log.header('📂 Checking local files in public directory...');
+  console.log(chalk.blue('\n📂 Checking local files in public directory...'));
   const results = [];
 
   for (const file of IMAGE_FILES) {
@@ -89,8 +62,8 @@ async function checkLocalFiles() {
         requiredSize: file.requiredSize
       });
 
-      log.success(`${file.path} (${size} KB)`);
-      log.data(`Required size: ${file.requiredSize.width}x${file.requiredSize.height}px`);
+      console.log(chalk.green(`✅ ${file.path} (${size} KB)`));
+      console.log(chalk.gray(`   Required size: ${file.requiredSize.width}x${file.requiredSize.height}px`));
     } catch (error) {
       results.push({
         path: file.path,
@@ -98,14 +71,14 @@ async function checkLocalFiles() {
         type: file.type,
         requiredSize: file.requiredSize
       });
-      log.error(`${file.path} (not found locally)`);
+      console.log(chalk.red(`❌ ${file.path} (not found locally)`));
     }
   }
 
   return results;
 }
 
-async function checkRemoteFile(file) {
+function checkRemoteFile(file) {
   return new Promise((resolve) => {
     const options = {
       hostname: DOMAIN,
@@ -147,112 +120,104 @@ async function checkMetaTags() {
       });
 
       res.on('end', () => {
-        // Enhanced meta tag checking
-        const checks = {
-          ogImage: /<meta property="og:image" content="([^"]+)"/,
-          twitterImage: /<meta name="twitter:image" content="([^"]+)"/,
-          canonical: /<link[^>]*rel="canonical"[^>]*href="([^"]+)"/,
-          title: /<meta property="og:title" content="([^"]+)"/,
-          description: /<meta property="og:description" content="([^"]+)"/,
-          twitterCard: /<meta name="twitter:card" content="([^"]+)"/,
-          twitterTitle: /<meta name="twitter:title" content="([^"]+)"/,
-          twitterDescription: /<meta name="twitter:description" content="([^"]+)"/
-        };
-
-        const results = Object.entries(checks).reduce((acc, [key, regex]) => {
-          const match = data.match(regex);
-          acc[key] = match ? match[1] : null;
-          return acc;
-        }, {});
-
-        resolve(results);
+        const ogImage = data.match(/<meta property="og:image" content="([^"]+)"/);
+        const twitterImage = data.match(/<meta name="twitter:image" content="([^"]+)"/);
+        const canonical = data.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/);
+        const title = data.match(/<meta property="og:title" content="([^"]+)"/);
+        const description = data.match(/<meta property="og:description" content="([^"]+)"/);
+        const twitterCard = data.match(/<meta name="twitter:card" content="([^"]+)"/);
+        const twitterTitle = data.match(/<meta name="twitter:title" content="([^"]+)"/);
+        const twitterDescription = data.match(/<meta name="twitter:description" content="([^"]+)"/);
+        
+        resolve({
+          ogImage: ogImage ? ogImage[1] : null,
+          twitterImage: twitterImage ? twitterImage[1] : null,
+          canonical: canonical ? canonical[1] : null,
+          title: title ? title[1] : null,
+          description: description ? description[1] : null,
+          twitterCard: twitterCard ? twitterCard[1] : null,
+          twitterTitle: twitterTitle ? twitterTitle[1] : null,
+          twitterDescription: twitterDescription ? twitterDescription[1] : null
+        });
       });
     }).on('error', (error) => {
-      resolve({ error: error.message });
+      resolve({
+        ogImage: null,
+        twitterImage: null,
+        canonical: null,
+        title: null,
+        description: null,
+        twitterCard: null,
+        twitterTitle: null,
+        twitterDescription: null,
+        error: error.message
+      });
     });
   });
 }
 
-async function generateReport(localFiles, remoteResults, metaTags) {
-  const report = {
-    timestamp: new Date().toISOString(),
-    domain: DOMAIN,
-    localFiles,
-    remoteFiles: remoteResults,
-    metaTags,
-    recommendations: []
-  };
-
-  // Add recommendations based on checks
-  if (remoteResults.some(r => r.status !== 200)) {
-    report.recommendations.push('Some image files are not accessible remotely');
-  }
-
-  if (!metaTags.ogImage) {
-    report.recommendations.push('Missing OpenGraph image meta tag');
-  }
-
-  if (!metaTags.twitterCard) {
-    report.recommendations.push('Missing Twitter card meta tag');
-  }
-
-  if (!metaTags.canonical) {
-    report.recommendations.push('Missing canonical URL');
-  }
-
-  // Save report to file
-  const reportPath = join(process.cwd(), 'metadata-report.json');
-  await fs.writeFile(reportPath, JSON.stringify(report, null, 2));
-  return report;
-}
-
 async function main() {
-  log.header('🔍 Checking metadata and images for ' + DOMAIN);
-  console.log('=======================================');
+  console.log(chalk.blue('🔍 Checking metadata and images for ' + DOMAIN));
+  console.log(chalk.gray('======================================='));
 
   // Check local files
   const localFiles = await checkLocalFiles();
 
   // Check remote files
-  log.header('🌐 Checking remote files...');
+  console.log(chalk.blue('\n🌐 Checking remote files...'));
   const remoteResults = await Promise.all(IMAGE_FILES.map(checkRemoteFile));
   
   remoteResults.forEach(result => {
     if (result.status === 200) {
-      log.success(result.path);
-      log.data(`Type: ${result.contentType}`);
-      log.data(`Size: ${(result.contentLength / 1024).toFixed(2)} KB`);
+      console.log(chalk.green(`✅ ${result.path}`));
+      console.log(chalk.gray(`   Type: ${result.contentType}`));
+      console.log(chalk.gray(`   Size: ${(result.contentLength / 1024).toFixed(2)} KB`));
     } else {
-      log.error(`${result.path} (${result.status})`);
+      console.log(chalk.red(`❌ ${result.path} (${result.status})`));
     }
   });
 
   // Check meta tags
-  log.header('🏷️  Checking meta tags...');
+  console.log(chalk.blue('\n🏷️  Checking meta tags...'));
   const metaTags = await checkMetaTags();
   
   if (metaTags.error) {
-    log.error('Error checking meta tags: ' + metaTags.error);
+    console.log(chalk.red(`❌ Error checking meta tags: ${metaTags.error}`));
   } else {
     Object.entries(metaTags).forEach(([key, value]) => {
       if (value) {
-        log.success(`${key}: ${value}`);
+        console.log(chalk.green(`✅ ${key}: ${value}`));
       } else {
-        log.error(`${key}: Not found`);
+        console.log(chalk.red(`❌ ${key}: Not found`));
       }
     });
   }
 
-  // Generate and save report
-  const report = await generateReport(localFiles, remoteResults, metaTags);
+  // Save results
+  const report = {
+    timestamp: new Date().toISOString(),
+    domain: DOMAIN,
+    localFiles,
+    remoteFiles: remoteResults,
+    metaTags
+  };
 
-  log.header('📋 Recommendations:');
-  report.recommendations.forEach(rec => log.info(rec));
-  
-  log.header('🔗 Validation Tools:');
+  await fs.writeFile(
+    join(process.cwd(), 'metadata-report.json'), 
+    JSON.stringify(report, null, 2)
+  );
+
+  console.log(chalk.blue('\n📋 Recommendations:'));
+  console.log('1. Ensure all image files exist and are accessible');
+  console.log('2. OpenGraph image should be 1200x630 pixels');
+  console.log('3. Twitter image should be 1200x600 pixels');
+  console.log('4. Verify canonical URL is correctly set');
+
+  console.log(chalk.blue('\n🔍 Validation Tools:'));
   console.log('- Facebook: https://developers.facebook.com/tools/debug/');
   console.log('- Twitter: https://cards-dev.twitter.com/validator');
   console.log('- LinkedIn: https://www.linkedin.com/post-inspector/');
+  
   console.log('\nReport saved to metadata-report.json');
 }
 
