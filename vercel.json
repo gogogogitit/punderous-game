@@ -2,6 +2,13 @@
     "version": 2,
     "routes": [
       {
+        "src": "^/(?!www\\.)(.*)",
+        "status": 301,
+        "headers": {
+          "Location": "https://www.punderous.com/$1"
+        }
+      },
+      {
         "src": "/images/(.*)\\.jpg",
         "headers": {
           "cache-control": "public, max-age=31536000, immutable",
@@ -27,7 +34,36 @@
       }
     ],
     "images": {
-      "domains": ["punderous.com", "www.punderous.com"],
-      "sizes": [640, 750, 828, 1080, 1200]
-    }
+      "domains": ["www.punderous.com"],
+      "sizes": [640, 750, 828, 1080, 1200],
+      "remotePatterns": [
+        {
+          "protocol": "https",
+          "hostname": "www.punderous.com"
+        }
+      ]
+    },
+    "headers": [
+      {
+        "source": "/(.*)",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "X-XSS-Protection",
+            "value": "1; mode=block"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          }
+        ]
+      }
+    ]
   }
