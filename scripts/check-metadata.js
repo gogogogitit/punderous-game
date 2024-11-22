@@ -18,7 +18,7 @@ const IMAGE_FILES = [
     requiredSize: { width: 1200, height: 600 }
   },
   {
-    path: '/opengraph-image.jpg',
+    path: '/og-image.jpg',
     type: 'OpenGraph Image (Next.js)',
     requiredSize: { width: 1200, height: 630 }
   },
