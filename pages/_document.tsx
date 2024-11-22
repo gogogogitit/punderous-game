@@ -9,12 +9,9 @@ class MyDocument extends Document {
       <Html lang="en">
         <Head>
           {/* Caching Tags */} 
-        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-        <meta httpEquiv="Pragma" content="no-cache" />
-        <meta httpEquiv="Expires" content="0" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:type" content="image/jpeg" />
+          <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+          <meta httpEquiv="Pragma" content="no-cache" />
+          <meta httpEquiv="Expires" content="0" />
 
           {/* Standard Meta Tags */}
           <meta charSet="utf-8" />
@@ -22,6 +19,7 @@ class MyDocument extends Document {
           <meta name="description" content="Play Punderous™ - the pun-a-day word game!" />
           <meta name="keywords" content="pun game, word game, puzzle game, brain teaser, Punderous" />
           <meta name="author" content="MJKUltra" />
+          <meta name="theme-color" content="#00B4D8" />
           
           {/* Open Graph Tags */}
           <meta property="fb:app_id" content="462159136491139" />
@@ -30,19 +28,20 @@ class MyDocument extends Document {
           <meta property="og:url" content={domain} />
           <meta property="og:site_name" content="Punderous™" />
           <meta property="og:locale" content="en_US" />
-          <meta property="og:image" content="https://punderous.com/images/og-image.jpg" />
+          <meta property="og:image" content={`${domain}/images/og-image.jpg`} />
           <meta property="og:image:type" content="image/jpeg" />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="630" />
           <meta property="og:image:alt" content="Punderous™ - A Pun-Filled Word Game!" />
-          <meta property="og:type" content="website" />
+          <meta property="og:type" content="game.achievement" />
 
           {/* Twitter Tags */}
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:creator" content="@PunderousGame" />
           <meta name="twitter:title" content="Punderous™ - A Pun-Filled Word Game!" />
           <meta name="twitter:description" content="Play Punderous™ - the pun-a-day word game!" />
-          <meta property="twitter:image" content="https://punderous.com/images/twitter-image.jpg" />
+          <meta property="twitter:image" content={`${domain}/images/twitter-image.jpg`} />
+          
           {/* JSON-LD Structured Data */}
           <script
             type="application/ld+json"
@@ -59,6 +58,10 @@ class MyDocument extends Document {
                 "gameType": "Word Game",
                 "genre": "Puzzle",
                 "inLanguage": "en-US",
+                "potentialAction": {
+                  "@type": "PlayAction",
+                  "target": domain
+                },
                 "offers": {
                   "@type": "Offer",
                   "price": "0",
@@ -66,11 +69,17 @@ class MyDocument extends Document {
                 },
                 "author": {
                   "@type": "Organization",
-                  "name": "MJKUltra"
+                  "name": "MJKUltra",
+                  "url": domain
                 },
                 "publisher": {
                   "@type": "Organization",
-                  "name": "MJKUltra"
+                  "name": "MJKUltra",
+                  "url": domain,
+                  "logo": {
+                    "@type": "ImageObject",
+                    "url": `${domain}/images/punderous-logo.png`
+                  }
                 }
               })
             }}
@@ -83,7 +92,7 @@ class MyDocument extends Document {
           <meta name="format-detection" content="telephone=no, address=no, email=no" />
 
           {/* Favicon and App Icons */}
-          <link rel="icon" href="/favicon.ico" sizes="32x32" />
+          <link rel="icon" href="/favicon.ico" type="image/x-icon" />
           <link rel="icon" href="/images/favicon-16x16.png" sizes="16x16" type="image/png" />
           <link rel="icon" href="/images/favicon-32x32.png" sizes="32x32" type="image/png" />
           <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" sizes="180x180" />
