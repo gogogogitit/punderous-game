@@ -40,7 +40,7 @@ class MyDocument extends Document {
           <meta name="twitter:creator" content="@PunderousGame" />
           <meta name="twitter:title" content="Punderous™ - A Pun-Filled Word Game!" />
           <meta name="twitter:description" content="Play Punderous™ - the pun-a-day word game!" />
-          <meta property="twitter:image" content={`${domain}/images/twitter-image.jpg`} />
+          <meta name="twitter:image" content={`${domain}/images/twitter-image.jpg`} />
           
           {/* JSON-LD Structured Data */}
           <script
@@ -55,8 +55,8 @@ class MyDocument extends Document {
                 "image": `${domain}/images/og-image.jpg`,
                 "screenshot": `${domain}/images/og-image.jpg`,
                 "applicationCategory": "GameApplication",
-                "gameType": "Word Game",
-                "genre": "Puzzle",
+                "gameType": ["Word Game", "Puzzle Game", "Browser Game"],
+                "genre": ["Puzzle", "Word", "Educational"],
                 "inLanguage": "en-US",
                 "potentialAction": {
                   "@type": "PlayAction",
@@ -80,6 +80,13 @@ class MyDocument extends Document {
                     "@type": "ImageObject",
                     "url": `${domain}/images/punderous-logo.png`
                   }
+                },
+                "aggregateRating": {
+                  "@type": "AggregateRating",
+                  "ratingValue": "5",
+                  "ratingCount": "1",
+                  "bestRating": "5",
+                  "worstRating": "1"
                 }
               })
             }}
