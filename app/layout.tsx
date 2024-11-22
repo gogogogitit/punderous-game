@@ -21,8 +21,9 @@ const siteConfig = {
   name: 'Punderous™',
   description: 'Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!',
   url: 'https://punderous.com',
-  ogImage: '/images/og-image.jpg',  // Updated path
-  twitterImage: '/images/twitter-image.jpg',  // Updated path
+  ogImage: '/images/og-image.jpg',
+  twitterImage: '/images/twitter-image.jpg',
+  fbAppId: '462159136491139',
 }
 
 export const metadata: Metadata = {
@@ -45,19 +46,21 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: siteConfig.url,
+    siteName: siteConfig.name,
     title: {
       default: `${siteConfig.name} - A Pun-Filled Word Game!`,
       template: `%s | ${siteConfig.name}`,
     },
     description: siteConfig.description,
-    siteName: siteConfig.name,
-    images: [{
-      url: siteConfig.ogImage,
-      width: 1200,
-      height: 630,
-      alt: `${siteConfig.name} - A Pun-Filled Word Game!`,
-      type: 'image/jpeg', // Added explicit type
-    }],
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: `${siteConfig.name} - A Pun-Filled Word Game!`,
+        type: 'image/jpeg',
+      }
+    ]
   },
   twitter: {
     card: 'summary_large_image',
@@ -69,7 +72,7 @@ export const metadata: Metadata = {
       width: 1200,
       height: 630,
       alt: `${siteConfig.name} - A Pun-Filled Word Game!`,
-      type: 'image/jpeg', // Added explicit type
+      type: 'image/jpeg',
     }],
   },
   robots: {
@@ -86,21 +89,21 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/images/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/images/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
     ],
     shortcut: [
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' }
+      { url: '/images/favicon-16x16.png', sizes: '16x16', type: 'image/png' }
     ],
     apple: {
-      url: '/apple-touch-icon.png',
+      url: '/images/apple-touch-icon.png',
       sizes: '180x180',
       type: 'image/png',
     },
     other: [
       {
         rel: 'mask-icon',
-        url: '/favicon-16x16.png',
+        url: '/images/favicon-16x16.png',
       },
     ],
   },
@@ -126,10 +129,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta property="fb:app_id" content={siteConfig.fbAppId} />
         <link rel="icon" href="/favicon.ico" sizes="32x32" />
-        <link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png" />
-        <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+        <link rel="icon" href="/images/favicon-16x16.png" sizes="16x16" type="image/png" />
+        <link rel="icon" href="/images/favicon-32x32.png" sizes="32x32" type="image/png" />
+        <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" sizes="180x180" />
         <link rel="manifest" href="/site.webmanifest" crossOrigin="use-credentials" />
         <JsonLd />
       </head>
