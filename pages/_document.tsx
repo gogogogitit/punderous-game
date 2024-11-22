@@ -14,6 +14,7 @@ class MyDocument extends Document {
           <meta name="author" content="MJKUltra" />
           
           {/* Open Graph Tags */}
+          <meta property="fb:app_id" content="462159136491139" />
           <meta property="og:title" content="Punderous™ - A Pun-Filled Word Game!" />
           <meta property="og:description" content="Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!" />
           <meta property="og:url" content="https://punderous.com" />
