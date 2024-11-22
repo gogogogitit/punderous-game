@@ -41,7 +41,7 @@ class MyDocument extends Document {
             dangerouslySetInnerHTML={{
               __html: JSON.stringify({
                 "@context": "https://schema.org",
-                "@type": "WebApplication",
+                "@type": "SoftwareApplication",
                 "name": "Punderous™",
                 "description": "Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!",
                 "url": "https://punderous.com",
@@ -51,12 +51,13 @@ class MyDocument extends Document {
                   "width": "1200",
                   "height": "630"
                 },
-                "applicationCategory": "Game",
-                "operatingSystem": "Web Browser",
+                "applicationCategory": "GameApplication",
+                "operatingSystem": ["Web Browser", "Any"],
                 "offers": {
                   "@type": "Offer",
                   "price": "0",
-                  "priceCurrency": "USD"
+                  "priceCurrency": "USD",
+                  "availability": "http://schema.org/InStock"
                 },
                 "author": {
                   "@type": "Organization",
@@ -85,7 +86,8 @@ class MyDocument extends Document {
                   "ratingValue": "5",
                   "ratingCount": "1",
                   "bestRating": "5",
-                  "worstRating": "1"
+                  "worstRating": "1",
+                  "reviewCount": "1"
                 },
                 "gamePlatform": ["Web Browser"],
                 "genre": "Puzzle Game",
