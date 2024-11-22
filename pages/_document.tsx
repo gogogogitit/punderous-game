@@ -22,8 +22,8 @@ class MyDocument extends Document {
           <meta property="og:url" content={domain} />
           <meta property="og:site_name" content="Punderous™" />
           <meta property="og:locale" content="en_US" />
-          <meta property="og:image" content={`${domain}/images/og-image.png`} />
-          <meta property="og:image:type" content="image/png" />
+          <meta property="og:image" content={`${domain}/images/og-image.jpg`} />
+          <meta property="og:image:type" content="image/jpeg" />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="630" />
           <meta property="og:image:alt" content="Punderous™ - A Pun-Filled Word Game!" />
@@ -34,7 +34,7 @@ class MyDocument extends Document {
           <meta name="twitter:creator" content="@PunderousGame" />
           <meta name="twitter:title" content="Punderous™ - A Pun-Filled Word Game!" />
           <meta name="twitter:description" content="Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!" />
-          <meta name="twitter:image" content={`${domain}/images/twitter-image.png`} />
+          <meta name="twitter:image" content={`${domain}/images/twitter-image.jpg`} />
 
           {/* JSON-LD Structured Data */}
           <script
@@ -46,8 +46,8 @@ class MyDocument extends Document {
                 "name": "Punderous™",
                 "description": "Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!",
                 "url": domain,
-                "image": `${domain}/images/og-image.png`,
-                "screenshot": `${domain}/images/og-image.png`,
+                "image": `${domain}/images/og-image.jpg`,
+                "screenshot": `${domain}/images/og-image.jpg`,
                 "applicationCategory": "GameApplication",
                 "gameType": "Word Game",
                 "genre": "Puzzle",
