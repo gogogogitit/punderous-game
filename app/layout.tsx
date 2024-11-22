@@ -11,14 +11,18 @@ const GoogleAnalytics = dynamic(() => import('@/components/GoogleAnalytics'), {
   ssr: false,
 })
 
+const JsonLd = dynamic(() => import('@/components/JsonLd'), {
+  ssr: true
+})
+
 const inter = Inter({ subsets: ['latin'] })
 
 const siteConfig = {
   name: 'Punderous™',
   description: 'Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!',
   url: 'https://punderous.com',
-  ogImage: '/og-image.png',  // Updated to match actual file
-  twitterImage: '/twitter-image.png',  // Separate Twitter image
+  ogImage: '/og-image.jpg',
+  twitterImage: '/twitter-image.jpg',
 }
 
 export const metadata: Metadata = {
@@ -120,6 +124,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
         <link rel="manifest" href="/site.webmanifest" crossOrigin="use-credentials" />
+        <JsonLd />
       </head>
       <body className={inter.className}>
         <main className="min-h-screen bg-[#00B4D8]">
