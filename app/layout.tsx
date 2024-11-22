@@ -21,8 +21,8 @@ const siteConfig = {
   name: 'Punderous™',
   description: 'Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!',
   url: 'https://punderous.com',
-  ogImage: '/og-image.jpg',
-  twitterImage: '/twitter-image.jpg',
+  ogImage: '/images/og-image.jpg',  // Updated path
+  twitterImage: '/images/twitter-image.jpg',  // Updated path
 }
 
 export const metadata: Metadata = {
@@ -56,6 +56,7 @@ export const metadata: Metadata = {
       width: 1200,
       height: 630,
       alt: `${siteConfig.name} - A Pun-Filled Word Game!`,
+      type: 'image/jpeg', // Added explicit type
     }],
   },
   twitter: {
@@ -63,7 +64,13 @@ export const metadata: Metadata = {
     title: `${siteConfig.name} - A Pun-Filled Word Game!`,
     description: siteConfig.description,
     creator: '@PunderousGame',
-    images: [siteConfig.twitterImage], // Using separate Twitter image
+    images: [{
+      url: siteConfig.twitterImage,
+      width: 1200,
+      height: 630,
+      alt: `${siteConfig.name} - A Pun-Filled Word Game!`,
+      type: 'image/jpeg', // Added explicit type
+    }],
   },
   robots: {
     index: true,
