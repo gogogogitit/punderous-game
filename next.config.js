@@ -1,8 +1,4 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -11,15 +7,22 @@ const nextConfig = {
   experimental: {
     outputFileTracingRoot: path.join(__dirname, './'),
     outputFileTracingIncludes: {
-      '/*': ['./public/**/*']
+      '/': ['./public/**/*']
     }
   },
   output: 'standalone',
   images: {
-    domains: ['www.punderous.com', 'punderous.com'],
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 0,
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'punderous.com',
+        pathname: '/**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.punderous.com',
+        pathname: '/**'
+      },
       {
         protocol: 'https',
         hostname: 'v0.dev',
@@ -30,8 +33,11 @@ const nextConfig = {
         hostname: '*.public.blob.vercel-storage.com',
         pathname: '/**'
       }
-    ]
+    ],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 0,
+    unoptimized: true
   }
 };
 
-export default nextConfig;
+module.exports = nextConfig;

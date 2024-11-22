@@ -2,17 +2,15 @@
   "name": "punderful-game",
   "version": "0.1.0",
   "private": true,
-
-
   "scripts": {
-    "start": "cross-env NODE_ENV=production node server.js",
     "dev": "next dev",
-    "build": "next build && cp -r public .next/standalone/",
+    "build": "next build",
+    "start": "node .next/standalone/server.js",
     "postinstall": "prisma generate",
     "check-metadata": "node scripts/check-metadata.js",
     "type-check": "tsc --noEmit",
     "validate": "npm run check-metadata && npm run dev",
-    "postbuild": "cp -r public/images .next/standalone/public/"
+    "postbuild": "cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/"
   },
   "dependencies": {
     "@next/third-parties": "^15.0.3",
@@ -38,6 +36,7 @@
     "react-confetti": "^6.1.0",
     "react-dom": "^18.2.0",
     "react-dom-confetti": "^0.2.0",
+    "sharp": "^0.33.5",
     "tailwind-merge": "^2.5.4",
     "tailwindcss": "^3.3.5",
     "tailwindcss-animate": "^1.0.7"
