@@ -6,43 +6,44 @@ import chalk from 'chalk';
 
 const DOMAIN = 'punderous.com';
 
+// scripts/check-metadata.js
 const IMAGE_FILES = [
-  {
-    path: '/og-image.jpg',
-    type: 'OpenGraph Image',
-    requiredSize: { width: 1200, height: 630 }
-  },
-  {
-    path: '/twitter-image.jpg',
-    type: 'Twitter Image',
-    requiredSize: { width: 1200, height: 600 }
-  },
-  {
-    path: '/og-image.jpg',
-    type: 'OpenGraph Image (Next.js)',
-    requiredSize: { width: 1200, height: 630 }
-  },
-  {
-    path: '/favicon.ico',
-    type: 'Favicon',
-    requiredSize: { width: 32, height: 32 }
-  },
-  {
-    path: '/favicon-16x16.png',
-    type: 'Small Favicon',
-    requiredSize: { width: 16, height: 16 }
-  },
-  {
-    path: '/favicon-32x32.png',
-    type: 'Large Favicon',
-    requiredSize: { width: 32, height: 32 }
-  },
-  {
-    path: '/apple-touch-icon.png',
-    type: 'Apple Touch Icon',
-    requiredSize: { width: 180, height: 180 }
-  }
-];
+    {
+      path: '/images/og-image.jpg',
+      type: 'OpenGraph Image',
+      requiredSize: { width: 1200, height: 630 }
+    },
+    {
+      path: '/images/twitter-image.jpg',
+      type: 'Twitter Image',
+      requiredSize: { width: 1200, height: 600 }
+    },
+    {
+      path: '/images/og-image.jpg',
+      type: 'OpenGraph Image (Next.js)',
+      requiredSize: { width: 1200, height: 630 }
+    },
+    {
+      path: '/favicon.ico',
+      type: 'Favicon', 
+      requiredSize: { width: 32, height: 32 }
+    },
+    {
+      path: '/images/favicon-16x16.png',
+      type: 'Small Favicon',
+      requiredSize: { width: 16, height: 16 }
+    },
+    {
+      path: '/images/favicon-32x32.png', 
+      type: 'Large Favicon',
+      requiredSize: { width: 32, height: 32 }
+    },
+    {
+      path: '/images/apple-touch-icon.png',
+      type: 'Apple Touch Icon',
+      requiredSize: { width: 180, height: 180 }
+    }
+  ];
 
 async function checkLocalFiles() {
   console.log(chalk.blue('\n📂 Checking local files in public directory...'));

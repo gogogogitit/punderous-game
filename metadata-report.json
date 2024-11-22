@@ -1,9 +1,9 @@
 {
-  "timestamp": "2024-11-22T00:51:33.810Z",
+  "timestamp": "2024-11-22T14:24:05.272Z",
   "domain": "punderous.com",
   "localFiles": [
     {
-      "path": "/og-image.jpg",
+      "path": "/images/og-image.jpg",
       "exists": true,
       "size": "69.85 KB",
       "type": "OpenGraph Image",
@@ -13,18 +13,9 @@
       }
     },
     {
-      "path": "/og-image.jpg",
-      "exists": false,
-      "type": "OpenGraph Image (JPG)",
-      "requiredSize": {
-        "width": 1200,
-        "height": 630
-      }
-    },
-    {
-      "path": "/twitter-image.png",
+      "path": "/images/twitter-image.jpg",
       "exists": true,
-      "size": "69.85 KB",
+      "size": "60.83 KB",
       "type": "Twitter Image",
       "requiredSize": {
         "width": 1200,
@@ -32,27 +23,10 @@
       }
     },
     {
-      "path": "/twitter-image.jpg",
-      "exists": false,
-      "type": "Twitter Image (JPG)",
-      "requiredSize": {
-        "width": 1200,
-        "height": 600
-      }
-    },
-    {
-      "path": "/opengraph-image.jpg",
-      "exists": false,
+      "path": "/images/og-image.jpg",
+      "exists": true,
+      "size": "69.85 KB",
       "type": "OpenGraph Image (Next.js)",
-      "requiredSize": {
-        "width": 1200,
-        "height": 630
-      }
-    },
-    {
-      "path": "/opengraph-image.png",
-      "exists": false,
-      "type": "OpenGraph Image (Next.js PNG)",
       "requiredSize": {
         "width": 1200,
         "height": 630
@@ -69,7 +43,7 @@
       }
     },
     {
-      "path": "/favicon-16x16.png",
+      "path": "/images/favicon-16x16.png",
       "exists": true,
       "size": "0.67 KB",
       "type": "Small Favicon",
@@ -79,7 +53,7 @@
       }
     },
     {
-      "path": "/favicon-32x32.png",
+      "path": "/images/favicon-32x32.png",
       "exists": true,
       "size": "1.69 KB",
       "type": "Large Favicon",
@@ -89,7 +63,7 @@
       }
     },
     {
-      "path": "/apple-touch-icon.png",
+      "path": "/images/apple-touch-icon.png",
       "exists": true,
       "size": "19.71 KB",
       "type": "Apple Touch Icon",
@@ -101,7 +75,7 @@
   ],
   "remoteFiles": [
     {
-      "path": "/og-image.jpg",
+      "path": "/images/og-image.jpg",
       "type": "OpenGraph Image",
       "requiredSize": {
         "width": 1200,
@@ -111,17 +85,7 @@
       "contentType": "text/plain"
     },
     {
-      "path": "/og-image.jpg",
-      "type": "OpenGraph Image (JPG)",
-      "requiredSize": {
-        "width": 1200,
-        "height": 630
-      },
-      "status": 308,
-      "contentType": "text/plain"
-    },
-    {
-      "path": "/twitter-image.png",
+      "path": "/images/twitter-image.jpg",
       "type": "Twitter Image",
       "requiredSize": {
         "width": 1200,
@@ -131,28 +95,8 @@
       "contentType": "text/plain"
     },
     {
-      "path": "/twitter-image.jpg",
-      "type": "Twitter Image (JPG)",
-      "requiredSize": {
-        "width": 1200,
-        "height": 600
-      },
-      "status": 308,
-      "contentType": "text/plain"
-    },
-    {
-      "path": "/opengraph-image.jpg",
+      "path": "/images/og-image.jpg",
       "type": "OpenGraph Image (Next.js)",
-      "requiredSize": {
-        "width": 1200,
-        "height": 630
-      },
-      "status": 308,
-      "contentType": "text/plain"
-    },
-    {
-      "path": "/opengraph-image.png",
-      "type": "OpenGraph Image (Next.js PNG)",
       "requiredSize": {
         "width": 1200,
         "height": 630
@@ -171,7 +115,7 @@
       "contentType": "text/plain"
     },
     {
-      "path": "/favicon-16x16.png",
+      "path": "/images/favicon-16x16.png",
       "type": "Small Favicon",
       "requiredSize": {
         "width": 16,
@@ -181,7 +125,7 @@
       "contentType": "text/plain"
     },
     {
-      "path": "/favicon-32x32.png",
+      "path": "/images/favicon-32x32.png",
       "type": "Large Favicon",
       "requiredSize": {
         "width": 32,
@@ -191,7 +135,7 @@
       "contentType": "text/plain"
     },
     {
-      "path": "/apple-touch-icon.png",
+      "path": "/images/apple-touch-icon.png",
       "type": "Apple Touch Icon",
       "requiredSize": {
         "width": 180,
@@ -210,11 +154,5 @@
     "twitterCard": null,
     "twitterTitle": null,
     "twitterDescription": null
-  },
-  "recommendations": [
-    "Some image files are not accessible remotely",
-    "Missing OpenGraph image meta tag",
-    "Missing Twitter card meta tag",
-    "Missing canonical URL"
-  ]
+  }
 }
