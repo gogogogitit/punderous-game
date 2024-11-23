@@ -1,12 +1,5 @@
 {
     "version": 2,
-    "redirects": [
-      {
-        "source": "/:path((?!www\\.).*)",
-        "destination": "https://www.punderous.com/:path",
-        "permanent": true
-      }
-    ],
     "headers": [
       {
         "source": "/(.*)",
