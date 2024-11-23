@@ -2,8 +2,8 @@
     "version": 2,
     "redirects": [
       {
-        "source": "^/(?!www\\.)(.*)",
-        "destination": "https://www.punderous.com/$1",
+        "source": "/:path((?!www\\.).*)",
+        "destination": "https://www.punderous.com/:path",
         "permanent": true
       }
     ],
