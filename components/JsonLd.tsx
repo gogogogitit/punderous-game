@@ -8,7 +8,7 @@ export default function JsonLd() {
     "name": "Punderous™",
     "applicationCategory": "GameApplication",
     "operatingSystem": "Any",
-    "description": "Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!",
+    "description": "Play Punderous™ - the pun-a-day word game that's fun for the whole family!",
     "url": "https://punderous.com",
     "image": "https://punderous.com/images/og-image.jpg",
     "offers": {
