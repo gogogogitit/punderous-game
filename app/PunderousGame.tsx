@@ -811,7 +811,7 @@ export default function Component() {
               </p>
               <CardDescription className="text-xl font-medium text-[#00B4D8] flex items-center justify-center">
               <span className="mr-2 text-2xl">⚡</span>
-              Let Your Brainstorm Begin!
+              Let the Brainstorm Begin!
               <span className="ml-2 text-2xl">⚡</span>
             </CardDescription>
             {cheatModeActive && (
