@@ -13,6 +13,7 @@ import Confetti from 'react-dom-confetti'
 import { useDictionary } from '@/hooks/useDictionary'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { trackEvent as analyticsTrackEvent } from '../lib/analytics'
+import RulesDialog from "@/components/RulesDialog";
 
 const trackEvent = (eventName: string, eventParams?: Record<string, any>) => {
   analyticsTrackEvent(eventName, eventParams);
@@ -995,25 +996,25 @@ export default function Component() {
         transition={{ delay: 0.6, duration: 0.5 }}
         className="flex flex-col items-center space-y-2 mt-3"
       >
-        <p className="text-[12.5px] text-gray-700 font-medium">Was this a good pun or a bad pun?</p>
+        <p className="text-[12.5px] text-gray-700 font-medium">Was this punny or not punny?</p>
         <div className="flex justify-center space-x-2">
           <Button
             onClick={() => handleVote(gameState.currentPun!, 'up')}
             variant="outline"
             size="sm"
-            className="h-9 w-[80px] text-[13.75px] border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
+            className="h-9 w-[110px] text-[13.75px] border-[#A06CD5] text-[#A06CD5] hover:bg-[#A06CD5] hover:text-white"
           >
             <ThumbsUp className="w-4 h-4 mr-1.5" />
-            Good
+            Punny
           </Button>
           <Button
             onClick={() => handleVote(gameState.currentPun!, 'down')}
             variant="outline"
             size="sm"
-            className="h-9 w-[80px] text-[13.75px] border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
+            className="h-9 w-[110px] text-[13.75px] border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white"
           >
             <ThumbsDown className="w-4 h-4 mr-1.5" />
-            Bad
+            Not punny
           </Button>
         </div>
       </motion.div>
@@ -1071,12 +1072,7 @@ export default function Component() {
       <Send className="w-3 h-3 mr-1" />
       Submit
     </Button>
-    <Button
-  disabled={true}
-  className="flex-1 bg-gray-200 text-gray-400 hover:bg-gray-200 text-[13px] py-1 h-9 cursor-not-allowed"
->
-  Hints coming soon!
-</Button>
+    <RulesDialog />
   </div>
   <Button
     onClick={() => {
