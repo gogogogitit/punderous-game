@@ -109,7 +109,8 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   alternates: {
-    canonical: siteConfig.url,
+    // Only change here - update canonical URL format
+    canonical: new URL('/', siteConfig.url).toString()
   },
 }
 
