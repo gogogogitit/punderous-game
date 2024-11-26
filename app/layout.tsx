@@ -135,6 +135,9 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta property="fb:app_id" content={siteConfig.fbAppId} />
+        {/* Add explicit favicon links as recommended by Google */}
+        <link rel="icon" href="/favicon.ico" sizes="48x48" />
+        <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png" />
         <link rel="manifest" href="/site.webmanifest" crossOrigin="use-credentials" />
         <JsonLd />
       </head>
