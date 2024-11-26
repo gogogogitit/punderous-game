@@ -75,6 +75,7 @@ export const metadata: Metadata = {
       type: 'image/jpeg',
     }],
   },
+  // Single robots configuration
   robots: {
     index: true,
     follow: true,
@@ -84,32 +85,35 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
       'max-image-preview': 'large',
       'max-snippet': -1,
-    },
+      noimageindex: false
+    }
   },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' },
-      { url: '/images/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
       { url: '/images/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/images/favicon-16x16.png', sizes: '16x16', type: 'image/png' }
     ],
     shortcut: [
-      { url: '/images/favicon-16x16.png', sizes: '16x16', type: 'image/png' }
+      { url: '/favicon-96x96.png', type: 'image/png' }
     ],
     apple: {
       url: '/images/apple-touch-icon.png',
       sizes: '180x180',
-      type: 'image/png',
+      type: 'image/png'
     },
     other: [
       {
-        rel: 'mask-icon',
-        url: '/images/favicon-16x16.png',
-      },
-    ],
+        rel: 'icon',
+        url: '/favicon-96x96.png',
+        type: 'image/png',
+        sizes: '96x96'
+      }
+    ]
   },
   manifest: '/site.webmanifest',
   alternates: {
-    // Only change here - update canonical URL format
     canonical: new URL('/', siteConfig.url).toString()
   },
 }
@@ -131,10 +135,6 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta property="fb:app_id" content={siteConfig.fbAppId} />
-        <link rel="icon" href="/favicon.ico" sizes="32x32" />
-        <link rel="icon" href="/images/favicon-16x16.png" sizes="16x16" type="image/png" />
-        <link rel="icon" href="/images/favicon-32x32.png" sizes="32x32" type="image/png" />
-        <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" sizes="180x180" />
         <link rel="manifest" href="/site.webmanifest" crossOrigin="use-credentials" />
         <JsonLd />
       </head>

@@ -222,11 +222,7 @@ export default function Component() {
   const loadDictionaryAndPuns = useCallback(async () => {
     try {
       const punsData = [
-        { id: 7, question: "What do you call a pig that does karate?", answer: "A pork chop", difficulty: 1, upVotes: 0, downVotes: 0 },
-        { id: 8, question: "Why don't eggs tell jokes?", answer: "They would crack up", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 9, question: "What do you call a sleeping bull?", answer: "A bulldozer", difficulty: 1, upVotes: 0, downVotes: 0 },
         { id: 10, question: "Why did the math book look so sad?", answer: "It had too many problems", difficulty: 2, upVotes: 0, downVotes: 0 },
-        { id: 11, question: "Why did the golfer bring two pairs of pants?", answer: "In case they got a hole in one", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 12, question: "What do you call a parade of rabbits hopping backwards?", answer: "A receding hare line", difficulty: 3, upVotes: 0, downVotes: 0 },
         { id: 13, question: "Why don't skeletons fight each other?", answer: "They have no guts", difficulty: 2, upVotes: 0, downVotes: 0 },
         { id: 14, question: "What do you call a fake stone in Ireland?", answer: "A sham rock", difficulty: 2, upVotes: 0, downVotes: 0 },

@@ -11,7 +11,7 @@
     "type-check": "tsc --noEmit",
     "validate": "npm run check-metadata && npm run dev",
     "postbuild": "cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/seed.ts"
   },
   "dependencies": {
     "@next/third-parties": "^15.0.3",
