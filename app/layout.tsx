@@ -19,7 +19,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 const siteConfig = {
   name: 'Punderous™',
-  description: 'Play Punderous™ - a pun-filled word game where we ask the questions and you guess the puns!',
+  description: 'Play Punderous™ - the pun-a-day word game!',
   url: 'https://punderous.com',
   ogImage: '/images/og-image.jpg',
   twitterImage: '/images/twitter-image.jpg',
@@ -29,7 +29,7 @@ const siteConfig = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${siteConfig.name} - A Pun-Filled Word Game!`,
+    default: `${siteConfig.name} - The Pun-A-Day Word Game!`,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     url: siteConfig.url,
     siteName: siteConfig.name,
     title: {
-      default: `${siteConfig.name} - A Pun-Filled Word Game!`,
+      default: `${siteConfig.name} - The Pun-A-Day Word Game!`,
       template: `%s | ${siteConfig.name}`,
     },
     description: siteConfig.description,
@@ -57,21 +57,21 @@ export const metadata: Metadata = {
         url: siteConfig.ogImage,
         width: 1200,
         height: 630,
-        alt: `${siteConfig.name} - A Pun-Filled Word Game!`,
+        alt: `${siteConfig.name} - The Pun-A-Day Word Game!`,
         type: 'image/jpeg',
       }
     ]
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${siteConfig.name} - A Pun-Filled Word Game!`,
+    title: `${siteConfig.name} - The Pun-A-Day Word Game!`,
     description: siteConfig.description,
     creator: '@PunderousGame',
     images: [{
       url: siteConfig.twitterImage,
       width: 1200,
       height: 630,
-      alt: `${siteConfig.name} - A Pun-Filled Word Game!`,
+      alt: `${siteConfig.name} - The Pun-A-Day Word Game!`,
       type: 'image/jpeg',
     }],
   },
