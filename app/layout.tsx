@@ -6,7 +6,6 @@ import { Analytics } from '@vercel/analytics/react'
 import Script from 'next/script'
 import { GA_TRACKING_ID } from '@/lib/analytics'
 import dynamic from 'next/dynamic'
-import { metadata as metadataConfig } from './metadata'
 import JsonLd from '../components/JsonLd'
 
 const GoogleAnalytics = dynamic(() => import('@/components/GoogleAnalytics'), { 
@@ -14,6 +13,8 @@ const GoogleAnalytics = dynamic(() => import('@/components/GoogleAnalytics'), {
 })
 
 const inter = Inter({ subsets: ['latin'] })
+
+const FB_APP_ID = '462159136491139'
 
 export const viewport: Viewport = {
   themeColor: '#00B4D8',
@@ -26,7 +27,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL('https://punderous.com'),
   title: 'Punderous™ - The Daily Pun Word Game',
-  description: 'Play Punderous™ - the Pun-A-Day Word Game!',
+  description: 'Play Punderous™ - Pun-A-Day Word Game!',
   openGraph: {
     title: 'Punderous™ - The Daily Pun Word Game',
     description: 'Play Punderous™ - Pun-A-Day Word Game!',
@@ -58,9 +59,6 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-  verification: {
-    google: 'YOUR-GOOGLE-VERIFICATION-ID', // Add your Google verification ID
   }
 }
 
@@ -72,8 +70,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta property="fb:app_id" content={metadataConfig.other?.['fb:app_id']?.toString()} />
-        {/* Add explicit favicon links as recommended by Google */}
+        <meta property="fb:app_id" content={FB_APP_ID} />
         <link rel="icon" href="/favicon.ico" sizes="48x48" />
         <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png" />
         <link rel="manifest" href="/site.webmanifest" crossOrigin="use-credentials" />
@@ -86,7 +83,7 @@ export default function RootLayout({
         <Analytics />
         <GoogleAnalytics />
         <Script
-          strategy="afterInteractive"
+          strategy="afterInteractive" 
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
         />
         <Script
