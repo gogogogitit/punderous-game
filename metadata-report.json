@@ -1,6 +1,6 @@
 {
-  "timestamp": "2024-11-22T14:24:05.272Z",
-  "domain": "punderous.com",
+  "timestamp": "2024-12-01T21:46:58.601Z",
+  "domain": "punderous-game-h1n1m3v71-mjkultra.vercel.app",
   "localFiles": [
     {
       "path": "/images/og-image.jpg",
@@ -81,8 +81,9 @@
         "width": 1200,
         "height": 630
       },
-      "status": 308,
-      "contentType": "text/plain"
+      "status": 200,
+      "contentType": "image/jpeg",
+      "contentLength": "71525"
     },
     {
       "path": "/images/twitter-image.jpg",
@@ -91,8 +92,9 @@
         "width": 1200,
         "height": 600
       },
-      "status": 308,
-      "contentType": "text/plain"
+      "status": 200,
+      "contentType": "image/jpeg",
+      "contentLength": "62288"
     },
     {
       "path": "/images/og-image.jpg",
@@ -101,8 +103,9 @@
         "width": 1200,
         "height": 630
       },
-      "status": 308,
-      "contentType": "text/plain"
+      "status": 200,
+      "contentType": "image/jpeg",
+      "contentLength": "71525"
     },
     {
       "path": "/favicon.ico",
@@ -111,8 +114,9 @@
         "width": 32,
         "height": 32
       },
-      "status": 308,
-      "contentType": "text/plain"
+      "status": 200,
+      "contentType": "image/x-icon",
+      "contentLength": "15406"
     },
     {
       "path": "/images/favicon-16x16.png",
@@ -121,8 +125,9 @@
         "width": 16,
         "height": 16
       },
-      "status": 308,
-      "contentType": "text/plain"
+      "status": 200,
+      "contentType": "image/png",
+      "contentLength": "691"
     },
     {
       "path": "/images/favicon-32x32.png",
@@ -131,8 +136,9 @@
         "width": 32,
         "height": 32
       },
-      "status": 308,
-      "contentType": "text/plain"
+      "status": 200,
+      "contentType": "image/png",
+      "contentLength": "1733"
     },
     {
       "path": "/images/apple-touch-icon.png",
@@ -141,18 +147,19 @@
         "width": 180,
         "height": 180
       },
-      "status": 308,
-      "contentType": "text/plain"
+      "status": 200,
+      "contentType": "image/png",
+      "contentLength": "20188"
     }
   ],
   "metaTags": {
-    "ogImage": null,
-    "twitterImage": null,
-    "canonical": null,
-    "title": null,
-    "description": null,
-    "twitterCard": null,
-    "twitterTitle": null,
-    "twitterDescription": null
+    "ogImage": "https://punderous-game-git-fix-seo-phase1-mjkultra.vercel.app/images/og-image.jpg",
+    "twitterImage": "https://punderous-game-git-fix-seo-phase1-mjkultra.vercel.app/images/twitter-image.jpg",
+    "canonical": "https://punderous.com",
+    "title": "Punderous™ - The Pun-A-Day Word Game!",
+    "description": "Play Punderous™ - the pun-a-day word game!",
+    "twitterCard": "summary_large_image",
+    "twitterTitle": "Punderous™ - The Pun-A-Day Word Game!",
+    "twitterDescription": "Play Punderous™ - the pun-a-day word game!"
   }
 }

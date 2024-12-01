@@ -1,6 +1,8 @@
 // components/JsonLd.tsx
 'use client';
 
+const DOMAIN = 'punderous-game-h1n1m3v71-mjkultra.vercel.app'
+
 export default function JsonLd() {
   const structuredData = {
     "@context": "https://schema.org",
@@ -9,8 +11,8 @@ export default function JsonLd() {
     "applicationCategory": "GameApplication",
     "operatingSystem": "Any",
     "description": "Play Punderous™ - the pun-a-day word game that's fun for the whole family!",
-    "url": "https://punderous.com",
-    "image": "https://punderous.com/images/og-image.jpg",
+    "url": `https://${DOMAIN}`,
+    "image": `https://${DOMAIN}/images/og-image.jpg`,
     "offers": {
       "@type": "Offer",
       "price": "0",
