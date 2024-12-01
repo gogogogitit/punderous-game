@@ -2,23 +2,24 @@ import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://punderous.com'
+  const lastUpdated = '2024-01-01'
   
   return [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: lastUpdated,
       changeFrequency: 'daily',
       priority: 1,
     },
     {
       url: `${baseUrl}/privacy-policy`,
-      lastModified: new Date(),
+      lastModified: lastUpdated,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/not-found`,
-      lastModified: new Date(),
+      lastModified: lastUpdated,
       changeFrequency: 'yearly',
       priority: 0.3,
     }
