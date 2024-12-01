@@ -24,8 +24,12 @@ export const viewport: Viewport = {
   minimumScale: 1,
 }
 
+const baseUrl = process.env.VERCEL_URL 
+  ? `https://${process.env.VERCEL_URL}`
+  : process.env.NEXT_PUBLIC_BASE_URL || 'https://punderous.com'
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://punderous.com'),
+  metadataBase: new URL(baseUrl),
   title: 'Punderous™ - the Pun-A-Day Word Game!',
   description: 'Play Punderous™ - the Pun-A-Day Word Game!',
   openGraph: {
