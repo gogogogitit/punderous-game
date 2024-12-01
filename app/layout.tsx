@@ -6,7 +6,7 @@ import { Analytics } from '@vercel/analytics/react'
 import Script from 'next/script'
 import { GA_TRACKING_ID } from '@/lib/analytics'
 import dynamic from 'next/dynamic'
-import { metadata } from './metadata'
+import { metadata as metadataConfig } from './metadata'
 import JsonLd from '../components/JsonLd'
 
 const GoogleAnalytics = dynamic(() => import('@/components/GoogleAnalytics'), { 
@@ -23,6 +23,47 @@ export const viewport: Viewport = {
   minimumScale: 1,
 }
 
+export const metadata: Metadata = {
+  metadataBase: new URL('https://punderous.com'),
+  title: 'Punderous™ - The Daily Pun Word Game',
+  description: 'Play Punderous™ - the Pun-A-Day Word Game!',
+  openGraph: {
+    title: 'Punderous™ - The Daily Pun Word Game',
+    description: 'Play Punderous™ - Pun-A-Day Word Game!',
+    url: 'https://punderous.com',
+    siteName: 'Punderous™',
+    images: [
+      {
+        url: '/images/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Punderous™ - The Daily Pun Word Game'
+      }
+    ],
+    type: 'website'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Punderous™ - The Daily Pun Word Game',
+    description: 'Play Punderous™ - Pun-A-Day Word Game!',
+    images: ['/images/twitter-image.jpg']
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'YOUR-GOOGLE-VERIFICATION-ID', // Add your Google verification ID
+  }
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -31,7 +72,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta property="fb:app_id" content={metadata.other?.['fb:app_id']?.toString()} />
+        <meta property="fb:app_id" content={metadataConfig.other?.['fb:app_id']?.toString()} />
         {/* Add explicit favicon links as recommended by Google */}
         <link rel="icon" href="/favicon.ico" sizes="48x48" />
         <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png" />
