@@ -26,11 +26,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://punderous.com'),
-  title: 'Punderous™ - The Daily Pun Word Game',
-  description: 'Play Punderous™ - Pun-A-Day Word Game!',
+  title: 'Punderous™ - the Pun-A-Day Word Game!',
+  description: 'Play Punderous™ - the Pun-A-Day Word Game!',
   openGraph: {
-    title: 'Punderous™ - The Daily Pun Word Game',
-    description: 'Play Punderous™ - Pun-A-Day Word Game!',
+    title: 'Punderous™ - the Pun-A-Day Word Game!',
+    description: 'Play Punderous™ - the Pun-A-Day Word Game!',
     url: 'https://punderous.com',
     siteName: 'Punderous™',
     images: [
@@ -38,15 +38,15 @@ export const metadata: Metadata = {
         url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Punderous™ - The Daily Pun Word Game'
+        alt: 'Punderous™ - the Pun-A-Day Word Game!'
       }
     ],
     type: 'website'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Punderous™ - The Daily Pun Word Game',
-    description: 'Play Punderous™ - Pun-A-Day Word Game!',
+    title: 'Punderous™ - the Pun-A-Day Word Game!',
+    description: 'Play Punderous™ - the Pun-A-Day Word Game!',
     images: ['/images/twitter-image.jpg']
   },
   robots: {

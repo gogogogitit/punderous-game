@@ -12,7 +12,7 @@ export default function JsonLd() {
     "operatingSystem": "Any",
     "description": "Play Punderous™ - the Pun-A-Day Word Game!",
     "url": "https://punderous.com",
-    "image": "https://punderous.com/images/og-image.jpg",
+    "image": "/images/og-image.jpg",
     "offers": {
       "@type": "Offer",
       "price": "0",
