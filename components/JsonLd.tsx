@@ -4,15 +4,15 @@
 const DOMAIN = 'punderous-game-h1n1m3v71-mjkultra.vercel.app'
 
 export default function JsonLd() {
-  const structuredData = {
+  const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Punderous™",
     "applicationCategory": "GameApplication",
     "operatingSystem": "Any",
-    "description": "Play Punderous™ - the pun-a-day word game that's fun for the whole family!",
-    "url": `https://${DOMAIN}`,
-    "image": `https://${DOMAIN}/images/og-image.jpg`,
+    "description": "Play Punderous™ - the Pun-A-Day Word Game!",
+    "url": "https://punderous.com",
+    "image": "https://punderous.com/images/og-image.jpg",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -32,10 +32,8 @@ export default function JsonLd() {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(structuredData)
-      }}
       id="schema-jsonld"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
     />
   );
 }
