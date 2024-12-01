@@ -1,26 +1,20 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date('2024-01-01')
+  const baseUrl = 'https://punderous-game-git-temp-seo-test-mjkultra.vercel.app'
   
   return [
     {
-      url: 'https://punderous.com',
-      lastModified,
+      url: baseUrl,
+      lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1,
     },
     {
-      url: 'https://punderous.com/privacy-policy',
-      lastModified,
-      changeFrequency: 'monthly', 
+      url: `${baseUrl}/privacy-policy`,
+      lastModified: new Date(), 
+      changeFrequency: 'monthly',
       priority: 0.8,
-    },
-    {
-      url: 'https://punderous.com/not-found',
-      lastModified,
-      changeFrequency: 'yearly',
-      priority: 0.3,
     }
   ]
 }
