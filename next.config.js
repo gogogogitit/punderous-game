@@ -9,10 +9,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   experimental: {
-    outputFileTracingRoot: path.join(__dirname, './'),
-    outputFileTracingIncludes: {
-      '/': ['./public/**/*']
-    }
+    outputFileTracingRoot: __dirname,
   },
   output: 'standalone',
   images: {
