@@ -4,7 +4,9 @@ import { join } from 'path';
 import { promises as fs } from 'fs';
 import chalk from 'chalk';
 
-const DOMAIN = 'punderous.com';
+const DOMAIN = process.env.VERCEL_ENV === 'preview' 
+    ? process.env.VERCEL_URL 
+    : 'punderous.com';
 
 // scripts/check-metadata.js
 const IMAGE_FILES = [
