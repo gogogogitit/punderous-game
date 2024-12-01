@@ -2,14 +2,32 @@
     "version": 2,
     "redirects": [
         {
-            "source": "/",
+            "source": "/:path*",
+            "has": [
+                {
+                    "type": "host",
+                    "value": "www.punderous.com"
+                }
+            ],
+            "destination": "https://punderous.com/:path*",
+            "permanent": true
+        },
+        {
+            "source": "/:path*",
             "has": [
                 {
                     "type": "host",
                     "value": "punderous.com"
                 }
             ],
-            "destination": "https://www.punderous.com",
+            "missing": [
+                {
+                    "type": "header",
+                    "key": "x-forwarded-proto",
+                    "value": "https"
+                }
+            ],
+            "destination": "https://punderous.com/:path*",
             "permanent": true
         }
     ],
