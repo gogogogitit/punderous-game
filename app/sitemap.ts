@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next'
-import { getBaseUrl } from '@/lib/utils'
+import { getServerBaseUrl } from '@/lib/server-utils'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = getBaseUrl()
+  const baseUrl = getServerBaseUrl()
   
   return [
     {
