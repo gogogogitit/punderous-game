@@ -25,6 +25,10 @@
             ],
             "headers": [
                 {
+                    "key": "X-Robots-Tag",
+                    "value": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+                },
+                {
                     "key": "Strict-Transport-Security",
                     "value": "max-age=31536000; includeSubDomains"
                 },

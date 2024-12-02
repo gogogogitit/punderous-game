@@ -32,6 +32,10 @@ const nextConfig = {
           {
             key: 'Access-Control-Allow-Origin',
             value: '*'
+          },
+          {
+            key: 'X-Robots-Tag',
+            value: 'index, follow'
           }
         ]
       }
