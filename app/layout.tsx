@@ -32,11 +32,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Punderous™ - the Pun-A-Day Word Game!',
     description: 'Play Punderous™ - the Pun-A-Day Word Game!',
-    url: 'https://punderous.com',
+    url: getServerBaseUrl(),
     siteName: 'Punderous™',
     images: [
       {
-        url: '/images/og-image.jpg',
+        url: `${getServerBaseUrl()}/images/og-image.jpg`,
         width: 1200,
         height: 630,
         alt: 'Punderous™ - the Pun-A-Day Word Game!'
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Punderous™ - the Pun-A-Day Word Game!',
     description: 'Play Punderous™ - the Pun-A-Day Word Game!',
-    images: ['/images/twitter-image.jpg']
+    images: [`${getServerBaseUrl()}/images/twitter-image.jpg`]
   },
   robots: {
     index: true,
@@ -68,6 +68,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const baseUrl = getServerBaseUrl()
+  
   return (
     <html lang="en">
       <head>
@@ -75,7 +77,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="48x48" />
         <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png" />
         <link rel="manifest" href="/site.webmanifest" crossOrigin="use-credentials" />
-        <JsonLd />
+        <JsonLd baseUrl={baseUrl} />
       </head>
       <body className={inter.className}>
         <main className="min-h-screen bg-[#00B4D8]">

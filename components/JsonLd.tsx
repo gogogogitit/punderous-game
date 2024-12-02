@@ -1,11 +1,11 @@
 // components/JsonLd.tsx
 'use client';
 
-import { getBaseUrl } from '@/lib/utils'
+interface JsonLdProps {
+  baseUrl: string
+}
 
-export default function JsonLd() {
-  const baseUrl = getBaseUrl()
-
+export default function JsonLd({ baseUrl }: JsonLdProps) {
   return (
     <script
       type="application/ld+json"
