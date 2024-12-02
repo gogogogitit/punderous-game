@@ -7,6 +7,7 @@ import Script from 'next/script'
 import { GA_TRACKING_ID } from '@/lib/analytics'
 import dynamic from 'next/dynamic'
 import JsonLd from '../components/JsonLd'
+import { headers } from 'next/headers'
 
 const GoogleAnalytics = dynamic(() => import('@/components/GoogleAnalytics'), { 
   ssr: false,
@@ -24,12 +25,15 @@ export const viewport: Viewport = {
   minimumScale: 1,
 }
 
-const baseUrl = process.env.VERCEL_URL 
-  ? `https://${process.env.VERCEL_URL}`
-  : process.env.NEXT_PUBLIC_BASE_URL || 'https://punderous.com'
+function getBaseUrl() {
+  const headersList = headers()
+  const host = headersList.get('host')
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
+  return `${protocol}://${host}`
+}
 
 export const metadata: Metadata = {
-  metadataBase: new URL(baseUrl),
+  metadataBase: new URL(getBaseUrl()),
   title: 'Punderous™ - the Pun-A-Day Word Game!',
   description: 'Play Punderous™ - the Pun-A-Day Word Game!',
   openGraph: {
