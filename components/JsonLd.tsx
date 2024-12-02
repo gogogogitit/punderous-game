@@ -1,7 +1,11 @@
 // components/JsonLd.tsx
 'use client';
 
-export default function JsonLd() {
+interface JsonLdProps {
+  baseUrl?: string
+}
+
+export default function JsonLd({ baseUrl = 'https://punderous.com' }: JsonLdProps) {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -9,8 +13,8 @@ export default function JsonLd() {
     "applicationCategory": "GameApplication",
     "operatingSystem": "Any",
     "description": "Play Punderous™ - the pun-a-day word game that's fun for the whole family!",
-    "url": "https://punderous.com",
-    "image": "https://punderous.com/images/og-image.jpg",
+    "url": baseUrl,
+    "image": `${baseUrl}/images/og-image.jpg`,
     "offers": {
       "@type": "Offer",
       "price": "0",

@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next'
+import { getServerBaseUrl } from '../lib/server-utils'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://punderous.com'
+  const baseUrl = getServerBaseUrl()
   
   return [
     {
@@ -10,17 +11,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily',
       priority: 1,
     },
-    {
-      url: `${baseUrl}/privacy-policy`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/not-found`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    }
   ]
 }
