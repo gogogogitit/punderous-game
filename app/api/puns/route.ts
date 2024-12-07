@@ -4,16 +4,17 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export async function GET() {
-  console.log('Puns API called');
+  console.log('Puns API: Starting request');
   try {
     if (!process.env.DATABASE_URL) {
-      console.error('DATABASE_URL is not set');
+      console.error('Puns API: DATABASE_URL is not set');
       return NextResponse.json({ 
         success: false, 
         message: 'Database configuration error' 
       }, { status: 500 });
     }
 
+    console.log('Puns API: Connecting to database...');
     const puns = await prisma.pun.findMany({
       select: {
         id: true,
@@ -25,21 +26,27 @@ export async function GET() {
       },
       orderBy: {
         id: 'asc'
-      },
-      take: 100 // Limit to 100 puns, adjust as needed
+      }
     });
 
-    console.log(`Retrieved ${puns.length} puns from the database`);
+    console.log(`Puns API: Retrieved ${puns.length} puns from database`);
 
-    return NextResponse.json({ 
+    return new NextResponse(JSON.stringify({ 
       success: true, 
       puns 
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
+      }
     });
   } catch (error) {
-    console.error('Error in puns API:', error);
+    console.error('Puns API: Error occurred:', error);
     return NextResponse.json({ 
       success: false, 
-      message: 'Failed to retrieve puns' 
+      message: 'Failed to retrieve puns',
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   } finally {
     await prisma.$disconnect();

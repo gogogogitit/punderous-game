@@ -5,13 +5,8 @@ import './globals.css'
 import { Analytics } from '@vercel/analytics/react'
 import Script from 'next/script'
 import { GA_TRACKING_ID } from '@/lib/analytics'
-import dynamic from 'next/dynamic'
 import JsonLd from '../components/JsonLd'
 import { getServerBaseUrl } from '../lib/server-utils'
-
-const GoogleAnalytics = dynamic(() => import('@/components/GoogleAnalytics'), { 
-  ssr: false,
-})
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -85,7 +80,6 @@ export default function RootLayout({
           {children}
         </main>
         <Analytics />
-        <GoogleAnalytics />
         <Script
           strategy="afterInteractive" 
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}

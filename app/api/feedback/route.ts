@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    // Try to create the feedback entry
     const feedback = await prisma.feedback.create({
       data: {
         email,
@@ -33,6 +34,19 @@ export async function POST(request: Request) {
     });
 
     console.log('Feedback saved:', feedback);
+
+    // Also try to create an email submission if it doesn't exist
+    try {
+      await prisma.emailSubmission.create({
+        data: {
+          email,
+          comment
+        }
+      });
+    } catch (error) {
+      // If the email already exists, that's fine
+      console.log('Email might already be subscribed:', error);
+    }
 
     return NextResponse.json({ 
       success: true, 
