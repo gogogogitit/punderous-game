@@ -49,6 +49,21 @@ const nextConfig = {
         ]
       }
     ]
+  },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        has: [
+          {
+            type: 'host',
+            value: 'www.punderous.com',
+          },
+        ],
+        destination: 'https://punderous.com',
+        permanent: true,
+      },
+    ]
   }
 };
 

@@ -7,6 +7,7 @@ import Script from 'next/script'
 import { GA_TRACKING_ID } from '@/lib/analytics'
 import JsonLd from '../components/JsonLd'
 import { getServerBaseUrl } from '../lib/server-utils'
+import { headers } from 'next/headers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -65,6 +66,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const baseUrl = getServerBaseUrl()
+  const headersList = headers()
+  const pathname = headersList.get('x-pathname') || ''
   
   return (
     <html lang="en">
@@ -74,6 +77,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png" />
         <link rel="manifest" href="/site.webmanifest" crossOrigin="use-credentials" />
         <JsonLd baseUrl={baseUrl} />
+        <link rel="canonical" href={`https://punderous.com${pathname}`} />
       </head>
       <body className={inter.className}>
         <main className="min-h-screen bg-[#00B4D8]">
