@@ -15,6 +15,7 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import { trackEvent as analyticsTrackEvent } from '../lib/analytics'
 import RulesDialog from "@/components/RulesDialog";
 import LetterHint from '@/components/game/LetterHint';
+import PreviousAnswers from '@/components/game/PreviousAnswers';
 
 const trackEvent = (eventName: string, eventParams?: Record<string, any>) => {
   analyticsTrackEvent(eventName, eventParams);
@@ -134,33 +135,6 @@ const confettiConfig = {
 
 const API_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
 
-const PreviousAnswers: React.FC<{ answers: string[] }> = ({ answers }) => {
-  if (answers.length === 0) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full rounded-lg border border-gray-200 p-2 bg-white/50 mt-2 mb-2 text-center"
-    >
-      <p className="text-[15.6px] font-medium text-gray-600 mb-1">Previous Answers:</p>
-      <div className="space-y-0.5">
-        {answers.map((answer, index) => (
-          <motion.p
-            key={index}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="text-[14.4px] text-gray-700"
-          >
-            {index + 1}. {answer}
-          </motion.p>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
-
 export default function Component() {
   console.log('PunderousGame: Component mounted')
   const [puns, setPuns] = useState<Pun[]>([])
@@ -210,9 +184,22 @@ export default function Component() {
         if (data.success && Array.isArray(data.puns) && isMounted) {
           setPuns(data.puns)
           if (data.puns.length > 0) {
+            // Calculate today's pun index
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const startDate = new Date('2024-01-01');
+            const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            const punOfTheDayIndex = daysSinceStart % data.puns.length;
+            
+            console.log('Today:', today);
+            console.log('Days since start:', daysSinceStart);
+            console.log('Pun of the day index:', punOfTheDayIndex);
+            
             setGameState(prev => ({
               ...prev,
-              currentPun: data.puns[0]
+              currentPun: data.puns[punOfTheDayIndex],
+              currentPunIndex: punOfTheDayIndex,
+              lastPlayedDate: today.toDateString()
             }))
           }
         }
