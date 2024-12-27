@@ -17,6 +17,7 @@ const RulesDialog = () => {
     "See a question, guess the pun-chline",
     "Spaces show word breaks in the answer",
     "You get 5 attempts to solve each pun",
+    "No apostrophes or quotation marks in the answer",
     "Correct letters in guesses fill in the blanks",
     "Puns are worth 1-3 points (Easy/Medium/Hard)",
     "Build your score and level with correct answers",
