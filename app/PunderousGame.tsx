@@ -982,7 +982,7 @@ export default function Component() {
                     type="submit"
                     className="w-full bg-[#00B4D8] text-white hover:bg-[#00B4D8]/90 text-[13px] py-1 h-9 mt-2"
                   >
-                    Get Notified
+                    Submit Email - Comment Optional
                   </Button>
                 </form>
               )}

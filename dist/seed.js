@@ -80,7 +80,7 @@ const puns = [
     { id: 105, question: "What kind of key opens a banana?", answer: "A monkey", difficulty: 1, upVotes: 0, downVotes: 0 },
     { id: 106, question: "Where does a tree withdraw money?", answer: "A bank branch", difficulty: 1, upVotes: 0, downVotes: 0 },
     { id: 107, question: "How do cows stay up to date?", answer: "They read the moospaper", difficulty: 1, upVotes: 0, downVotes: 0 },
-    { id: 108, question: "Why did the mushroom get invited to all the parties?", answer: "He was a fungi", difficulty: 1, upVotes: 0, downVotes: 0 },
+    { id: 108, question: "Why did Mr. Mushroom get invited to all the parties?", answer: "He was a fungi", difficulty: 1, upVotes: 0, downVotes: 0 },
     { id: 109, question: "What did the duck say when it was time to pay for lunch?", answer: "Put it on my bill", difficulty: 1, upVotes: 0, downVotes: 0 },
     { id: 110, question: "What kind of music do mummies listen to?", answer: "Wrap music", difficulty: 1, upVotes: 0, downVotes: 0 },
     { id: 111, question: "Why can't your nose be 12 inches long?", answer: "It would be a foot", difficulty: 1, upVotes: 0, downVotes: 0 },
